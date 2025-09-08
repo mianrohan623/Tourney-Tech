@@ -1,0 +1,497 @@
+==== src/models/* ====
+
+
+==== ./BracketGroup.js ====
+import { Schema, model, models } from "mongoose";
+
+const BracketGroupSchema = new Schema(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: [true, "Tournament ID is required."],
+    },
+
+    name: {
+      type: String,
+      required: [true, "Bracket group name is required."],
+    },
+
+    order: {
+      type: Number,
+      required: true,
+    },
+
+    bracketSide: {
+      type: String,
+      enum: ["winner", "loser"],
+      default: "winner",
+    },
+  },
+  { timestamps: true }
+);
+
+// Ensure unique group names per tournament
+BracketGroupSchema.index({ tournament: 1, name: 1 }, { unique: true });
+
+export const BracketGroup =
+  models.BracketGroup || model("BracketGroup", BracketGroupSchema);
+
+
+==== ./Game.js ====
+import { Schema, model, models } from "mongoose";
+
+const GameSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Game name is required."],
+      unique: true,
+      trim: true,
+    },
+
+    genre: {
+      type: String,
+      trim: true,
+    },
+
+    platform: {
+      type: String,
+      enum: ["pc", "console", "mobile", "table"],
+      required: true,
+    },
+
+    description: {
+      type: String,
+    },
+
+    rulesUrl: {
+      type: String, // Optional URL to PDF or webpage
+    },
+
+    icon: {
+      type: String, // Cloudinary or external image URL
+    },
+
+    coverImage: {
+      type: String, // Cloudinary or external image URL
+    },
+  },
+  { timestamps: true }
+);
+
+export const Game = models.Game || model("Game", GameSchema);
+
+
+==== ./Match.js ====
+import { Schema, model, models } from "mongoose";
+
+const MatchSchema = new Schema(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+        required: [true, "Tournament ID is required."],
+    },
+
+    matchNumber: {
+      type: Number,
+      required: [true, "Match number is required."],
+    },
+
+    bracketGroup: {
+      type: Schema.Types.ObjectId,
+      ref: "BracketGroup", // optional in early stages
+    },
+
+    round: {
+      type: Number,
+      required: [true, "Round number is required."],
+    },
+
+    qr: {
+      type: String, // optional QR code for check-in
+    },
+
+    teamA: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+      required: [true, "Team A ID is required."],
+    },
+
+    teamB: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+      required: [true, "Team B ID is required."],
+    },
+
+    winner: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+    },
+
+    loser: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+    },
+
+    score: {
+      type: String, // e.g. "2-1"
+    },
+
+    scheduledAt: {
+      type: Date,
+    },
+
+    completedAt: {
+      type: Date,
+    },
+
+    nextMatch: {
+      type: Schema.Types.ObjectId,
+      ref: "Match", // For bracket linking
+    },
+
+    admin: {
+      type: Schema.Types.ObjectId,
+      ref: "User", // Optional, match referee
+    },
+  },
+  { timestamps: true }
+);
+
+// Index to quickly query tournament matches in order
+MatchSchema.index({ tournament: 1, matchNumber: 1 }, { unique: true });
+
+export const Match = models.Match || model("Match", MatchSchema);
+
+
+==== ./merged_models.txt ====
+
+
+==== ./Registration.js ====
+import { Schema, model, models } from "mongoose";
+
+const RegistrationSchema = new Schema(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: [true, "Tournament ID is required."],
+    },
+
+    team: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+      required: [true, "Team ID is required."],
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+
+    paid: {
+      type: Boolean,
+      default: false,
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "stripe", "manual"],
+      default: "manual",
+    },
+
+    paymentDetails: {
+      type: String, // Optional details like transaction ID
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
+
+RegistrationSchema.index({ tournament: 1, team: 1 }, { unique: true });
+
+export const Registration =
+  models.Registration || model("Registration", RegistrationSchema);
+
+
+==== ./Team.js ====
+import { Schema, model, models } from "mongoose";
+
+const TeamSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Team name is required."],
+      unique: true,
+      trim: true,
+    },
+
+    logo: {
+      type: String, // URL or Cloudinary path
+    },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+export const Team = models.Team || model("Team", TeamSchema);
+
+
+==== ./TeamMember.js ====
+import { Schema, model, models } from "mongoose";
+
+const TeamMemberSchema = new Schema(
+  {
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
+    },
+
+    team: {
+      type: Schema.Types.ObjectId,
+      ref: "Team",
+      required: true,
+    },
+
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+// 💡 Composite index: One user per tournament
+TeamMemberSchema.index({ tournament: 1, user: 1 }, { unique: true });
+
+export const TeamMember =
+  models.TeamMember || model("TeamMember", TeamMemberSchema);
+
+
+==== ./Tournament.js ====
+import { Schema, model, models } from "mongoose";
+
+const TournamentSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Tournament name is required."],
+      trim: true,
+    },
+
+    qr: {
+      type: String, // Optional QR code URL or base64
+    },
+
+    game: {
+      type: Schema.Types.ObjectId,
+      ref: "Game",
+      required: [true, "Game ID is required."],
+    },
+
+    type: {
+      type: String,
+      enum: ["single_elimination", "double_elimination", "round_robin"],
+      required: [true, "Tournament type is required."],
+    },
+
+    teamBased: {
+      type: Boolean,
+      default: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["upcoming", "ongoing", "completed"],
+      default: "upcoming",
+    },
+
+    startDate: {
+      type: Date,
+      required: [true, "Start date is required."],
+    },
+
+    endDate: {
+      type: Date,
+      required: [true, "End date is required."],
+    },
+
+    minPlayers: {
+      type: Number,
+      required: [true, "Minimum players per team is required."],
+      min: 1,
+    },
+
+    maxPlayers: {
+      type: Number,
+      required: [true, "Maximum players per team is required."],
+      min: 1,
+    },
+
+    location: {
+      type: String,
+      required: [true, "Location is required."],
+      trim: true,
+    },
+
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+
+    description: {
+      type: String,
+    },
+
+    bannerUrl: {
+      type: String,
+    },
+
+    organizer: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Organizer ID is required."],
+    },
+
+    admin: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Admin ID is required."],
+    },
+  },
+  { timestamps: true }
+);
+
+export const Tournament =
+  models.Tournament || model("Tournament", TournamentSchema);
+
+
+==== ./User.js ====
+import { Schema, model, models } from "mongoose";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const UserSchema = new Schema(
+  {
+    registrationId: { type: String },
+
+    firstname: {
+      type: String,
+      required: [true, "First name is required."],
+    },
+
+    lastname: {
+      type: String,
+      required: [true, "Last name is required."],
+    },
+
+    avatar: {
+      type: String,
+    },
+
+    email: {
+      type: String,
+      required: [true, "Email is required."],
+      lowercase: true,
+      trim: true,
+      unique: true,
+      index: true,
+    },
+
+    username: {
+      type: String,
+      required: [true, "Username is required."],
+      lowercase: true,
+      trim: true,
+      unique: true,
+      index: true,
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required."],
+    },
+
+    phone: {
+      type: String,
+      validate: {
+        validator: function (v) {
+          return /^\+?\d{10,15}$/.test(v);
+        },
+        message: (props) => `${props.value} is not a valid phone number!`,
+      },
+      unique: true,
+      sparse: true, // Allows multiple users without phone numbers
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
+
+    city: {
+      type: String,
+      required: [true, "City is required."],
+    },
+
+    stateCode: {
+      type: String,
+      required: [true, "State code is required."],
+    },
+
+    dob: {
+      type: Date,
+      validate: {
+        validator: function (value) {
+          return value <= new Date();
+        },
+        message: "Date of birth cannot be in the future.",
+      },
+      required: [true, "DOB is required."],
+    },
+
+    refreshToken: { type: String },
+
+    status: {
+      type: String,
+      enum: ["online", "offline", "idle"],
+      default: "offline",
+    },
+
+    role: {
+      type: String,
+      enum: ["player", "admin", "manager"],
+      default: "player",
+    },
+  },
+  { timestamps: true }
+);
+
+// Password hashing before saving user
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+// Compare plain password with hashed password
+UserSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
+};
+
+// 🧠 Prevent model overwrite in development
+export const User = models.User || model("User", UserSchema);
+
+
