@@ -7,11 +7,12 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
 import { requireAuth } from "@/utils/server/auth";
 import mongoose from "mongoose";
+import { BankDetails } from "@/models/BankDetails";
+import { Game } from "@/models/Game";
 
 export const POST = asyncHandler(async (req) => {
   const { fields } = await parseForm(req);
   const user = await requireAuth();
-
 
   const tournamentId = fields.tournamentId?.toString();
   const userId = user?._id;
@@ -20,7 +21,6 @@ export const POST = asyncHandler(async (req) => {
     : fields.gameIds
       ? [fields.gameIds]
       : [];
-//   const teamId = fields.teamId?.toString();
   const paymentMethod = fields.paymentMethod?.toString();
   const paymentDetails =
     typeof fields.paymentDetails === "string"
@@ -42,6 +42,13 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiError(400, "Invalid Tournament ID or User ID.");
   }
 
+  const validGameIds = gameIds.map((gameId) => {
+    if (!gameId || !mongoose.isValidObjectId(gameId)) {
+      throw new ApiError(400, `Game ID ${gameId} is invalid.`);
+    }
+    return new mongoose.Types.ObjectId(gameId);
+  });
+
   const tournament = await Tournament.findById(tournamentId);
   if (!tournament) {
     throw new ApiError(404, "Tournament not found.");
@@ -56,12 +63,7 @@ export const POST = asyncHandler(async (req) => {
   }
 
   const gameRegistrationDetails = {
-    game: gameIds.map((gameId) => {
-      if (!gameId || !mongoose.isValidObjectId(gameId)) {
-        throw new ApiError(400, `Game ID ${gameId} is invalid.`);
-      }
-      return new mongoose.Types.ObjectId(gameId);
-    }), 
+    games: validGameIds,
     status: "pending",
     paid: false,
     paymentMethod: paymentMethod || "cash",
@@ -69,6 +71,7 @@ export const POST = asyncHandler(async (req) => {
 
   /*
   if (tournament.isTeamBased) {
+    const teamId = fields.teamId?.toString();
     if (!teamId || !mongoose.isValidObjectId(teamId)) {
       throw new ApiError(400, "Team ID is required for team-based tournament.");
     }
@@ -128,5 +131,30 @@ export const POST = asyncHandler(async (req) => {
       registration,
       "Tournament registration created successfully"
     )
+  );
+});
+
+export const GET = asyncHandler(async () => {
+  const registrations = await Registration.find()
+    .populate("tournament")
+    .populate("user", "username email")
+    .populate({
+      path: "gameRegistrationDetails.games",
+      model: "Game",
+    })
+    .populate({
+      path: "gameRegistrationDetails.team",
+      model: "Teams",
+      strictPopulate: false,
+    })
+    .populate({
+      path: "gameRegistrationDetails.paymentDetails.bankId",
+      model: "BankDetails",
+      strictPopulate: false,
+    })
+    .lean();
+
+  return Response.json(
+    new ApiResponse(200, registrations, "Registrations fetched successfully")
   );
 });
