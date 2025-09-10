@@ -80,7 +80,6 @@ export default function TournamentCard({
             >
               {games?.[0]?.entryFee ? `Fee: ${games[0].entryFee}` : "Free"}
             </span> */}
-            
           </div>
         </div>
 
