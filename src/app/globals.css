@@ -57,12 +57,14 @@
 
     --border-color: #364153;
     --card-background: #101828;
+
   }
 }
 
 /* ========= BASE RESET ========= */
 * {
   box-sizing: border-box;
+  font-family: sans-serif;
 }
 
 body {

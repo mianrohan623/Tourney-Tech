@@ -1,7 +1,7 @@
 import { Schema, model, models } from "mongoose";
 
 const GameRegistrationSchema = new Schema({
-  game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
+  games: [{ type: Schema.Types.ObjectId, ref: "Game", required: true }],
   team: { type: Schema.Types.ObjectId, ref: "Team" }, // optional for solo
   status: {
     type: String,
@@ -11,10 +11,21 @@ const GameRegistrationSchema = new Schema({
   paid: { type: Boolean, default: false },
   paymentMethod: {
     type: String,
-    enum: ["cash", "stripe", "manual"],
-    default: "manual",
+    enum: ["cash", "online"],
+    default: "cash",
   },
-  paymentDetails: { type: String, trim: true },
+  paymentDetails: {
+    bankId: {
+      type: Schema.Types.ObjectId,
+      ref: "BankDetails",
+    },
+    accountName: {
+      type: String,
+    },
+    transactionId: {
+      type: String,
+    },
+  },
 });
 
 const RegistrationSchema = new Schema(
@@ -25,7 +36,7 @@ const RegistrationSchema = new Schema(
       required: true,
     },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true }, // captain or solo player
-    gameRegistrations: [GameRegistrationSchema],
+    gameRegistrationDetails: GameRegistrationSchema,
   },
   { timestamps: true }
 );
