@@ -39,21 +39,8 @@ export default function BankDetailsForm() {
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="mb-4  font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200"
-            style={{
-              background: "var(--accent-color)",
-              color: "black",
-            }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.background = "var(--primary-hover)")(
-                (e.currentTarget.style.color = "white")
-              )
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.background = "var(--accent-color)")(
-                (e.currentTarget.style.color = "black")
-              )
-            }
+            className="mb-4  font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 bg-[var(--accent-color)] hover:bg-[var(--primary-hover)] text-black hover:text-white"
+           
           >
             + Add Bank Details
           </button>
@@ -153,17 +140,7 @@ export default function BankDetailsForm() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="flex-1 font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200"
-                  style={{
-                    background: "var(--primary-color)",
-                    color: "var(--foreground)",
-                  }}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.background = "var(--primary-hover)")
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.background = "var(--primary-color)")
-                  }
+                  className="flex-1 font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-black hover:text-white"
                 >
                   Save
                 </button>
