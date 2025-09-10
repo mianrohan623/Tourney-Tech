@@ -111,7 +111,12 @@ export default function TournamentCard({
         <div className="flex flex-col sm:flex-row gap-3 mt-3">
           {status === "upcoming" ? (
             // ✅ Show Register Now only for upcoming
-            <Link href={`/dashboard/game-registration`} className="flex-1">
+            <Link
+              href={{
+                pathname: `/dashboard/game-registration/${_id}`,
+              }}
+              className="flex-1"
+            >
               <button
                 onClick={() => onSelect(_id)}
                 className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
