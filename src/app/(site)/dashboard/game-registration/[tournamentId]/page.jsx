@@ -27,37 +27,36 @@ export default function GameRegistrationPage() {
 
     async function fetchData() {
       try {
-        const res = await api.get("/api/tournamentRegister");
-        const registrationData = res.data.data;
+        const res = await api.get(`/api/tournaments/${tournamentId}`);
+        const fetchBankDetails = await api.get("/api/bankDetails");
+        console.log("Response:", res.data);
+        const registrationData = res.data;
 
-        const currentTournamentReg = registrationData.find(
-          (r) => r.tournament._id === tournamentId
+        // Registered games for dropdown
+        const registeredGames = registrationData?.games || [];
+        setGames(
+          registeredGames.map((g) => ({
+            _id: g?.game?._id,
+            name: g?.game?.name,
+          }))
         );
 
-        if (currentTournamentReg) {
-          // Registered games for dropdown
-          const registeredGames = currentTournamentReg.gameRegistrationDetails?.games || [];
-          setGames(
-            registeredGames.map((g) => ({ _id: g._id, name: g.name }))
-          );
+        // Tournament game details
+        const tournamentGamesData = registrationData?.games || [];
+        setTournamentGames(
+          tournamentGamesData.map((g) => ({
+            _id: g.game, // match with gameRegistrationDetails._id
+            entryFee: g.entryFee,
+            format: g.format,
+            teamBased: g.teamBased,
+            minPlayers: g.minPlayers,
+            maxPlayers: g.maxPlayers,
+          }))
+        );
 
-          // Tournament game details
-          const tournamentGamesData = currentTournamentReg.tournament?.games || [];
-          setTournamentGames(
-            tournamentGamesData.map((g) => ({
-              _id: g.game, // match with gameRegistrationDetails._id
-              entryFee: g.entryFee,
-              format: g.format,
-              teamBased: g.teamBased,
-              minPlayers: g.minPlayers,
-              maxPlayers: g.maxPlayers,
-            }))
-          );
-
-          // Bank accounts (array of objects)
-          const bankObj = currentTournamentReg.gameRegistrationDetails?.paymentDetails?.bankId;
-          setBankAccounts(bankObj ? [bankObj] : []);
-        }
+        // Bank accounts (array of objects)
+        const bankObj = fetchBankDetails?.data?.data || [];
+        setBankAccounts(bankObj ? bankObj : []);
       } catch (err) {
         console.error("Error fetching data:", err);
         toast.error("Failed to load games or bank accounts.");
@@ -116,21 +115,35 @@ export default function GameRegistrationPage() {
     }
   };
 
-  const selectedGameDetails = tournamentGames.find((g) => g._id === formData.game);
+  const selectedGameDetails = tournamentGames.find(
+    (g) => g._id === formData.game
+  );
   const selectedBank = bankAccounts.find((b) => b._id === formData.bankAccount);
 
   if (fetching) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div className="max-w-lg mx-auto rounded-2xl p-8 shadow-lg border" style={{ background: "var(--card-background)", borderColor: "var(--border-color)" }}>
-      <h2 className="text-2xl font-bold text-center mb-6" style={{ color: "var(--accent-color)" }}>
+    <div
+      className="max-w-lg mx-auto rounded-2xl p-8 shadow-lg border"
+      style={{
+        background: "var(--card-background)",
+        borderColor: "var(--border-color)",
+      }}
+    >
+      <h2
+        className="text-2xl font-bold text-center mb-6"
+        style={{ color: "var(--accent-color)" }}
+      >
         Tournament Registration
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Game Selection */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--foreground)" }}
+          >
             Select Game
           </label>
           <select
@@ -139,28 +152,55 @@ export default function GameRegistrationPage() {
             onChange={handleChange}
             required
             className="w-full rounded-lg px-3 py-2"
-            style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}
+            style={{
+              background: "var(--secondary-color)",
+              borderColor: "var(--border-color)",
+              color: "var(--foreground)",
+            }}
           >
             <option value="">-- Select Game --</option>
             {games.map((g) => (
-              <option key={g._id} value={g._id}>{g.name}</option>
+              <option key={g._id} value={g._id}>
+                {g.name}
+              </option>
             ))}
           </select>
 
           {selectedGameDetails && (
-            <div className="mt-3 p-3 border rounded-lg" style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}>
-              <p><strong>Entry Fee:</strong> {selectedGameDetails.entryFee} PKR</p>
-              <p><strong>Format:</strong> {selectedGameDetails.format}</p>
-              <p><strong>Team Based:</strong> {selectedGameDetails.teamBased ? "Yes" : "No"}</p>
-              <p><strong>Min Players:</strong> {selectedGameDetails.minPlayers}</p>
-              <p><strong>Max Players:</strong> {selectedGameDetails.maxPlayers}</p>
+            <div
+              className="mt-3 p-3 border rounded-lg"
+              style={{
+                background: "var(--secondary-color)",
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            >
+              <p>
+                <strong>Entry Fee:</strong> {selectedGameDetails.entryFee} PKR
+              </p>
+              <p>
+                <strong>Format:</strong> {selectedGameDetails.format}
+              </p>
+              <p>
+                <strong>Team Based:</strong>{" "}
+                {selectedGameDetails.teamBased ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>Min Players:</strong> {selectedGameDetails.minPlayers}
+              </p>
+              <p>
+                <strong>Max Players:</strong> {selectedGameDetails.maxPlayers}
+              </p>
             </div>
           )}
         </div>
 
         {/* Payment Method */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+          <label
+            className="block text-sm font-medium mb-1"
+            style={{ color: "var(--foreground)" }}
+          >
             Payment Method
           </label>
           <select
@@ -169,7 +209,11 @@ export default function GameRegistrationPage() {
             onChange={handleChange}
             required
             className="w-full rounded-lg px-3 py-2"
-            style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}
+            style={{
+              background: "var(--secondary-color)",
+              borderColor: "var(--border-color)",
+              color: "var(--foreground)",
+            }}
           >
             <option value="">-- Select Payment Type --</option>
             <option value="online">Online</option>
@@ -180,7 +224,10 @@ export default function GameRegistrationPage() {
         {formData.paymentType === "online" && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: "var(--foreground)" }}
+              >
                 Select Bank Account
               </label>
               <select
@@ -189,44 +236,80 @@ export default function GameRegistrationPage() {
                 onChange={handleChange}
                 required
                 className="w-full rounded-lg px-3 py-2"
-                style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  background: "var(--secondary-color)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
               >
                 <option value="">-- Select Bank Account --</option>
                 {bankAccounts.map((bank) => (
-                  <option key={bank._id} value={bank._id}>{bank.bankName}</option>
+                  <option key={bank._id} value={bank._id}>
+                    {bank.bankName}
+                  </option>
                 ))}
               </select>
             </div>
 
             {selectedBank && (
-              <div className="p-3 rounded-lg shadow-sm border text-sm" style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}>
-                <p><strong>Admin Account Name:</strong> {selectedBank.accountHolder}</p>
-                <p><strong>Account Number:</strong> {selectedBank.accountNumber}</p>
+              <div
+                className="p-3 rounded-lg shadow-sm border text-sm"
+                style={{
+                  background: "var(--secondary-color)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
+              >
+                <p>
+                  <strong>Admin Account Name:</strong>{" "}
+                  {selectedBank.accountHolder}
+                </p>
+                <p>
+                  <strong>Account Number:</strong> {selectedBank.accountNumber}
+                </p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Your Account Name</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: "var(--foreground)" }}
+              >
+                Your Account Name
+              </label>
               <input
                 type="text"
                 name="accountName"
                 value={formData.accountName}
                 onChange={handleChange}
                 className="w-full rounded-lg px-3 py-2"
-                style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  background: "var(--secondary-color)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Transaction ID</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: "var(--foreground)" }}
+              >
+                Transaction ID
+              </label>
               <input
                 type="text"
                 name="transactionId"
                 value={formData.transactionId}
                 onChange={handleChange}
                 className="w-full rounded-lg px-3 py-2"
-                style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  background: "var(--secondary-color)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
                 required
               />
             </div>
@@ -237,7 +320,10 @@ export default function GameRegistrationPage() {
           type="submit"
           disabled={loading}
           className="w-full font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 disabled:opacity-50"
-          style={{ background: "var(--primary-color)", color: "var(--foreground)" }}
+          style={{
+            background: "var(--primary-color)",
+            color: "var(--foreground)",
+          }}
         >
           {loading ? "Registering..." : "Register"}
         </button>
