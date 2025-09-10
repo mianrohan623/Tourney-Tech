@@ -34,4 +34,5 @@ export const GET = asyncHandler(async (req) => {
   return Response.json(
     new ApiResponse(200, bankDetails, "Bank details fetched successfully")
   );
+  
 });
