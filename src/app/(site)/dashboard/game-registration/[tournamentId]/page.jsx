@@ -9,8 +9,8 @@ export default function GameRegistrationPage() {
   const params = useParams();
   const tournamentId = params?.tournamentId;
 
-  const [games, setGames] = useState([]); // array of {id, name} from gameRegistrationDetails
-  const [tournamentGames, setTournamentGames] = useState([]); // array of full game details from tournament
+  const [games, setGames] = useState([]);
+  const [tournamentGames, setTournamentGames] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [formData, setFormData] = useState({
     game: "",
@@ -35,16 +35,13 @@ export default function GameRegistrationPage() {
         );
 
         if (currentTournamentReg) {
-          // Names from gameRegistrationDetails.games
+          // Registered games for dropdown
           const registeredGames = currentTournamentReg.gameRegistrationDetails?.games || [];
           setGames(
-            registeredGames.map((g) => ({
-              _id: g._id,
-              name: g.name,
-            }))
+            registeredGames.map((g) => ({ _id: g._id, name: g.name }))
           );
 
-          // Details from tournament.games
+          // Tournament game details
           const tournamentGamesData = currentTournamentReg.tournament?.games || [];
           setTournamentGames(
             tournamentGamesData.map((g) => ({
@@ -57,11 +54,9 @@ export default function GameRegistrationPage() {
             }))
           );
 
-          // Bank accounts
-          const banks = currentTournamentReg.gameRegistrationDetails?.paymentDetails?.bankId
-            ? [currentTournamentReg.gameRegistrationDetails.paymentDetails.bankId]
-            : [];
-          setBankAccounts(banks);
+          // Bank accounts (array of objects)
+          const bankObj = currentTournamentReg.gameRegistrationDetails?.paymentDetails?.bankId;
+          setBankAccounts(bankObj ? [bankObj] : []);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -80,30 +75,27 @@ export default function GameRegistrationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!tournamentId) {
-      toast.error("Tournament ID is required!");
-      return;
-    }
+    if (!tournamentId) return toast.error("Tournament ID is required!");
 
     try {
       setLoading(true);
 
-      const payload = {
-        tournamentId,
-        gameIds: [formData.game],
-        paymentMethod: formData.paymentType,
-      };
+      const form = new FormData();
+      form.append("tournamentId", tournamentId);
+      form.append("gameIds", formData.game);
+      form.append("paymentMethod", formData.paymentType);
 
       if (formData.paymentType === "online") {
-        payload.paymentDetails = {
+        const paymentDetails = {
           bankId: formData.bankAccount,
           accountName: formData.accountName,
           transactionId: formData.transactionId,
         };
+        form.append("paymentDetails", JSON.stringify(paymentDetails));
       }
 
-      const res = await api.post("/api/tournamentRegister", payload, {
-        headers: { "Content-Type": "application/json" },
+      const res = await api.post("/api/tournamentRegister", form, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       toast.success("Registration successful!");
@@ -124,17 +116,13 @@ export default function GameRegistrationPage() {
     }
   };
 
-  const selectedGameName = games.find((g) => g._id === formData.game);
   const selectedGameDetails = tournamentGames.find((g) => g._id === formData.game);
   const selectedBank = bankAccounts.find((b) => b._id === formData.bankAccount);
 
   if (fetching) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div
-      className="max-w-lg mx-auto rounded-2xl p-8 shadow-lg border"
-      style={{ background: "var(--card-background)", borderColor: "var(--border-color)" }}
-    >
+    <div className="max-w-lg mx-auto rounded-2xl p-8 shadow-lg border" style={{ background: "var(--card-background)", borderColor: "var(--border-color)" }}>
       <h2 className="text-2xl font-bold text-center mb-6" style={{ color: "var(--accent-color)" }}>
         Tournament Registration
       </h2>
@@ -155,13 +143,10 @@ export default function GameRegistrationPage() {
           >
             <option value="">-- Select Game --</option>
             {games.map((g) => (
-              <option key={g._id} value={g._id}>
-                {g.name}
-              </option>
+              <option key={g._id} value={g._id}>{g.name}</option>
             ))}
           </select>
 
-          {/* Selected Game Details */}
           {selectedGameDetails && (
             <div className="mt-3 p-3 border rounded-lg" style={{ background: "var(--secondary-color)", borderColor: "var(--border-color)", color: "var(--foreground)" }}>
               <p><strong>Entry Fee:</strong> {selectedGameDetails.entryFee} PKR</p>
@@ -208,9 +193,7 @@ export default function GameRegistrationPage() {
               >
                 <option value="">-- Select Bank Account --</option>
                 {bankAccounts.map((bank) => (
-                  <option key={bank._id} value={bank._id}>
-                    {bank.bankName}
-                  </option>
+                  <option key={bank._id} value={bank._id}>{bank.bankName}</option>
                 ))}
               </select>
             </div>
@@ -223,9 +206,7 @@ export default function GameRegistrationPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
-                Your Account Name
-              </label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Your Account Name</label>
               <input
                 type="text"
                 name="accountName"
@@ -238,9 +219,7 @@ export default function GameRegistrationPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>
-                Transaction ID
-              </label>
+              <label className="block text-sm font-medium mb-1" style={{ color: "var(--foreground)" }}>Transaction ID</label>
               <input
                 type="text"
                 name="transactionId"
