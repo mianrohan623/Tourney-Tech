@@ -7,7 +7,6 @@ import DashboardSidebar from "@/components/ui/dashboard/DashboardSidebar";
 
 import AdminGuard from "@/components/gard/admin/AdminGard";
 
-
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +14,7 @@ import {
   LogOut,
   BadgePlus,
   Gamepad2,
+  Banknote,
 } from "lucide-react";
 
 // Change this to adminNavItems if needed
@@ -28,6 +28,7 @@ const adminNavItems = [
     label: "Create Tournament",
     icon: BadgePlus,
   },
+  { href: "/admin/add-bank-details", label: "Add Bank Details", icon: Banknote },
   {
     label: "Settings",
     icon: Settings,
