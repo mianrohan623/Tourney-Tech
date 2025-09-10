@@ -3,8 +3,10 @@ import { ApiError } from "@/utils/server/ApiError";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
+import { requireAdmin } from "@/utils/server/roleGuards";
 
 export const PATCH = asyncHandler(async (req, context) => {
+  await requireAdmin();
   const { id } = context.params;
   if (!id) throw new ApiError(400, "ID parameter is missing");
 
