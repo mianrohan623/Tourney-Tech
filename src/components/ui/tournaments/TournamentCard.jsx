@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-
 import TournamentGameList from "./TournamentGameList";
 
 export default function TournamentCard({
@@ -72,7 +71,7 @@ export default function TournamentCard({
           </div>
 
           <div>
-            <span
+            {/* <span
               className="inline-block px-3 py-1 text-sm rounded-full font-medium"
               style={{
                 backgroundColor: "var(--accent-color)",
@@ -80,7 +79,7 @@ export default function TournamentCard({
               }}
             >
               {games?.[0]?.entryFee ? `Fee: ${games[0].entryFee}` : "Free"}
-            </span>
+            </span> */}
           </div>
         </div>
 
@@ -95,37 +94,51 @@ export default function TournamentCard({
             📍 <strong>Location:</strong> {location || ""}
           </p>
           <p>
-            📅 <strong>Start:</strong>
-            {formatDate(startDate)}
+            📅 <strong>Start:</strong> {formatDate(startDate)}
           </p>
           <p>
-            📅 <strong>End:</strong>
-            {formatDate(endDate)}
+            📅 <strong>End:</strong> {formatDate(endDate)}
           </p>
           <p>
-            ⏰ <strong>Time:</strong>
-            {formatTime(startDate)}
+            ⏰ <strong>Time:</strong> {formatTime(startDate)}
           </p>
         </div>
 
         {/* Games */}
         <TournamentGameList games={games || []} />
 
-        {/* Button */}
-      <Link href={`/dashboard/game-registration`}>
-        <button
-          onClick={() => onSelect(_id)}
-          className="w-full mt-3 py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
-          style={{
-            backgroundColor: isSelected
-              ? "var(--primary-hover)"
-              : "var(--accent-color)",
-            color: isSelected ? "var(--foreground)" : "var(--background)",
-          }}
-        >
-          {isSelected ? "✔ Entered" : "Enter Tournament"}
-        </button>
-      </Link>
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 mt-3">
+          {status === "upcoming" ? (
+            // ✅ Show Register Now only for upcoming
+            <Link href={`/dashboard/game-registration`} className="flex-1">
+              <button
+                onClick={() => onSelect(_id)}
+                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+                style={{
+                  backgroundColor: isSelected
+                    ? "var(--primary-hover)"
+                    : "var(--accent-color)",
+                  color: isSelected ? "var(--foreground)" : "var(--background)",
+                }}
+              >
+                Register Now
+              </button>
+            </Link>
+          ) : (
+            // ✅ Otherwise show View Tournament
+              <button
+                onClick={() => onSelect(_id)}
+                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+                style={{
+                  backgroundColor: "var(--accent-color)",
+                  color: "var(--background)",
+                }}
+              >
+                View Tournament
+              </button>
+          )}
+        </div>
       </div>
     </div>
   );
