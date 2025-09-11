@@ -3,7 +3,7 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
-import { User } from "@/models/User";
+// import { User } from "@/models/User";
 
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();

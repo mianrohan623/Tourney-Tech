@@ -1,9 +1,9 @@
-import { Registration } from "@/models/Registration";
+// import { Registration } from "@/models/Registration";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
-import { User } from "@/models/User";
+// import { User } from "@/models/User";
 import { parseForm } from "@/utils/server/parseForm";
 import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
