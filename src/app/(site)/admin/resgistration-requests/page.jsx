@@ -6,8 +6,10 @@ import { toast } from "react-hot-toast";
 
 export default function AdminRegistrationsTable() {
   const [registrations, setRegistrations] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
   const rowsPerPage = 10;
 
   // Fetch registrations
@@ -16,6 +18,7 @@ export default function AdminRegistrationsTable() {
       try {
         const res = await api.get(`/api/tournamentRegister`);
         setRegistrations(res.data.data || []);
+        setFiltered(res.data.data || []);
       } catch (err) {
         console.error(err);
         toast.error("Failed to fetch registrations");
@@ -25,6 +28,23 @@ export default function AdminRegistrationsTable() {
     }
     fetchRegistrations();
   }, []);
+
+  // Search filter
+  useEffect(() => {
+    const filteredData = registrations.filter((r) => {
+      const username = r.user?.username?.toLowerCase() || "";
+      const email = r.user?.email?.toLowerCase() || "";
+      const tournament = r.tournament?.name?.toLowerCase() || "";
+      const query = search.toLowerCase();
+      return (
+        username.includes(query) ||
+        email.includes(query) ||
+        tournament.includes(query)
+      );
+    });
+    setFiltered(filteredData);
+    setCurrentPage(1); // reset to first page on search
+  }, [search, registrations]);
 
   // Approve/Reject handler
   const handleStatusUpdate = async (id, status) => {
@@ -61,13 +81,30 @@ export default function AdminRegistrationsTable() {
   // Pagination logic
   const indexOfLast = currentPage * rowsPerPage;
   const indexOfFirst = indexOfLast - rowsPerPage;
-  const currentRows = registrations.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(registrations.length / rowsPerPage);
+  const currentRows = filtered.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div className="p-6 max-w-full ">
+    <div className="max-w-full">
+      <div className="flex items-center justify-between flex-wrap">
+        <h1 class="text-2xl font-bold text-[var(--accent-color)] md:mb-0 mb-4">
+          Players Registration
+        </h1>
+
+        {/* Search input */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search by user, email, or tournament"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="p-2 rounded border border-[var(--border-color)] bg-[var(--card-background)] text-white w-full sm:w-64"
+          />
+        </div>
+      </div>
+
       <div className="scrollbar-x overflow-x-auto">
         <table className="min-w-full border border-[var(--border-color)] rounded-lg overflow-hidden">
           <thead className="bg-[var(--secondary-color)] text-[var(--foreground)]">
@@ -102,7 +139,6 @@ export default function AdminRegistrationsTable() {
                     ?.map((g) => g.name)
                     .join(", ")}
                 </td>
-
                 <td className="py-2 px-4">
                   {(r.gameRegistrationDetails?.games?.[0]?._id &&
                     r.tournament?.games?.find(
@@ -144,7 +180,6 @@ export default function AdminRegistrationsTable() {
                   {r.gameRegistrationDetails?.paymentDetails?.bankId
                     ?.bankName || "-"}
                 </td>
-
                 <td className="py-2 px-4">
                   {r.gameRegistrationDetails?.paymentDetails?.accountName ||
                     "-"}
