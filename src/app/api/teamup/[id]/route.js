@@ -10,7 +10,6 @@ export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth();
   const { id } = context.params;
   const { fields } = await parseForm(req);
-  console.log("is:", id);
   const status = fields.status?.toString();
 
   if (!["accepted", "rejected"].includes(status)) {
@@ -18,22 +17,15 @@ export const PATCH = asyncHandler(async (req, context) => {
   }
 
   const request = await TeamUp.findById(id)
-    .populate("from", "name email")
-    .populate("to", "name email");
+    .populate("from", "firstname lastname email")
+    .populate("to", "firstname lastname email");
 
   if (!request) {
     throw new ApiResponse(404, null, "Team-up request not found");
   }
+;
 
-  console.log(
-    "request.to.toString() !== user._id.toString():",
-    request.to.toString() !== user._id.toString(),
-    request.to.toString(),
-    user._id.toString()
-  );
-
-  // Only receiver can update status
-  if (request.to.toString() !== user._id.toString()) {
+  if (request.to?._id.toString() !== user._id.toString()) {
     throw new ApiResponse(403, null, "Not authorized to update this request");
   }
 
@@ -42,9 +34,7 @@ export const PATCH = asyncHandler(async (req, context) => {
 
   let team = null;
 
-  // ✅ If accepted, create a team
   if (status === "accepted") {
-    // get registration details of sender (from user)
     const fromReg = await Registration.findOne({ user: request.from });
     const toReg = await Registration.findOne({ user: request.to });
 
@@ -56,14 +46,13 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
-    // Check same tournament + game
     const commonTournament =
       fromReg.tournament?.toString() === toReg.tournament?.toString()
         ? fromReg.tournament
         : null;
 
-    const fromGames = fromReg.gameRegistrationDetails.flatMap((d) => d.games);
-    const toGames = toReg.gameRegistrationDetails.flatMap((d) => d.games);
+    const fromGames = fromReg.gameRegistrationDetails?.games.flatMap((d) => d);
+    const toGames = toReg.gameRegistrationDetails?.games.flatMap((d) => d);
 
     const commonGame = fromGames.find((g) =>
       toGames.map((x) => x.toString()).includes(g.toString())
@@ -79,7 +68,7 @@ export const PATCH = asyncHandler(async (req, context) => {
 
     // ✅ Create Team
     team = await Team.create({
-      name: `${request.from.name}-${request.to.name} Team`,
+      name: `${request.from.firstname}-${request.to.firstname} Team`,
       createdBy: request.from._id,
       tournament: commonTournament,
       game: commonGame,

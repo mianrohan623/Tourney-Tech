@@ -35,7 +35,6 @@ export const GET = asyncHandler(async () => {
       (Array.isArray(d.games) ? d.games : [d.games]).map((g) => g._id || g)
     );
 
-    console.log("tournamentId:", tournamentId, "gameIds:", gameIds);
 
     const matchingRegistrations = await Registration.find({
       tournament: tournamentId,
