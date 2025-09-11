@@ -4,7 +4,7 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAdmin } from "@/utils/server/roleGuards";
 import "@/models/Game";
 
-export const GET = asyncHandler(async (req, context) => {
+export const GET = asyncHandler(async () => {
   await requireAdmin();
 
   const fetchAllRegisterdUsersInTournament = await Registration.find()
