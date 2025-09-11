@@ -10,6 +10,7 @@ export const GET = asyncHandler(async () => {
 
   const currentUserRegistrations = await Registration.find({
     user: user?._id,
+    "gameRegistrationDetails.status": "approved",
   }).populate({
     path: "gameRegistrationDetails.games",
     model: "Game",
@@ -39,6 +40,7 @@ export const GET = asyncHandler(async () => {
     const matchingRegistrations = await Registration.find({
       tournament: tournamentId,
       "gameRegistrationDetails.games": { $in: gameIds },
+      "gameRegistrationDetails.status": "approved",
       user: { $ne: user._id },
     })
       .populate({
@@ -67,4 +69,3 @@ export const GET = asyncHandler(async () => {
     )
   );
 });
-

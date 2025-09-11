@@ -1,3 +1,5 @@
+import { Registration } from "@/models/Registration";
+import { Team } from "@/models/Team";
 import { TeamUp } from "@/models/TeamUp";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
@@ -8,20 +10,27 @@ export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth();
   const { id } = context.params;
   const { fields } = await parseForm(req);
-
+  console.log("is:", id);
   const status = fields.status?.toString();
 
   if (!["accepted", "rejected"].includes(status)) {
     throw new ApiResponse(400, null, "Invalid status value");
   }
 
-  const request = await TeamUp.findById(id);
-
-  console.log("request:", request)
+  const request = await TeamUp.findById(id)
+    .populate("from", "name email")
+    .populate("to", "name email");
 
   if (!request) {
     throw new ApiResponse(404, null, "Team-up request not found");
   }
+
+  console.log(
+    "request.to.toString() !== user._id.toString():",
+    request.to.toString() !== user._id.toString(),
+    request.to.toString(),
+    user._id.toString()
+  );
 
   // Only receiver can update status
   if (request.to.toString() !== user._id.toString()) {
@@ -31,8 +40,60 @@ export const PATCH = asyncHandler(async (req, context) => {
   request.status = status;
   await request.save();
 
+  let team = null;
+
+  // ✅ If accepted, create a team
+  if (status === "accepted") {
+    // get registration details of sender (from user)
+    const fromReg = await Registration.findOne({ user: request.from });
+    const toReg = await Registration.findOne({ user: request.to });
+
+    if (!fromReg || !toReg) {
+      throw new ApiResponse(
+        400,
+        null,
+        "Both users must be registered in a tournament"
+      );
+    }
+
+    // Check same tournament + game
+    const commonTournament =
+      fromReg.tournament?.toString() === toReg.tournament?.toString()
+        ? fromReg.tournament
+        : null;
+
+    const fromGames = fromReg.gameRegistrationDetails.flatMap((d) => d.games);
+    const toGames = toReg.gameRegistrationDetails.flatMap((d) => d.games);
+
+    const commonGame = fromGames.find((g) =>
+      toGames.map((x) => x.toString()).includes(g.toString())
+    );
+
+    if (!commonTournament || !commonGame) {
+      throw new ApiResponse(
+        400,
+        null,
+        "Users must have same tournament and same game to form a team"
+      );
+    }
+
+    // ✅ Create Team
+    team = await Team.create({
+      name: `${request.from.name}-${request.to.name} Team`,
+      createdBy: request.from._id,
+      tournament: commonTournament,
+      game: commonGame,
+    });
+  }
+
   return Response.json(
-    new ApiResponse(200, request, "Team-up request updated")
+    new ApiResponse(
+      200,
+      { request, team },
+      status === "accepted"
+        ? "Team-up request accepted and team created"
+        : "Team-up request updated"
+    )
   );
 });
 
