@@ -1,4 +1,5 @@
-import { Registration, GameRegistrationSchema } from "@/models/Registration.js";
+// import { Registration, GameRegistrationSchema } from "@/models/Registration.js";
+import { Registration } from "@/models/Registration.js";
 import { Tournament } from "@/models/Tournament.js";
 // import { Team } from "@/models/Team.js";
 import { ApiError } from "@/utils/server/ApiError";
