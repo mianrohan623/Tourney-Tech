@@ -40,7 +40,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   );
 });
 
-export const DELETE = asyncHandler(async (req, context) => {
+export const DELETE = asyncHandler(async (_, context) => {
   await requireAdmin();
 
   const { id } = context.params;

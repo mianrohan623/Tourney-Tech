@@ -28,7 +28,7 @@ export const POST = asyncHandler(async (req) => {
   );
 });
 
-export const GET = asyncHandler(async (req) => {
+export const GET = asyncHandler(async () => {
   const bankDetails = await BankDetails.find().sort({ createdAt: -1 }).lean();
 
   return Response.json(

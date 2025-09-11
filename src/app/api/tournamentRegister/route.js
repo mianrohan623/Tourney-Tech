@@ -7,8 +7,8 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
 import { requireAuth } from "@/utils/server/auth";
 import mongoose from "mongoose";
-import { BankDetails } from "@/models/BankDetails";
-import { Game } from "@/models/Game";
+import "@/models/BankDetails";
+import "@/models/Game";
 
 export const POST = asyncHandler(async (req) => {
   const { fields } = await parseForm(req);

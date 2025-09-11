@@ -7,16 +7,14 @@ import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 import { Tournament } from "@/models/Tournament";
 import "@/models/Game";
 
-// Disable body parsing for file uploads
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// ✅ POST /api/tournaments → Create a new tournament
 export const POST = asyncHandler(async (req) => {
-  const user = await requireAdmin(); // global admin or manager
+  const user = await requireAdmin(); 
 
   const { fields, files } = await parseForm(req);
 
@@ -32,7 +30,6 @@ export const POST = asyncHandler(async (req) => {
   const status = fields.status?.toString() || "upcoming";
 
 
-  // Optional: JSON array of users to assign as organizers/managers/support
   const organizers = JSON.parse(fields.organizers || "[]");
   const managers = JSON.parse(fields.managers || "[]");
   const support = JSON.parse(fields.support || "[]");
@@ -94,11 +91,10 @@ export const POST = asyncHandler(async (req) => {
   );
 });
 
-// ✅ GET /api/tournaments → Fetch all tournaments
 export const GET = asyncHandler(async () => {
   const tournaments = await Tournament.find()
-    .populate("games.game", "name icon") // populate basic game info
-    .populate("staff.user", "username email") // populate staff users
+    .populate("games.game", "name icon") 
+    .populate("staff.user", "username email")
     .sort({ createdAt: -1 })
     .lean();
 
