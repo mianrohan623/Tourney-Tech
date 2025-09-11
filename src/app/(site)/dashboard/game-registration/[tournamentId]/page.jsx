@@ -45,7 +45,7 @@ export default function GameRegistrationPage() {
         const tournamentGamesData = registrationData?.games || [];
         setTournamentGames(
           tournamentGamesData.map((g) => ({
-            _id: g.game, // match with gameRegistrationDetails._id
+            _id: g.game?._id, // ✅ use the game ID string
             entryFee: g.entryFee,
             format: g.format,
             teamBased: g.teamBased,
@@ -79,22 +79,24 @@ export default function GameRegistrationPage() {
     try {
       setLoading(true);
 
-      const form = new FormData();
-      form.append("tournamentId", tournamentId);
-      form.append("gameIds", formData.game);
-      form.append("paymentMethod", formData.paymentType);
+      const payload = {
+        tournamentId,
+        gameIds: formData.game,
+        paymentMethod: formData.paymentType,
+      };
 
       if (formData.paymentType === "online") {
-        const paymentDetails = {
+        payload.paymentDetails = {
           bankId: formData.bankAccount,
           accountName: formData.accountName,
           transactionId: formData.transactionId,
         };
-        form.append("paymentDetails", JSON.stringify(paymentDetails));
       }
 
-      const res = await api.post("/api/tournamentRegister", form, {
-        headers: { "Content-Type": "multipart/form-data" },
+      console.log("Payload:", payload); // <-- check what is being sent
+
+      const res = await api.post("/api/tournamentRegister", payload, {
+        headers: { "Content-Type": "application/json" },
       });
 
       toast.success("Registration successful!");
@@ -261,7 +263,7 @@ export default function GameRegistrationPage() {
                 }}
               >
                 <p>
-                  <strong>Admin Account Name:</strong>{" "}
+                  <strong>Account Name:</strong>{" "}
                   {selectedBank.accountHolder}
                 </p>
                 <p>
