@@ -14,8 +14,15 @@ const userNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/profile", label: "Profile", icon: Users },
   { href: "/dashboard/matches-overview", label: "Matches", icon: Users },
-  { href: "/dashboard/notifications", label: "Notifications", icon: BellDot },
   { href: "/dashboard/teamup", label: "Team Up", icon: Users },
+   {
+      label: "Notifications",
+      icon: BellDot,
+      children: [
+        { href: "/dashboard/received-requests", label: "Received Request" },
+        { href: "/dashboard/send-requests", label: "Send Request" }
+      ],
+    },
   { href: "/logOut", label: "Logout", icon: LogOut },
 ];
 
