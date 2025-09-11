@@ -30,7 +30,8 @@ const adminNavItems = [
     icon: BadgePlus,
   },
   { href: "/admin/add-bank-details", label: "Add Bank Details", icon: Banknote },
-  { href: "/admin/resgistration-requests", label: "Registration Requests", icon: Users },
+  { href: "/admin/registration-requests", label: "Registration Requests", icon: Users },
+  { href: "/admin/all-registered-players", label: "All Registered Players", icon: Users },
   { href: "/admin/create-team", label: "Create Team", icon: PlusCircle },
   {
     label: "Settings",
