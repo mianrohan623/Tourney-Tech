@@ -23,8 +23,6 @@ export const PATCH = asyncHandler(async (req, context) => {
   if (!request) {
     throw new ApiResponse(404, null, "Team-up request not found");
   }
-;
-
   if (request.to?._id.toString() !== user._id.toString()) {
     throw new ApiResponse(403, null, "Not authorized to update this request");
   }
@@ -72,6 +70,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       createdBy: request.from._id,
       tournament: commonTournament,
       game: commonGame,
+      members: [request.from?._id, request.to?._id],
     });
   }
 
