@@ -29,6 +29,7 @@ const adminNavItems = [
     icon: BadgePlus,
   },
   { href: "/admin/add-bank-details", label: "Add Bank Details", icon: Banknote },
+  { href: "/admin/resgistration-requests", label: "Registration Requests", icon: Users },
   {
     label: "Settings",
     icon: Settings,
