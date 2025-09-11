@@ -3,8 +3,8 @@ import { parseForm } from "@/utils/server/parseForm";
 import { requireAdmin } from "@/utils/server/roleGuards";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { Team } from "@/models/Team";
-import { TeamUp } from "@/models/TeamUp";
-import { User } from "@/models/User"; // agar members check karna ho
+// import { TeamUp } from "@/models/TeamUp";
+// import { User } from "@/models/User"; // agar members check karna ho
 import mongoose from "mongoose";
 
 export const POST = asyncHandler(async (req) => {

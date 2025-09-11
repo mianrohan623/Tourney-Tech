@@ -8,9 +8,13 @@ export default function SentRequests() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
 
- 
+  // Function to fetch user and requests
   const fetchRequests = async () => {
     try {
+      const resUser = await api.get("/api/me");
+      const id = resUser.data?.data?.user?._id;
+      setUserId(id);
+
       const res = await api.get("/api/teamup");
       setRequests(res.data?.data || []);
     } catch (err) {
@@ -21,21 +25,17 @@ export default function SentRequests() {
     }
   };
 
+  // Initial fetch + polling every 5 seconds
   useEffect(() => {
-    const load = async () => {
-      await fetchCurrentUser();
-    };
-    load();
+    fetchRequests(); // initial load
+    const interval = setInterval(fetchRequests, 5000); // fetch every 5s
+    return () => clearInterval(interval); // cleanup on unmount
   }, []);
-
-  useEffect(() => {
-    if (!userId) return;
-    fetchRequests();
-  }, [userId]);
 
   if (loading) return <p className="p-6 text-center">Loading requests...</p>;
 
-  const sentRequests = requests.filter((r) => r.from?._id?.toString() === userId);
+  // Filter only requests sent by current user
+  const sentRequests = requests.filter((r) => r.from?._id === userId);
 
   return (
     <div className="min-h-screen p-6" style={{ background: "var(--background)", color: "var(--foreground)" }}>
@@ -52,6 +52,11 @@ export default function SentRequests() {
               <h3 className="font-semibold text-lg mb-2">
                 {req.to?.firstname} {req.to?.lastname} ({req.to?.email})
               </h3>
+              <p className="text-sm">
+                {req.status === "accepted"
+                  ? "You are now team members"
+                  : "wants to team up with you"}
+              </p>
               <p className="text-sm">
                 Status: <span className="font-semibold capitalize">{req.status || "pending"}</span>
               </p>

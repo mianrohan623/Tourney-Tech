@@ -89,7 +89,7 @@ export default function AdminRegistrationsTable() {
   return (
     <div className="max-w-full">
       <div className="flex items-center justify-between flex-wrap">
-        <h1 class="text-2xl font-bold text-[var(--accent-color)] md:mb-0 mb-4">
+        <h1 className="text-2xl font-bold text-[var(--accent-color)] md:mb-0 mb-4">
           Players Registration
         </h1>
 

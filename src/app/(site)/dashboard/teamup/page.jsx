@@ -8,59 +8,71 @@ export default function TeamUp() {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch matched users from your API
+  // ✅ Fetch matched users from API
+  const fetchPlayers = async () => {
+    try {
+      const res = await api.get("/api/tournaments/similar-players");
+      const matchedUsers = res.data?.data?.matchedUsers || [];
+
+      const formatted = matchedUsers.map((u) => ({
+        id: u._id,
+        firstname: u.firstname || "",
+        lastname: u.lastname || "",
+        username: u.username || "",
+        city: u.city || "Unknown",
+        country: u.country || "Unknown",
+        gender: u.gender || "Not specified",
+        email: u.email || "",
+        phone: u.phone || "",
+        role: u.role || "",
+        status: u.status || "",
+        requested: false, // keep track of requests
+      }));
+
+      setPlayers(formatted);
+    } catch (err) {
+      console.error("❌ Failed to fetch players:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Initial fetch + polling every 5s to get new users
   useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        console.log("🔎 Fetching similar players...");
-        const res = await api.get("/api/tournaments/similar-players");
-
-        console.log("✅ API Response:", res.data);
-
-        const matchedUsers = res.data?.data?.matchedUsers || [];
-
-        // ✅ Use correct keys (firstname / lastname)
-        const formatted = matchedUsers.map((u) => ({
-          id: u._id,
-          firstname: u.firstname || "",
-          lastname: u.lastname || "",
-          username: u.username || "",
-          city: u.city || "Unknown",
-          country: u.country || "Unknown",
-          gender: u.gender || "Not specified",
-          email: u.email || "",
-          phone: u.phone || "",
-          role: u.role || "",
-          status: u.status || "",
-          requested: false,
-        }));
-
-        setPlayers(formatted);
-      } catch (err) {
-        console.error("❌ Failed to fetch players:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPlayers();
+    const interval = setInterval(fetchPlayers, 5000); // poll every 5s
+    return () => clearInterval(interval); // cleanup on unmount
   }, []);
 
   // ✅ Send request to backend
   const handleRequest = async (id) => {
     try {
-      await api.post("/api/teamup", { to: id }); // your API expects { to }
+      await api.post("/api/teamup", { to: id });
+
       setPlayers((prev) =>
         prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
       );
+
       toast.success("Team-up request sent!");
     } catch (err) {
       console.error("❌ Failed to send request:", err);
-      toast.error(err.response?.data?.message || "Failed to send request");
+
+      // Handle duplicate request error (E11000)
+      const isDuplicate = err.response?.data?.message?.includes("E11000");
+      if (isDuplicate) {
+        toast.error("You already sent a request to this player");
+
+        // Mark as requested locally so UI updates
+        setPlayers((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
+        );
+      } else {
+        toast.error(err.response?.data?.message || "Failed to send request");
+      }
     }
   };
 
-  // ✅ Cancel request (optional, backend support needed if you want real cancel)
+  // ✅ Cancel request locally
   const handleCancel = (id) => {
     setPlayers((prev) =>
       prev.map((p) => (p.id === id ? { ...p, requested: false } : p))
@@ -116,26 +128,20 @@ export default function TeamUp() {
                   {player.firstname} {player.lastname}
                 </h2>
                 <p className="text-sm">
-                  <span className="font-semibold">Username:</span>{" "}
-                  {player.username}
+                  <span className="font-semibold">Username:</span> {player.username}
                 </p>
                 <p className="text-sm">
-                  <span className="font-semibold">Location:</span>{" "}
-                  {player.city}, {player.country}
+                  <span className="font-semibold">Location:</span> {player.city}, {player.country}
                 </p>
                 <p className="text-sm">
-                  <span className="font-semibold">Gender:</span>{" "}
-                  {player.gender}
+                  <span className="font-semibold">Gender:</span> {player.gender}
                 </p>
 
                 {!player.requested ? (
                   <button
                     type="button"
                     className="mt-4 w-full font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200"
-                    style={{
-                      background: "var(--accent-color)",
-                      color: "black",
-                    }}
+                    style={{ background: "var(--accent-color)", color: "black" }}
                     onClick={() => handleRequest(player.id)}
                   >
                     Send Request
@@ -145,20 +151,14 @@ export default function TeamUp() {
                     <button
                       type="button"
                       className="flex-1 font-semibold py-2 px-4 rounded-lg shadow-md cursor-default"
-                      style={{
-                        background: "var(--success-color)",
-                        color: "white",
-                      }}
+                      style={{ background: "var(--success-color)", color: "white" }}
                     >
                       Requested
                     </button>
                     <button
                       type="button"
                       className="px-4 py-2 rounded-lg shadow-md font-semibold transition duration-200"
-                      style={{
-                        background: "var(--error-color)",
-                        color: "white",
-                      }}
+                      style={{ background: "var(--error-color)", color: "white" }}
                       onClick={() => handleCancel(player.id)}
                     >
                       Cancel
