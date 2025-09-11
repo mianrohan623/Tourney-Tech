@@ -37,7 +37,7 @@ export default function TournamentsPage() {
   };
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-[var(--accent-color)]">
