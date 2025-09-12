@@ -60,3 +60,16 @@ export const POST = asyncHandler(async (req) => {
 
   return Response.json(new ApiResponse(201, team, "Team created successfully"));
 });
+
+export const GET = asyncHandler(async () => {
+  await requireAdmin();
+  const teams = await Team.find()
+    .populate("game")
+    .populate("tournament")
+    .populate("createdBy", "firstname lastname username email")
+    .populate("members", "firstname lastname username email")
+    .lean();
+  return Response.json(
+    new ApiResponse(200, teams, "Teams fetched successfully")
+  );
+});

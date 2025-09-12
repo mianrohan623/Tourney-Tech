@@ -16,7 +16,7 @@ export default function ReceivedRequests() {
       setUserId(id);
 
       const resRequests = await api.get("/api/teamup");
-      setRequests(resRequests.data?.data || []);
+      setRequests(resRequests.data?.data?.requests || []);
     } catch (err) {
       console.error("Error fetching data:", err);
       toast.error("Failed to load requests");

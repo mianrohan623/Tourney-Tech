@@ -7,6 +7,7 @@ import "@/models/Game";
 import { parseForm } from "@/utils/server/parseForm";
 import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
+import { Team } from "@/models/Team";
 
 export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);
@@ -34,14 +35,37 @@ export const POST = asyncHandler(async (req) => {
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
 
+  // get requests (pending + accepted)
   const requests = await TeamUp.find({
     $or: [{ from: user._id }, { to: user._id }],
-    status: { $in: ["pending", "accepted"] }, // ✅ filter added
+    status: { $in: ["pending", "accepted"] },
   })
-    .populate("from", "firstname lastname email")
-    .populate("to", "firstname lastname email");
+    .populate("from", "firstname lastname username email")
+    .populate("to", "firstname lastname username email")
+    .lean();
+
+  // get teams only for accepted requests
+  const acceptedUserIds = requests
+    .filter((r) => r.status === "accepted")
+    .flatMap((r) => [r.from._id.toString(), r.to._id.toString()]);
+
+  let teams = [];
+  if (acceptedUserIds.length > 0) {
+    teams = await Team.find({
+      members: { $in: acceptedUserIds },
+    })
+      .populate("game")
+      .populate("tournament")
+      .populate("createdBy", "firstname lastname username email")
+      .populate("members", "firstname lastname username email")
+      .lean();
+  }
 
   return Response.json(
-    new ApiResponse(200, requests, "Fetched team-up requests")
+    new ApiResponse(
+      200,
+      { requests, teams },
+      "Fetched team-up requests & teams"
+    )
   );
 });
