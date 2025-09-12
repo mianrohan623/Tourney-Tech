@@ -63,7 +63,7 @@ export const POST = asyncHandler(async (req) => {
   const team = await Team.create({
     name: teamName,
     logo: logo || null,
-    tournament,
+    tournament, 
     game,
     createdBy: memberIds[0],
     members: memberIds,

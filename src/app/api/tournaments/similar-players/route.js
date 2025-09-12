@@ -1,5 +1,6 @@
 import { Registration } from "@/models/Registration";
 import { TeamUp } from "@/models/TeamUp";
+import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
@@ -8,13 +9,20 @@ import "@/models/Game";
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
 
+  // ✅ Current user ki registrations laao
   const currentUserRegistrations = await Registration.find({
     user: user?._id,
     "gameRegistrationDetails.status": "approved",
-  }).populate({
-    path: "gameRegistrationDetails.games",
-    model: "Game",
-  });
+  })
+    .populate({
+      path: "tournament",
+      model: "Tournament",
+      select: "games", // only games needed
+    })
+    .populate({
+      path: "gameRegistrationDetails.games",
+      model: "Game",
+    });
 
   if (!currentUserRegistrations || currentUserRegistrations.length === 0) {
     return Response.json(
@@ -25,7 +33,17 @@ export const GET = asyncHandler(async () => {
   let allMatchedUsers = [];
 
   for (const reg of currentUserRegistrations) {
-    const tournamentId = reg.tournament;
+    // ✅ Tournament me check karo ke iske games me koi "double_player" type hai ya nahi
+    const tournament = reg.tournament;
+    if (
+      !tournament ||
+      !Array.isArray(tournament.games) ||
+      !tournament.games.some((g) => g.tournamentTeamType === "double_player")
+    ) {
+      continue; // agar double_player game nahi hai to skip
+    }
+
+    const tournamentId = reg.tournament._id;
 
     const gameDetailsArray = Array.isArray(reg.gameRegistrationDetails)
       ? reg.gameRegistrationDetails
@@ -65,7 +83,7 @@ export const GET = asyncHandler(async () => {
     status: "pending",
   }).select("to");
 
-  // ✅ Accepted requests nikaalo (from ya to dono check karne honge)
+  // ✅ Accepted requests nikaalo
   const acceptedRequests = await TeamUp.find({
     $or: [{ from: user._id }, { to: user._id }],
     status: "accepted",
@@ -92,7 +110,7 @@ export const GET = asyncHandler(async () => {
     new ApiResponse(
       200,
       { currentUser: user, matchedUsers: matchedUsersWithFlags },
-      "Fetched users with same tournament and same games"
+      "Fetched users with same tournament and same games (only double_player tournaments)"
     )
   );
 });

@@ -47,8 +47,7 @@ export const POST = asyncHandler(async (req) => {
       !game.game ||
       !game.format ||
       typeof game.teamBased !== "boolean" ||
-      !game.minPlayers ||
-      !game.maxPlayers
+      !game.tournamentTeamType 
     ) {
       throw new ApiError(400, "Invalid game configuration");
     }
