@@ -17,8 +17,8 @@ export const PATCH = asyncHandler(async (req, context) => {
   }
 
   const request = await TeamUp.findById(id)
-    .populate("from", "firstname lastname email")
-    .populate("to", "firstname lastname email");
+    .populate("from", "firstname lastname username email")
+    .populate("to", "firstname lastname username email");
 
   if (!request) {
     throw new ApiResponse(404, null, "Team-up request not found");
@@ -87,7 +87,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       }
     } else {
       team = await Team.create({
-        name: `${request.from.firstname}-${request.to.firstname} Team`,
+        name: `${request.from.username}-${request.to.username} Team`,
         createdBy: request.from._id,
         tournament: commonTournament,
         game: commonGame,

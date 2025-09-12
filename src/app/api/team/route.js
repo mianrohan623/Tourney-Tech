@@ -11,9 +11,9 @@ export const POST = asyncHandler(async (req) => {
   await requireAdmin();
   const { fields } = await parseForm(req);
 
-  const { name, logo, tournament, game, members } = fields;
+  const {  logo, tournament, game, members } = fields;
 
-  if (!name || !tournament || !game || !members) {
+  if ( !tournament || !game || !members) {
     throw new ApiResponse(
       400,
       null,
