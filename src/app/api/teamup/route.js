@@ -31,18 +31,15 @@ export const POST = asyncHandler(async (req) => {
   );
 });
 
-/**
- * @desc Get all my team-up requests
- * @route GET /api/teamup
- */
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
 
   const requests = await TeamUp.find({
     $or: [{ from: user._id }, { to: user._id }],
+    status: { $in: ["pending", "accepted"] }, // ✅ filter added
   })
-    .populate("from", "name email")
-    .populate("to", "name email");
+    .populate("from", "firstname lastname email")
+    .populate("to", "firstname lastname email");
 
   return Response.json(
     new ApiResponse(200, requests, "Fetched team-up requests")
