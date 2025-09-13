@@ -7,7 +7,7 @@ import { parseForm } from "@/utils/server/parseForm";
 // import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
 import { Team } from "@/models/Team";
-import { User } from "@/models/User";
+// import { User } from "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);

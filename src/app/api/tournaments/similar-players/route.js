@@ -1,6 +1,6 @@
 import { Registration } from "@/models/Registration";
 import { TeamUp } from "@/models/TeamUp";
-import { Tournament } from "@/models/Tournament";
+// import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
