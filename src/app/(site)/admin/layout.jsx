@@ -33,11 +33,11 @@ const adminNavItems = [
   { href: "/admin/registration-requests", label: "Registration Requests", icon: Users },
   { href: "/admin/all-registered-players", label: "All Registered Players", icon: Users },
   { href: "/admin/create-team", label: "Create Team", icon: PlusCircle },
-  {
-    label: "Settings",
-    icon: Settings,
-    children: [{ href: "/admin/settings/profile", label: "Profile Settings" }],
-  },
+  // {
+  //   label: "Settings",
+  //   icon: Settings,
+  //   children: [{ href: "/admin/settings/profile", label: "Profile Settings" }],
+  // },
   { href: "/logout", label: "Logout", icon: LogOut },
 ];
 

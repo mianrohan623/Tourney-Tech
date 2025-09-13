@@ -67,6 +67,10 @@ export default function ReceivedRequests() {
     }
   };
 
+  const formatDate = (isoString) => {
+    return new Date(isoString).toLocaleString(); // human readable
+  };
+
   if (loading) return <p className="p-6 text-center">Loading requests...</p>;
 
   // Filter only requests received by current user
@@ -90,13 +94,13 @@ export default function ReceivedRequests() {
                 border: `1px solid var(--border-color)`,
               }}
             >
-              <h3 className="font-semibold text-lg mb-2">
+              <h3 className="font-semibold text-lg mb-2 capitalize">
                 {req.from?.firstname || req.from?.name}{" "}
-                {req.from?.lastname || ""} 
+                {req.from?.lastname || ""}
               </h3>
-              <p className="text-sm">
+              <p className="text-sm mb-1">
                 <strong>User Name: </strong>
-                {req.to?.username}
+                {req.from?.username}
               </p>
               {/* Show message only if pending */}
               {req.status === "pending" && (
@@ -105,8 +109,9 @@ export default function ReceivedRequests() {
                 </p>
               )}
 
-              <p className="text-sm font-semibold capitalize mb-2">
-                Status: {req.status}
+              <p className="text-sm  capitalize mb-1">
+               <span className="font-semibold">Status: </span>
+            {req.status}
               </p>
 
               {req.status === "pending" ? (
@@ -130,12 +135,15 @@ export default function ReceivedRequests() {
                   </button>
                 </div>
               ) : (
-                <p className="text-sm font-medium text-green-600">
+                <p className="text-sm font-medium mb-1 text-green-600">
                   {req.status === "accepted"
                     ? "You are now team members"
                     : "Request rejected"}
                 </p>
               )}
+              <p className="text-sm opacity-70">
+                <strong>Received:</strong> {formatDate(req.createdAt)}
+              </p>
             </div>
           ))}
         </div>

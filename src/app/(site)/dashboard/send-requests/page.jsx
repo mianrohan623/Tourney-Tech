@@ -66,7 +66,7 @@ export default function SentRequests() {
                 border: `1px solid var(--border-color)`,
               }}
             >
-              <h3 className="font-semibold text-lg mb-2">
+              <h3 className="font-semibold text-lg mb-2 capitalize">
                 {req.to?.firstname} {req.to?.lastname}
               </h3>
               <p className="text-sm">

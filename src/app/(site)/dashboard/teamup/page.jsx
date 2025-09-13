@@ -131,7 +131,7 @@ export default function TeamUp() {
                   <span className="font-semibold">Username:</span> {player.username}
                 </p>
                 <p className="text-sm">
-                  <span className="font-semibold">Location:</span> {player.city}, {player.country}
+                  <span className="font-semibold">Location:</span> {player.city}
                 </p>
                 <p className="text-sm">
                   <span className="font-semibold">Gender:</span> {player.gender}
