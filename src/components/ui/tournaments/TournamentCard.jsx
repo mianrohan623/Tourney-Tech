@@ -20,14 +20,14 @@ export default function TournamentCard({
 
   const getStatusColor = () => {
     switch (status) {
-      case "complete":
-        return "var(--error-color)";
-      case "ongoing":
+      case "completed":
         return "var(--success-color)";
-      case "upcoming":
+      case "ongoing":
         return "var(--info-color)";
-      default:
+      case "upcoming":
         return "var(--accent-color)";
+      // default:
+      //   return "var(--accent-color)";
     }
   };
 
@@ -57,17 +57,16 @@ export default function TournamentCard({
       <div className="flex-1 p-6 space-y-4">
         {/* Header */}
         <div className="flex justify-between items-start flex-wrap gap-2">
-            <h2 className="text-xl font-bold">{name}</h2>
-            <span
-              className="inline-block mt-1 px-3 py-1 text-xs rounded-full font-semibold"
-              style={{
-                backgroundColor: getStatusColor(),
-                color: "var(--background)",
-              }}
-            >
-              {status?.toUpperCase()}
-            </span>
-
+          <h2 className="text-xl font-bold">{name}</h2>
+          <span
+            className="inline-block mt-1 px-3 py-1 text-xs rounded-full font-semibold"
+            style={{
+              backgroundColor: getStatusColor(),
+              color: "var(--background)",
+            }}
+          >
+            {status?.toUpperCase()}
+          </span>
         </div>
 
         {/* Description */}
@@ -99,9 +98,7 @@ export default function TournamentCard({
           {status === "upcoming" ? (
             // ✅ Show Register Now only for upcoming
             <Link
-              href={{
-                pathname: `/dashboard/game-registration/${_id}`,
-              }}
+              href={`/dashboard/game-registration/${_id}`}
               className="flex-1"
             >
               <button
@@ -117,18 +114,32 @@ export default function TournamentCard({
                 Register Now
               </button>
             </Link>
-          ) : (
-            // ✅ Otherwise show View Tournament
+          ) : status === "ongoing" ? (
+            // ✅ Show Play Tournament for ongoing
+            // <Link href={`/dashboard/play/${_id}`} className="flex-1">
               <button
                 onClick={() => onSelect(_id)}
-                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01] hover:bg[]"
                 style={{
-                  backgroundColor: "var(--accent-color)",
-                  color: "var(--background)",
+                  backgroundColor: "var(--info-color)",
+                  color: "white",
                 }}
               >
-                View Tournament
+                Play Tournament
               </button>
+            // </Link>
+          ) : (
+            // ✅ Default: View Tournament
+            <button
+              onClick={() => onSelect(_id)}
+              className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+              style={{
+                backgroundColor: "var(--success-color)",
+                color: "white",
+              }}
+            >
+              View ScoreBoard
+            </button>
           )}
         </div>
       </div>

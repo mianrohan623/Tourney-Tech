@@ -37,14 +37,14 @@ export default function TournamentsPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-[var(--accent-color)]">
             Tournaments
           </h1>
           <button
-            className="bg-[var(--accent-color)] hover:opacity-90 text-white px-4 py-2 rounded"
+            className="bg-[var(--accent-color)] hover:opacity-90 text-[var(--background)] px-4 py-2 rounded"
             onClick={() => {
               setEditTournament(null);
               setShowForm((prev) => !prev);
