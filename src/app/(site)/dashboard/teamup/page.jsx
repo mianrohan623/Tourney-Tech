@@ -45,32 +45,39 @@ export default function TeamUp() {
   }, []);
 
   // ✅ Send request to backend
-  const handleRequest = async (id) => {
-    try {
-      await api.post("/api/teamup", { to: id });
+ 
+const handleRequest = async (id) => {
+  try {
+    const formData = new FormData();
+    formData.append("tournament", "TOURNAMENT_ID"); // ✅ Replace with actual tournamentId
+    formData.append("game", "GAME_ID");             // ✅ Replace with actual gameId
+    formData.append("members", id);                 // selected player
+    formData.append("members", "MY_USER_ID");       // logged-in user
 
+    await api.post("/api/teamup", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    setPlayers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
+    );
+
+    toast.success("Team-up request sent!");
+  } catch (err) {
+    console.error("❌ Failed to send request:", err);
+
+    const isDuplicate = err.response?.data?.message?.includes("E11000");
+    if (isDuplicate) {
+      toast.error("You already sent a request to this player");
       setPlayers((prev) =>
         prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
       );
-
-      toast.success("Team-up request sent!");
-    } catch (err) {
-      console.error("❌ Failed to send request:", err);
-
-      // Handle duplicate request error (E11000)
-      const isDuplicate = err.response?.data?.message?.includes("E11000");
-      if (isDuplicate) {
-        toast.error("You already sent a request to this player");
-
-        // Mark as requested locally so UI updates
-        setPlayers((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
-        );
-      } else {
-        toast.error(err.response?.data?.message || "Failed to send request");
-      }
+    } else {
+      toast.error(err.response?.data?.message || "Failed to send request");
     }
-  };
+  }
+};
+
 
   // ✅ Cancel request locally
   const handleCancel = (id) => {
