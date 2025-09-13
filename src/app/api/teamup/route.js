@@ -10,68 +10,26 @@ import { Team } from "@/models/Team";
 import { User } from "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
-  await requireAdmin();
+  const user = await requireAuth(req);
   const { fields } = await parseForm(req);
 
-  const { logo, tournament, game, members } = fields;
+  const to = fields.to?.toString();
+  const message = fields.message?.toString();
+  if (!to) throw new ApiError(400, null, "Receiver user ID (to) is required");
 
-  if (!tournament || !game || !members) {
-    throw new ApiResponse(
-      400,
-      null,
-      "Tournament, game and members are required"
-    );
-  }
+  if (to.toString() === user._id.toString())
+    throw new ApiError(400, null, "Cannot send team-up request to yourself");
 
-  const memberIds = Array.isArray(members) ? members : [members];
-
-  if (memberIds.length !== 2) {
-    throw new ApiResponse(
-      400,
-      null,
-      "Exactly 2 members are required to create a team"
-    );
-  }
-
-  if (!memberIds.every((id) => mongoose.Types.ObjectId.isValid(id))) {
-    throw new ApiResponse(400, null, "Invalid member IDs");
-  }
-
-  // check if members are already in a team
-  const existingTeam = await Team.findOne({
-    tournament,
-    game,
-    members: { $in: memberIds },
+  const request = await TeamUp.create({
+    from: user._id,
+    to,
+    message,
   });
 
-  if (existingTeam) {
-    throw new ApiResponse(
-      400,
-      null,
-      "One or both users are already in a team for this tournament and game"
-    );
-  }
-
-  const users = await User.find({ _id: { $in: memberIds } }).select("username");
-
-  if (users.length !== 2) {
-    throw new ApiResponse(400, null, "Both users must exist");
-  }
-
-  const teamName = `${users[0].username}_${users[1].username}`;
-
-  const team = await Team.create({
-    name: teamName,
-    logo: logo || null,
-    tournament, 
-    game,
-    createdBy: memberIds[0],
-    members: memberIds,
-  });
-
-  return Response.json(new ApiResponse(201, team, "Team created successfully"));
+  return Response.json(
+    new ApiResponse(201, request, "Team-up request sent successfully")
+  );
 });
-
 
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
