@@ -16,7 +16,7 @@ export default function ReceivedRequests() {
       setUserId(id);
 
       const resRequests = await api.get("/api/teamup");
-      setRequests(resRequests.data?.data || []);
+      setRequests(resRequests.data?.data?.requests || []);
     } catch (err) {
       console.error("Error fetching data:", err);
       toast.error("Failed to load requests");
@@ -37,26 +37,38 @@ export default function ReceivedRequests() {
     try {
       await api.patch(`/api/teamup/${id}`, { status });
 
-      toast.success(status === "accepted" ? "Request accepted!" : "Request rejected");
+      toast.success(
+        status === "accepted" ? "Request accepted!" : "Request rejected"
+      );
 
       // Update request status locally immediately
-      setRequests(prev =>
-        prev.map(req => (req._id === id ? { ...req, status } : req))
+      setRequests((prev) =>
+        prev.map((req) => (req._id === id ? { ...req, status } : req))
       );
     } catch (err) {
       console.error(`❌ Failed to ${status}:`, err.response?.data || err);
 
       // Only show message for duplicate key error
-      const isDuplicateKey = err.response?.data?.message?.includes("E11000 duplicate key");
+      const isDuplicateKey = err.response?.data?.message?.includes(
+        "E11000 duplicate key"
+      );
       if (isDuplicateKey && status === "accepted") {
         toast.error("You are already team members");
-        setRequests(prev =>
-          prev.map(req => (req._id === id ? { ...req, status: "accepted" } : req))
+        setRequests((prev) =>
+          prev.map((req) =>
+            req._id === id ? { ...req, status: "accepted" } : req
+          )
         );
       } else {
-        toast.error(err.response?.data?.message || `Failed to ${status} request`);
+        toast.error(
+          err.response?.data?.message || `Failed to ${status} request`
+        );
       }
     }
+  };
+
+  const formatDate = (isoString) => {
+    return new Date(isoString).toLocaleString(); // human readable
   };
 
   if (loading) return <p className="p-6 text-center">Loading requests...</p>;
@@ -82,11 +94,14 @@ export default function ReceivedRequests() {
                 border: `1px solid var(--border-color)`,
               }}
             >
-              <h3 className="font-semibold text-lg mb-2">
+              <h3 className="font-semibold text-lg mb-2 capitalize">
                 {req.from?.firstname || req.from?.name}{" "}
-                {req.from?.lastname || ""} ({req.from?.email})
+                {req.from?.lastname || ""}
               </h3>
-
+              <p className="text-sm mb-1">
+                <strong>User Name: </strong>
+                {req.from?.username}
+              </p>
               {/* Show message only if pending */}
               {req.status === "pending" && (
                 <p className="text-sm mb-2">
@@ -94,15 +109,19 @@ export default function ReceivedRequests() {
                 </p>
               )}
 
-              <p className="text-sm font-semibold capitalize mb-2">
-                Status: {req.status}
+              <p className="text-sm  capitalize mb-1">
+               <span className="font-semibold">Status: </span>
+            {req.status}
               </p>
 
               {req.status === "pending" ? (
                 <div className="flex gap-2">
                   <button
                     className="flex-1 py-2 px-4 rounded-lg font-semibold cursor-pointer"
-                    style={{ background: "var(--success-color)", color: "white" }}
+                    style={{
+                      background: "var(--success-color)",
+                      color: "white",
+                    }}
                     onClick={() => updateRequest(req._id, "accepted")}
                   >
                     Accept
@@ -116,12 +135,15 @@ export default function ReceivedRequests() {
                   </button>
                 </div>
               ) : (
-                <p className="text-sm font-medium text-green-600">
+                <p className="text-sm font-medium mb-1 text-green-600">
                   {req.status === "accepted"
                     ? "You are now team members"
                     : "Request rejected"}
                 </p>
               )}
+              <p className="text-sm opacity-70">
+                <strong>Received:</strong> {formatDate(req.createdAt)}
+              </p>
             </div>
           ))}
         </div>

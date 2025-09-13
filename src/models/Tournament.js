@@ -9,8 +9,11 @@ const TournamentGameSchema = new Schema({
     required: true,
   },
   teamBased: { type: Boolean, default: true },
-  minPlayers: { type: Number, required: true },
-  maxPlayers: { type: Number, required: true },
+  tournamentTeamType: {
+    type: String,
+    enum: ["single_player", "double_player"],
+    required: true,
+  },
 });
 
 const TournamentStaffSchema = new Schema(

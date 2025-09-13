@@ -20,14 +20,14 @@ export default function TournamentCard({
 
   const getStatusColor = () => {
     switch (status) {
-      case "complete":
-        return "var(--error-color)";
-      case "ongoing":
+      case "completed":
         return "var(--success-color)";
-      case "upcoming":
+      case "ongoing":
         return "var(--info-color)";
-      default:
+      case "upcoming":
         return "var(--accent-color)";
+      // default:
+      //   return "var(--accent-color)";
     }
   };
 
@@ -80,6 +80,8 @@ export default function TournamentCard({
             >
               {games?.[0]?.entryFee ? `Fee: ${games[0].entryFee}` : "Free"}
             </span> */}
+
+            
           </div>
         </div>
 
@@ -112,9 +114,7 @@ export default function TournamentCard({
           {status === "upcoming" ? (
             // ✅ Show Register Now only for upcoming
             <Link
-              href={{
-                pathname: `/dashboard/game-registration/${_id}`,
-              }}
+              href={`/dashboard/game-registration/${_id}`}
               className="flex-1"
             >
               <button
@@ -130,18 +130,32 @@ export default function TournamentCard({
                 Register Now
               </button>
             </Link>
-          ) : (
-            // ✅ Otherwise show View Tournament
+          ) : status === "ongoing" ? (
+            // ✅ Show Play Tournament for ongoing
+            // <Link href={`/dashboard/play/${_id}`} className="flex-1">
               <button
                 onClick={() => onSelect(_id)}
-                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01] hover:bg[]"
                 style={{
-                  backgroundColor: "var(--accent-color)",
-                  color: "var(--background)",
+                  backgroundColor: "var(--info-color)",
+                  color: "white",
                 }}
               >
-                View Tournament
+                Play Tournament
               </button>
+            // </Link>
+          ) : (
+            // ✅ Default: View Tournament
+            <button
+              onClick={() => onSelect(_id)}
+              className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
+              style={{
+                backgroundColor: "var(--success-color)",
+                color: "white",
+              }}
+            >
+              View ScoreBoard
+            </button>
           )}
         </div>
       </div>

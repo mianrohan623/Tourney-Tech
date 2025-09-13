@@ -17,12 +17,13 @@ export const PATCH = asyncHandler(async (req, context) => {
   }
 
   const request = await TeamUp.findById(id)
-    .populate("from", "firstname lastname email")
-    .populate("to", "firstname lastname email");
+    .populate("from", "firstname lastname username email")
+    .populate("to", "firstname lastname username email");
 
   if (!request) {
     throw new ApiResponse(404, null, "Team-up request not found");
   }
+
   if (request.to?._id.toString() !== user._id.toString()) {
     throw new ApiResponse(403, null, "Not authorized to update this request");
   }
@@ -44,34 +45,55 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
-    const commonTournament =
-      fromReg.tournament?.toString() === toReg.tournament?.toString()
-        ? fromReg.tournament
-        : null;
+    if (fromReg.tournament?.toString() !== toReg.tournament?.toString()) {
+      throw new ApiResponse(
+        400,
+        null,
+        "Both users must be registered in the same tournament"
+      );
+    }
 
-    const fromGames = fromReg.gameRegistrationDetails?.games.flatMap((d) => d);
-    const toGames = toReg.gameRegistrationDetails?.games.flatMap((d) => d);
+    const commonTournament = fromReg.tournament;
+
+    const fromGames = fromReg.gameRegistrationDetails?.games?.flatMap((d) => d);
+    const toGames = toReg.gameRegistrationDetails?.games?.flatMap((d) => d);
 
     const commonGame = fromGames.find((g) =>
       toGames.map((x) => x.toString()).includes(g.toString())
     );
 
-    if (!commonTournament || !commonGame) {
+    if (!commonGame) {
       throw new ApiResponse(
         400,
         null,
-        "Users must have same tournament and same game to form a team"
+        "Both users must be registered in the same game"
       );
     }
 
-    // ✅ Create Team
-    team = await Team.create({
-      name: `${request.from.firstname}-${request.to.firstname} Team`,
+    team = await Team.findOne({
       createdBy: request.from._id,
       tournament: commonTournament,
       game: commonGame,
-      members: [request.from?._id, request.to?._id],
     });
+
+    if (team) {
+      if (
+        !team.members
+          .map((m) => m.toString())
+          .includes(request.to._id.toString())
+      ) {
+        team.members.push(request.to._id);
+        await team.save();
+      }
+    } else {
+      team = await Team.create({
+        name: `${request.from.username}-${request.to.username} Team`,
+        createdBy: request.from._id,
+        tournament: commonTournament,
+        game: commonGame,
+        members: [request.from._id, request.to._id],
+      });
+    }
   }
 
   return Response.json(
@@ -79,7 +101,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       200,
       { request, team },
       status === "accepted"
-        ? "Team-up request accepted and team created"
+        ? "Team-up request accepted and team updated/created"
         : "Team-up request updated"
     )
   );

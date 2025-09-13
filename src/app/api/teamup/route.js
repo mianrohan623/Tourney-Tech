@@ -3,10 +3,11 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
-// import { User } from "@/models/User";
 import { parseForm } from "@/utils/server/parseForm";
-import { ApiError } from "@/utils/server/ApiError";
+// import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
+import { Team } from "@/models/Team";
+import { User } from "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);
@@ -14,7 +15,6 @@ export const POST = asyncHandler(async (req) => {
 
   const to = fields.to?.toString();
   const message = fields.message?.toString();
-
   if (!to) throw new ApiError(400, null, "Receiver user ID (to) is required");
 
   if (to.toString() === user._id.toString())
@@ -31,20 +31,40 @@ export const POST = asyncHandler(async (req) => {
   );
 });
 
-/**
- * @desc Get all my team-up requests
- * @route GET /api/teamup
- */
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
 
+  // get requests (pending + accepted)
   const requests = await TeamUp.find({
     $or: [{ from: user._id }, { to: user._id }],
+    status: { $in: ["pending", "accepted"] },
   })
-    .populate("from", "name email")
-    .populate("to", "name email");
+    .populate("from", "firstname lastname username email")
+    .populate("to", "firstname lastname username email")
+    .lean();
+
+  // get teams only for accepted requests
+  const acceptedUserIds = requests
+    .filter((r) => r.status === "accepted")
+    .flatMap((r) => [r.from._id.toString(), r.to._id.toString()]);
+
+  let teams = [];
+  if (acceptedUserIds.length > 0) {
+    teams = await Team.find({
+      members: { $in: acceptedUserIds },
+    })
+      .populate("game")
+      .populate("tournament")
+      .populate("createdBy", "firstname lastname username email")
+      .populate("members", "firstname lastname username email")
+      .lean();
+  }
 
   return Response.json(
-    new ApiResponse(200, requests, "Fetched team-up requests")
+    new ApiResponse(
+      200,
+      { requests, teams },
+      "Fetched team-up requests & teams"
+    )
   );
 });

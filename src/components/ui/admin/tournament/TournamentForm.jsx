@@ -81,8 +81,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           entryFee: g.entryFee,
           format: g.format || "single_elimination",
           teamBased: g.teamBased || false,
-          minPlayers: g.minPlayers,
-          maxPlayers: g.maxPlayers,
+          tournamentTeamType: g.tournamentTeamType || "single_player",
         }))
       );
 
@@ -123,11 +122,10 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
       ...prev,
       {
         game: "",
-        entryFee: "",
+        entryFee: 0,
         format: "single_elimination",
         teamBased: false,
-        minPlayers: "",
-        maxPlayers: "",
+        tournamentTeamType: "single_player",
       },
     ]);
   };
@@ -208,11 +206,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
       }
 
       const validGames = gameFields.filter(
-        (g) =>
-          g.game &&
-          !isNaN(g.entryFee) &&
-          !isNaN(g.minPlayers) &&
-          !isNaN(g.maxPlayers)
+        (g) => g.game && !isNaN(g.entryFee) && g.tournamentTeamType
       );
 
       const jsonPayload = {
@@ -230,12 +224,10 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           const gameData = {
             game: g.game,
             entryFee: Number(g.entryFee),
-            format: g.format || "single_elimination",
+            format: g.format,
             teamBased: Boolean(g.teamBased),
-            minPlayers: Number(g.minPlayers),
-            maxPlayers: Number(g.maxPlayers),
+            tournamentTeamType: g.tournamentTeamType,
           };
-
           if (g.gameConfigId) {
             // ✅ Update existing game
             await api.patch(
@@ -406,17 +398,6 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           />
         </div>
 
-        {/* <select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className=""
-        >
-          <option value="upcoming">Upcoming</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="completed">Completed</option>
-        </select> */}
-
         <label htmlFor="status" className="block text-sm font-medium">
           Status
         </label>
@@ -488,27 +469,23 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 <X size={24} />
               </button>
 
+              {/* Select Game */}
               <select
                 value={field.game}
                 onChange={(e) =>
                   handleGameFieldChange(index, "game", e.target.value)
                 }
-                className="w-full mt-5 p-2 rounded  bg-[var(--background)] text-white focus:outline-none"
+                className="w-full mt-5 p-2 rounded bg-[var(--background)] text-white focus:outline-none"
               >
-                <option className="bg-[var(--background)]" value="">
-                  Select Game
-                </option>
+                <option value="">Select Game</option>
                 {gamesList.map((game) => (
-                  <option
-                    className="bg-[var(--background)]"
-                    key={game._id}
-                    value={game._id}
-                  >
+                  <option key={game._id} value={game._id}>
                     {game.name}
                   </option>
                 ))}
               </select>
 
+              {/* Entry Fee */}
               <input
                 type="number"
                 placeholder="Entry Fee"
@@ -516,17 +493,23 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 onChange={(e) =>
                   handleGameFieldChange(index, "entryFee", e.target.value)
                 }
-                className="w-full p-2 rounded  bg-[var(--background)] text-white focus:outline-none"
+                className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
               />
 
-              <input
-                type="text"
-                placeholder="Format"
+              {/* Format */}
+              <select
                 value={field.format}
-                readOnly
-                className="w-full p-2 rounded  bg-[var(--background)] text-white focus:outline-none"
-              />
+                onChange={(e) =>
+                  handleGameFieldChange(index, "format", e.target.value)
+                }
+                className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
+              >
+                <option value="single_elimination">Single Elimination</option>
+                <option value="double_elimination">Double Elimination</option>
+                <option value="round_robin">Round Robin</option>
+              </select>
 
+              {/* Team Based */}
               <label className="flex gap-2 items-center">
                 <input
                   type="checkbox"
@@ -538,26 +521,21 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 Team Based?
               </label>
 
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="number"
-                  placeholder="Min Players"
-                  value={field.minPlayers}
-                  onChange={(e) =>
-                    handleGameFieldChange(index, "minPlayers", e.target.value)
-                  }
-                  className="w-full p-2 rounded  bg-[var(--background)] text-white focus:outline-none"
-                />
-                <input
-                  type="number"
-                  placeholder="Max Players"
-                  value={field.maxPlayers}
-                  onChange={(e) =>
-                    handleGameFieldChange(index, "maxPlayers", e.target.value)
-                  }
-                  className="w-full p-2 rounded  bg-[var(--background)] text-white focus:outline-none"
-                />
-              </div>
+              {/* Tournament Team Type */}
+              <select
+                value={field.tournamentTeamType}
+                onChange={(e) =>
+                  handleGameFieldChange(
+                    index,
+                    "tournamentTeamType",
+                    e.target.value
+                  )
+                }
+                className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
+              >
+                <option value="single_player">Single Player</option>
+                <option value="double_player">Double Player</option>
+              </select>
 
               {field.gameConfigId && (
                 <button
@@ -568,8 +546,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                       entryFee: field.entryFee,
                       format: field.format,
                       teamBased: field.teamBased,
-                      minPlayers: field.minPlayers,
-                      maxPlayers: field.maxPlayers,
+                      tournamentTeamType: field.tournamentTeamType,
                     })
                   }
                   className="bg-[var(--accent-color)] px-3 py-1 mt-2 rounded text-black text-sm"

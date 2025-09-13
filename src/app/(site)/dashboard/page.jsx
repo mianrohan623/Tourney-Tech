@@ -14,7 +14,8 @@ export default function TournamentListing() {
   const [filters, setFilters] = useState({
     status: "",
     location: "",
-    type: "",
+    format: "",
+    teamType: "",
     game: "",
   });
 
@@ -54,19 +55,29 @@ export default function TournamentListing() {
       ? t.location === filters.location
       : true;
 
-    const matchesType = filters.type
-      ? t.type === filters.type // ✅ Make sure your tournament objects include `type`
+    // ✅ Check by format inside games[]
+    const matchesFormat = filters.format
+      ? t.games?.some((g) => g?.format === filters.format)
       : true;
 
+    // ✅ Check by team type inside games[]
+    const matchesTeamType = filters.teamType
+      ? t.games?.some((g) => g?.tournamentTeamType === filters.teamType)
+      : true;
+
+    // ✅ Check by game name
     const matchesGame = filters.game
-      ? t.games?.some((g) => g?.name === filters.game) // ✅ Check by direct name field
+      ? t.games?.some(
+          (g) => g?.game?.name?.toLowerCase() === filters.game.toLowerCase()
+        )
       : true;
 
     return (
       matchesSearch &&
       matchesStatus &&
       matchesLocation &&
-      matchesType &&
+      matchesFormat &&
+      matchesTeamType &&
       matchesGame
     );
   });

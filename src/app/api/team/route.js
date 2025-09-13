@@ -11,13 +11,13 @@ export const POST = asyncHandler(async (req) => {
   await requireAdmin();
   const { fields } = await parseForm(req);
 
-  const { name, logo, tournament, game, members } = fields;
+  const { logo, tournament, game, members } = fields;
 
-  if (!name || !tournament || !game || !members) {
+  if (!tournament || !game || !members) {
     throw new ApiResponse(
       400,
       null,
-      "Name, tournament, game and members are required"
+      "Tournament, game and members are required"
     );
   }
 
@@ -35,6 +35,7 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiResponse(400, null, "Invalid member IDs");
   }
 
+  // check if members are already in a team
   const existingTeam = await Team.findOne({
     tournament,
     game,
@@ -49,14 +50,35 @@ export const POST = asyncHandler(async (req) => {
     );
   }
 
+  const users = await User.find({ _id: { $in: memberIds } }).select("username");
+
+  if (users.length !== 2) {
+    throw new ApiResponse(400, null, "Both users must exist");
+  }
+
+  const teamName = `${users[0].username}_${users[1].username}`;
+
   const team = await Team.create({
-    name,
+    name: teamName,
     logo: logo || null,
-    tournament,
+    tournament, 
     game,
     createdBy: memberIds[0],
     members: memberIds,
   });
 
   return Response.json(new ApiResponse(201, team, "Team created successfully"));
+});
+
+export const GET = asyncHandler(async () => {
+  await requireAdmin();
+  const teams = await Team.find()
+    .populate("game")
+    .populate("tournament")
+    .populate("createdBy", "firstname lastname username email")
+    .populate("members", "firstname lastname username email")
+    .lean();
+  return Response.json(
+    new ApiResponse(200, teams, "Teams fetched successfully")
+  );
 });

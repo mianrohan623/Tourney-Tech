@@ -88,7 +88,7 @@ export default function TeamUp() {
 
   return (
     <div
-      className="min-h-screen p-6"
+      className=""
       style={{ background: "var(--background)", color: "var(--foreground)" }}
     >
       <h1 className="text-2xl font-bold mb-6">Team Up</h1>
@@ -131,7 +131,7 @@ export default function TeamUp() {
                   <span className="font-semibold">Username:</span> {player.username}
                 </p>
                 <p className="text-sm">
-                  <span className="font-semibold">Location:</span> {player.city}, {player.country}
+                  <span className="font-semibold">Location:</span> {player.city}
                 </p>
                 <p className="text-sm">
                   <span className="font-semibold">Gender:</span> {player.gender}

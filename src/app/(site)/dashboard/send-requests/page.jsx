@@ -16,16 +16,25 @@ export default function SentRequests() {
       setUserId(id);
 
       const res = await api.get("/api/teamup");
-      setRequests(res.data?.data || []);
+      const data = res.data?.data;
+
+      // ✅ Normalize into an array
+      if (Array.isArray(data)) {
+        setRequests(data);
+      } else if (Array.isArray(data?.requests)) {
+        setRequests(data.requests);
+      } else {
+        setRequests([]); // fallback
+      }
     } catch (err) {
       console.error("❌ Failed to fetch requests:", err);
       toast.error("Failed to load requests");
+      setRequests([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial fetch + polling every 5 seconds
   useEffect(() => {
     fetchRequests(); // initial load
     const interval = setInterval(fetchRequests, 5000); // fetch every 5s
@@ -34,11 +43,16 @@ export default function SentRequests() {
 
   if (loading) return <p className="p-6 text-center">Loading requests...</p>;
 
-  // Filter only requests sent by current user
-  const sentRequests = requests.filter((r) => r.from?._id === userId);
+  // ✅ Only filter if requests is an array
+  const sentRequests = Array.isArray(requests)
+    ? requests.filter((r) => r.from?._id === userId)
+    : [];
 
   return (
-    <div className="min-h-screen p-6" style={{ background: "var(--background)", color: "var(--foreground)" }}>
+    <div
+      className="min-h-screen p-6"
+      style={{ background: "var(--background)", color: "var(--foreground)" }}
+    >
       <h1 className="text-2xl font-bold mb-6">Sent Team Up Requests</h1>
 
       {sentRequests.length > 0 ? (
@@ -47,18 +61,28 @@ export default function SentRequests() {
             <div
               key={req._id}
               className="p-5 rounded-2xl shadow-md"
-              style={{ background: "var(--card-background)", border: `1px solid var(--border-color)` }}
+              style={{
+                background: "var(--card-background)",
+                border: `1px solid var(--border-color)`,
+              }}
             >
-              <h3 className="font-semibold text-lg mb-2">
-                {req.to?.firstname} {req.to?.lastname} ({req.to?.email})
+              <h3 className="font-semibold text-lg mb-2 capitalize">
+                {req.to?.firstname} {req.to?.lastname}
               </h3>
+              <p className="text-sm">
+                <strong>User Name: </strong>
+                {req.to?.username}
+              </p>
               <p className="text-sm">
                 {req.status === "accepted"
                   ? "You are now team members"
                   : "wants to team up with you"}
               </p>
               <p className="text-sm">
-                Status: <span className="font-semibold capitalize">{req.status || "pending"}</span>
+                Status:{" "}
+                <span className="font-semibold capitalize">
+                  {req.status || "pending"}
+                </span>
               </p>
             </div>
           ))}
