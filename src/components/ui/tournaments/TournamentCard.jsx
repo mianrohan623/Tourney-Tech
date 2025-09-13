@@ -57,7 +57,6 @@ export default function TournamentCard({
       <div className="flex-1 p-6 space-y-4">
         {/* Header */}
         <div className="flex justify-between items-start flex-wrap gap-2">
-          <div>
             <h2 className="text-xl font-bold">{name}</h2>
             <span
               className="inline-block mt-1 px-3 py-1 text-xs rounded-full font-semibold"
@@ -68,7 +67,6 @@ export default function TournamentCard({
             >
               {status?.toUpperCase()}
             </span>
-          </div>
 
         </div>
 

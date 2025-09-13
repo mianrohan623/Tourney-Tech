@@ -1,3 +1,5 @@
+"use client";
+
 export default function TournamentFilters({
   filters,
   onChange,
@@ -7,11 +9,15 @@ export default function TournamentFilters({
 }) {
   const uniqueLocations = [...new Set(tournamentData.map((t) => t.location))].sort();
 
- 
-  // Derive type from `teamBased`
-  const uniqueTypes = [...new Set(
-    tournamentData.map((t) => (t.teamBased ? "team" : "single"))
-  )];
+  // Derive unique formats (single/double elimination, round robin)
+  const uniqueFormats = [
+    ...new Set(tournamentData.flatMap((t) => t.games.map((g) => g.format))),
+  ];
+
+  // Derive unique team types (single_player / double_player)
+  const uniqueTeamTypes = [
+    ...new Set(tournamentData.flatMap((t) => t.games.map((g) => g.tournamentTeamType))),
+  ];
 
   const selectClass =
     "p-2 rounded border border-[var(--border-color)] bg-[var(--card-background)] text-[var(--foreground)]";
@@ -22,7 +28,7 @@ export default function TournamentFilters({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
       {/* Search bar */}
       <input
         type="text"
@@ -39,10 +45,18 @@ export default function TournamentFilters({
         onChange={onChange}
         className={selectClass}
       >
-        <option value="" style={optionStyle}>All Status</option>
-        <option value="upcoming" style={optionStyle}>Upcoming</option>
-        <option value="ongoing" style={optionStyle}>Ongoing</option>
-        <option value="completed" style={optionStyle}>Completed</option>
+        <option value="" style={optionStyle}>
+          All Status
+        </option>
+        <option value="upcoming" style={optionStyle}>
+          Upcoming
+        </option>
+        <option value="ongoing" style={optionStyle}>
+          Ongoing
+        </option>
+        <option value="completed" style={optionStyle}>
+          Completed
+        </option>
       </select>
 
       {/* Location filter */}
@@ -52,7 +66,9 @@ export default function TournamentFilters({
         onChange={onChange}
         className={selectClass}
       >
-        <option value="" style={optionStyle}>All Locations</option>
+        <option value="" style={optionStyle}>
+          All Locations
+        </option>
         {uniqueLocations.map((loc) => (
           <option key={loc} value={loc} style={optionStyle}>
             {loc}
@@ -60,17 +76,40 @@ export default function TournamentFilters({
         ))}
       </select>
 
-      {/* Type filter (derived from teamBased) */}
+      {/* Format filter */}
       <select
-        name="type"
-        value={filters.type}
+        name="format"
+        value={filters.format}
         onChange={onChange}
         className={selectClass}
       >
-        <option value="" style={optionStyle}>All Types</option>
-        {uniqueTypes.map((type) => (
+        <option value="" style={optionStyle}>
+          All Formats
+        </option>
+        {uniqueFormats.map((f) => (
+          <option key={f} value={f} style={optionStyle}>
+            {f === "single_elimination"
+              ? "Single Elimination"
+              : f === "double_elimination"
+              ? "Double Elimination"
+              : "Round Robin"}
+          </option>
+        ))}
+      </select>
+
+      {/* Team Type filter */}
+      <select
+        name="teamType"
+        value={filters.teamType}
+        onChange={onChange}
+        className={selectClass}
+      >
+        <option value="" style={optionStyle}>
+          All Team Types
+        </option>
+        {uniqueTeamTypes.map((type) => (
           <option key={type} value={type} style={optionStyle}>
-            {type === "team" ? "Team Based" : "Solo"}
+            {type === "single_player" ? "Single Player" : "Double Player"}
           </option>
         ))}
       </select>

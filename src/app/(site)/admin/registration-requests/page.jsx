@@ -114,8 +114,7 @@ export default function AdminRegistrationsTable() {
               <th className="py-2 px-4 text-left">Tournament</th>
               <th className="py-2 px-4 text-left">Game</th>
               <th className="py-2 px-4 text-left">Entry Fee</th>
-              <th className="py-2 px-4 text-left">Min Players</th>
-              <th className="py-2 px-4 text-left">Max Players</th>
+              <th className="py-2 px-4 text-left">Players</th>
               <th className="py-2 px-4 text-left">Paid</th>
               <th className="py-2 px-4 text-left">Payment Method</th>
               <th className="py-2 px-4 text-left">Bank Name</th>
@@ -150,22 +149,25 @@ export default function AdminRegistrationsTable() {
                 </td>
                 <td className="py-2 px-4">
                   {(r.gameRegistrationDetails?.games?.[0]?._id &&
-                    r.tournament?.games?.find(
-                      (g) =>
-                        g._id === r.gameRegistrationDetails.games[0]._id ||
-                        g.game === r.gameRegistrationDetails.games[0]._id
-                    )?.minPlayers) ||
-                    0}{" "}
+                    (() => {
+                      const game = r.tournament?.games?.find(
+                        (g) =>
+                          g._id === r.gameRegistrationDetails.games[0]._id ||
+                          g.game === r.gameRegistrationDetails.games[0]._id
+                      );
+                      if (!game) return "-";
+
+                      if (game.teamBased) {
+                        return game.minPlayers === 1 && game.maxPlayers === 1
+                          ? "1"
+                          : "2";
+                      } else {
+                        return "Single Player";
+                      }
+                    })()) ||
+                    "-"}
                 </td>
-                <td className="py-2 px-4">
-                  {(r.gameRegistrationDetails?.games?.[0]?._id &&
-                    r.tournament?.games?.find(
-                      (g) =>
-                        g._id === r.gameRegistrationDetails.games[0]._id ||
-                        g.game === r.gameRegistrationDetails.games[0]._id
-                    )?.maxPlayers) ||
-                    0}{" "}
-                </td>
+
                 <td className="py-2 px-4">
                   {r.gameRegistrationDetails?.paid ? (
                     <span className="text-[var(--success-color)]">Yes</span>

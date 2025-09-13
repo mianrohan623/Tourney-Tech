@@ -48,9 +48,7 @@ export default function GameRegistrationPage() {
             _id: g.game?._id, // ✅ use the game ID string
             entryFee: g.entryFee,
             format: g.format,
-            teamBased: g.teamBased,
-            minPlayers: g.minPlayers,
-            maxPlayers: g.maxPlayers,
+            players: g.tournamentTeamType,
           }))
         );
 
@@ -178,20 +176,27 @@ export default function GameRegistrationPage() {
               }}
             >
               <p>
-                <strong>Entry Fee:</strong> {selectedGameDetails.entryFee} PKR
+                <strong>Entry Fee:</strong> {selectedGameDetails.entryFee}
               </p>
               <p>
-                <strong>Format:</strong> {selectedGameDetails.format}
+                <strong>Format: </strong>
+                {selectedGameDetails.format === "single_elimination"
+                  ? "Single Elimination"
+                  : selectedGameDetails.format === "double_elimination"
+                    ? "Double Elimination"
+                    : selectedGameDetails.format === "round_robin"
+                      ? "Round Robin"
+                      : ""}
               </p>
+
               <p>
-                <strong>Team Based:</strong>{" "}
-                {selectedGameDetails.teamBased ? "Yes" : "No"}
-              </p>
-              <p>
-                <strong>Min Players:</strong> {selectedGameDetails.minPlayers}
-              </p>
-              <p>
-                <strong>Max Players:</strong> {selectedGameDetails.maxPlayers}
+                <strong>PLayer Required: </strong>
+                {selectedGameDetails.teamBased
+                  ? selectedGameDetails.minPlayers === 1 &&
+                    selectedGameDetails.maxPlayers === 1
+                    ? "Single"
+                    : "Double"
+                  : "Single Player"}
               </p>
             </div>
           )}
@@ -263,8 +268,7 @@ export default function GameRegistrationPage() {
                 }}
               >
                 <p>
-                  <strong>Account Name:</strong>{" "}
-                  {selectedBank.accountHolder}
+                  <strong>Account Name:</strong> {selectedBank.accountHolder}
                 </p>
                 <p>
                   <strong>Account Number:</strong> {selectedBank.accountNumber}

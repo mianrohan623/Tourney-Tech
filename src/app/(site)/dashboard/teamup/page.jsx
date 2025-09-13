@@ -88,7 +88,7 @@ export default function TeamUp() {
 
   return (
     <div
-      className="min-h-screen p-6"
+      className=""
       style={{ background: "var(--background)", color: "var(--foreground)" }}
     >
       <h1 className="text-2xl font-bold mb-6">Team Up</h1>
