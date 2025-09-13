@@ -8,7 +8,11 @@ export default function TournamentGameList({ games }) {
         {games.map((g, i) => (
           <li key={g._id || i}>
             <strong>{g?.game?.name || "Unknown Game"}</strong> — Rs {g.entryFee ?? "0"} •{" "}
-            {g.teamBased ? `Team of min player ${g.minPlayers} max player ${g.maxPlayers}` : "Single Player"}
+            {g.teamBased
+              ? g.tournamentTeamType === "double_player"
+                ? "Team of 2 players"
+                : "Single player team"
+              : "Individual"}
           </li>
         ))}
       </ul>

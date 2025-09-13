@@ -87,11 +87,20 @@ body {
   background: var(--background);
 }
 
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: var(--card-background);
+}
+
 /* Handle */
 .scrollbar::-webkit-scrollbar-thumb {
   background: var(--card-background);
    border-radius: 10px;
 }
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
 
 /* Handle on hover */
 .scrollbar::-webkit-scrollbar-thumb:hover {

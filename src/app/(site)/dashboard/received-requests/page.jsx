@@ -37,24 +37,32 @@ export default function ReceivedRequests() {
     try {
       await api.patch(`/api/teamup/${id}`, { status });
 
-      toast.success(status === "accepted" ? "Request accepted!" : "Request rejected");
+      toast.success(
+        status === "accepted" ? "Request accepted!" : "Request rejected"
+      );
 
       // Update request status locally immediately
-      setRequests(prev =>
-        prev.map(req => (req._id === id ? { ...req, status } : req))
+      setRequests((prev) =>
+        prev.map((req) => (req._id === id ? { ...req, status } : req))
       );
     } catch (err) {
       console.error(`❌ Failed to ${status}:`, err.response?.data || err);
 
       // Only show message for duplicate key error
-      const isDuplicateKey = err.response?.data?.message?.includes("E11000 duplicate key");
+      const isDuplicateKey = err.response?.data?.message?.includes(
+        "E11000 duplicate key"
+      );
       if (isDuplicateKey && status === "accepted") {
         toast.error("You are already team members");
-        setRequests(prev =>
-          prev.map(req => (req._id === id ? { ...req, status: "accepted" } : req))
+        setRequests((prev) =>
+          prev.map((req) =>
+            req._id === id ? { ...req, status: "accepted" } : req
+          )
         );
       } else {
-        toast.error(err.response?.data?.message || `Failed to ${status} request`);
+        toast.error(
+          err.response?.data?.message || `Failed to ${status} request`
+        );
       }
     }
   };
@@ -84,9 +92,12 @@ export default function ReceivedRequests() {
             >
               <h3 className="font-semibold text-lg mb-2">
                 {req.from?.firstname || req.from?.name}{" "}
-                {req.from?.lastname || ""} ({req.from?.email})
+                {req.from?.lastname || ""} 
               </h3>
-
+              <p className="text-sm">
+                <strong>User Name: </strong>
+                {req.to?.username}
+              </p>
               {/* Show message only if pending */}
               {req.status === "pending" && (
                 <p className="text-sm mb-2">
@@ -102,7 +113,10 @@ export default function ReceivedRequests() {
                 <div className="flex gap-2">
                   <button
                     className="flex-1 py-2 px-4 rounded-lg font-semibold cursor-pointer"
-                    style={{ background: "var(--success-color)", color: "white" }}
+                    style={{
+                      background: "var(--success-color)",
+                      color: "white",
+                    }}
                     onClick={() => updateRequest(req._id, "accepted")}
                   >
                     Accept

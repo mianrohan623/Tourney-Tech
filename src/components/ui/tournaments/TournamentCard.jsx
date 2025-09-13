@@ -70,19 +70,6 @@ export default function TournamentCard({
             </span>
           </div>
 
-          <div>
-            {/* <span
-              className="inline-block px-3 py-1 text-sm rounded-full font-medium"
-              style={{
-                backgroundColor: "var(--accent-color)",
-                color: "var(--background)",
-              }}
-            >
-              {games?.[0]?.entryFee ? `Fee: ${games[0].entryFee}` : "Free"}
-            </span> */}
-
-            
-          </div>
         </div>
 
         {/* Description */}
