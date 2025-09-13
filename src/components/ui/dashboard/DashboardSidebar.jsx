@@ -69,7 +69,7 @@ export default function DashboardSidebar({ isOpen, onClose, navItems }) {
         </div>
 
         {/* Dynamic Navigation */}
-        <nav className="py-4 px-3 scrollbar overflow-auto h-full scrollbar-sidebar">
+        <nav className="py-4 pb-20 px-3 scrollbar overflow-auto h-full scrollbar-sidebar">
           <ul className="space-y-1">
             {navItems.map((item) => (
               <li key={item.label} className="list-none">

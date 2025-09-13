@@ -29,11 +29,21 @@ export default function LoginPage() {
         password,
       });
 
-      const accessToken = res.data.data.accessToken;
+      const { user } = res.data.data;
+      const accessToken = res.data.data.accessToken; // ❌ you don't actually return accessToken in API
       localStorage.setItem("accessToken", accessToken);
 
+      // store user in localStorage if needed
+      localStorage.setItem("user", JSON.stringify(user));
+
       toast.success("Login successful!");
-      window.location.href = "/dashboard";
+
+      // ✅ Redirect based on role
+      if (user.role === "admin") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch (error) {
       const errorMessage =
         error?.response?.data?.message || "Login failed. Please try again.";
