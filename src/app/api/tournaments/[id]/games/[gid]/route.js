@@ -15,33 +15,39 @@ export const PATCH = asyncHandler(async (req, context) => {
 
   const body = await req.json();
 
+  // Check if user is allowed
   await requireTournamentStaff(tournamentId, user, [
     "admin",
     "owner",
     "organizer",
   ]);
 
+  // Fetch tournament
   const tournament = await Tournament.findById(tournamentId);
   if (!tournament) throw new ApiError(404, "Tournament not found");
 
+  // Find specific game config
   const game = tournament.games.id(gameConfigId);
   if (!game) throw new ApiError(404, "Game config not found");
 
-  const allowedFields = [
-    "entryFee",
-    "format",
-    "teamBased",
-    "minPlayers",
-    "maxPlayers",
-  ];
+  // Allowed fields according to schema
+  const allowedFields = ["entryFee", "format", "teamBased", "tournamentTeamType"];
   allowedFields.forEach((field) => {
-    if (field in body) game[field] = body[field];
+    if (field in body) {
+      game[field] = body[field];
+    }
   });
 
-  if (game.minPlayers > game.maxPlayers) {
-    throw new ApiError(400, "minPlayers cannot be greater than maxPlayers");
+  // Validate enums manually if needed
+  if (body.format && !["single_elimination", "double_elimination", "round_robin"].includes(body.format)) {
+    throw new ApiError(400, "Invalid format");
   }
 
+  if (body.tournamentTeamType && !["single_player", "double_player"].includes(body.tournamentTeamType)) {
+    throw new ApiError(400, "Invalid tournamentTeamType");
+  }
+
+  // Save tournament
   await tournament.save();
 
   return Response.json({ success: true, updatedGame: game });
