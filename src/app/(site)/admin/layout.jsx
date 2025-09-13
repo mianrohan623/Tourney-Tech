@@ -16,12 +16,13 @@ import {
   Gamepad2,
   Banknote,
   PlusCircle,
+  ArrowLeftRight,
 } from "lucide-react";
 
 // Change this to adminNavItems if needed
 const adminNavItems = [
   { href: "/admin", label: "Admin Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard", label: "Switch To User", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Switch To User", icon: ArrowLeftRight },
   { href: "/admin/users", label: "Manage Users", icon: Users },
   { href: "/admin/add-games", label: "Add Game", icon: Gamepad2 },
   {
