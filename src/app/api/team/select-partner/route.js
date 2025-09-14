@@ -4,11 +4,17 @@ import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
+import { parseForm } from "@/utils/server/parseForm";
 
 export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth(req);
-  const { teamId } = context.params;
-  const { partnerId } = await req.json();
+  //   const { teamId } = context.params;
+  //   const { partnerId } = await req.json();
+
+  const { fields } = await parseForm();
+
+  const teamId = fields.teamId?.toString();
+  const partnerId = fields.partnerId?.toString();
 
   const team = await Team.findById(teamId).populate("tournament");
   if (!team) throw new ApiResponse(404, "Team not found");
