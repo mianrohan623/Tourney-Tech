@@ -6,7 +6,8 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
 
-export const PATCH = asyncHandler(async (req, context) => {
+// export const PATCH = asyncHandler(async (req, context) => {
+export const PATCH = asyncHandler(async (req) => {
   const user = await requireAuth(req);
   //   const { teamId } = context.params;
   //   const { partnerId } = await req.json();
