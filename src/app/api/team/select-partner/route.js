@@ -11,7 +11,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   //   const { teamId } = context.params;
   //   const { partnerId } = await req.json();
 
-  const { fields } = await parseForm();
+  const { fields } = await parseForm(req);
 
   const teamId = fields.teamId?.toString();
   const partnerId = fields.partnerId?.toString();

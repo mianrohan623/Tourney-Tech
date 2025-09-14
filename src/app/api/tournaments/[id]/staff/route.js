@@ -4,6 +4,7 @@ import { requireAuth } from "@/utils/server/auth";
 import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { User } from "@/models/User";
+import { parseForm } from "@/utils/server/parseForm";
 
 const allowedRoles = ["owner", "organizer", "manager", "support"];
 
@@ -11,8 +12,8 @@ const allowedRoles = ["owner", "organizer", "manager", "support"];
 export const POST = asyncHandler(async (req, context) => {
   const authUser = await requireAuth(req);
   const { id: tournamentId } = await context.params;
+  const {userId, role} = await parseForm(req);
 
-  const { userId, role } = await req.json();
   if (!userId || !role) throw new ApiError(400, "userId and role are required");
   if (!allowedRoles.includes(role)) throw new ApiError(400, "Invalid role");
 
