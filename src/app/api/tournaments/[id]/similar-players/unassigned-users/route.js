@@ -5,7 +5,7 @@ import { Team } from "@/models/Team";
 import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import { parseForm } from "@/utils/server/parseForm";
+// import { parseForm } from "@/utils/server/parseForm";
 // import { requireAuth } from "@/utils/server/auth";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
