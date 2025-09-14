@@ -1,18 +1,19 @@
 // GET /api/tournaments/Id/similar-players/without-team
 
-
 import { Registration } from "@/models/Registration";
 import { Team } from "@/models/Team";
 import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
+import { parseForm } from "@/utils/server/parseForm";
 // import { requireAuth } from "@/utils/server/auth";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
 export const GET = asyncHandler(async (req, context) => {
   await requireAdmin(req);
-  const { tournamentId } = context.params;
-
+  const { id: tournamentId } = context.params;
+  // const { fields } = await parseForm(req);
+  // const tournamentId = fields?.tournamentId?.toString();
   const tournament = await Tournament.findById(tournamentId);
   if (!tournament) {
     return Response.json(new ApiResponse(404, null, "Tournament not found"));
