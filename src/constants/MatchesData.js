@@ -1,4 +1,5 @@
-export const matches = [
+
+export const rawMatches = [
   // Quarterfinals
   {
     id: 1,

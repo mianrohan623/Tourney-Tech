@@ -1,5 +1,4 @@
-"use client"
-
+"use client";
 import {
   SingleEliminationBracket,
   SVGViewer,
@@ -8,13 +7,18 @@ import {
 } from "@g-loot/react-tournament-brackets";
 
 import { useEffect, useState } from "react";
-import { matches as rawMatches } from "@/constants/matches/matchesData";
+
+
+import { rawMatches } from "@/constants/MatchesData";
 import { mapMatches } from "@/utils/mapMatches";
 
 // Helper function to get CSS variable values from :root
 const getCSSVar = (name, fallback) => {
   if (typeof window === "undefined") return fallback;
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  return (
+    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
+    fallback
+  );
 };
 
 export default function MatchesOverview() {
@@ -109,11 +113,10 @@ export default function MatchesOverview() {
         matches={matches}
         matchComponent={Match}
         theme={theme}
-        
         svgWrapper={({ children, ...props }) => (
           <SVGViewer
             background={theme.svgBackground}
-          SVGBackground={theme.svgBackground}
+            SVGBackground={theme.svgBackground}
             width={dimensions.width}
             height={dimensions.height}
             {...props}
