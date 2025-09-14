@@ -134,7 +134,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
     const updated = [...gameFields];
     if (name === "teamBased") {
       updated[index][name] = value === true || value === "true";
-    } else if (["entryFee", "minPlayers", "maxPlayers"].includes(name)) {
+    } else if (["entryFee"].includes(name)) {
       updated[index][name] = value === "" ? "" : Number(value);
     } else {
       updated[index][name] = value;

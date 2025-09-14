@@ -31,7 +31,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   if (!game) throw new ApiError(404, "Game config not found");
 
   // Allowed fields according to schema
-  const allowedFields = ["entryFee", "format", "teamBased", "tournamentTeamType"];
+  const allowedFields = ["game","entryFee", "format", "teamBased", "tournamentTeamType"];
   allowedFields.forEach((field) => {
     if (field in body) {
       game[field] = body[field];

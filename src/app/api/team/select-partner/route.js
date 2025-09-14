@@ -1,4 +1,4 @@
-// PATCH /api/teams/:teamId/select-partner
+// PATCH /api/team/:teamId/select-partner
 import { Team } from "@/models/Team";
 import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";

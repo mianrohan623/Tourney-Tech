@@ -1,16 +1,26 @@
-// GET /api/tournaments/unassigned-users
+// GET /api/tournaments/Id/similar-players/without-team
+
 
 import { Registration } from "@/models/Registration";
 import { Team } from "@/models/Team";
+import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
+// import { requireAuth } from "@/utils/server/auth";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
-export const GET = asyncHandler(async (req) => {
+export const GET = asyncHandler(async (req, context) => {
   await requireAdmin(req);
+  const { tournamentId } = context.params;
 
-  // ✅ Get all approved registrations
+  const tournament = await Tournament.findById(tournamentId);
+  if (!tournament) {
+    return Response.json(new ApiResponse(404, null, "Tournament not found"));
+  }
+
+  // ✅ Tournament ke sab registrations
   const registrations = await Registration.find({
+    tournament: tournamentId,
     "gameRegistrationDetails.status": "approved",
   }).populate({
     path: "user",
@@ -18,10 +28,10 @@ export const GET = asyncHandler(async (req) => {
     select: "-password -refreshToken -accessToken -__v",
   });
 
-  // ✅ Get all teams
-  const teams = await Team.find();
+  // ✅ Tournament ki sab teams
+  const teams = await Team.find({ tournament: tournamentId });
 
-  // ✅ Build a set of all assigned user IDs
+  // ✅ Team members ka set banao
   const assignedUserIds = new Set();
   teams.forEach((team) => {
     assignedUserIds.add(team.createdBy.toString());
@@ -31,7 +41,7 @@ export const GET = asyncHandler(async (req) => {
     }
   });
 
-  // ✅ Filter registrations to only unassigned users
+  // ✅ Filter un users ko jo assigned list me nahi hain
   const unassignedUsers = registrations
     .map((r) => r.user)
     .filter((u) => !assignedUserIds.has(u._id.toString()));
@@ -40,7 +50,7 @@ export const GET = asyncHandler(async (req) => {
     new ApiResponse(
       200,
       { unassignedUsers },
-      "Fetched all users who are registered but not in any team"
+      "Fetched users who are registered but not in any team of this tournament"
     )
   );
 });
