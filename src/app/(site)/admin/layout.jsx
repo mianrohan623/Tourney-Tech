@@ -17,6 +17,7 @@ import {
   Banknote,
   PlusCircle,
   ArrowLeftRight,
+  UserPlus2,
 } from "lucide-react";
 
 // Change this to adminNavItems if needed
@@ -31,9 +32,10 @@ const adminNavItems = [
     icon: BadgePlus,
   },
   { href: "/admin/add-bank-details", label: "Add Bank Details", icon: Banknote },
-  { href: "/admin/registration-requests", label: "Registration Requests", icon: Users },
+  { href: "/admin/registration-requests", label: "Registration Requests", icon: UserPlus2 },
   { href: "/admin/all-registered-players", label: "All Registered Players", icon: Users },
   { href: "/admin/create-team", label: "Create Team", icon: PlusCircle },
+  { href: "/admin/all-teams", label: "All Teams", icon: Users },
   // {
   //   label: "Settings",
   //   icon: Settings,

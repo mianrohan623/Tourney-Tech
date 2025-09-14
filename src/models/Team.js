@@ -17,6 +17,7 @@ const TeamSchema = new Schema(
         ref: "User",
       },
     ],
+    partner: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

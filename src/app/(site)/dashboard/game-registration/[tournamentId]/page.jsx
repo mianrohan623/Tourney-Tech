@@ -13,7 +13,7 @@ export default function GameRegistrationPage() {
   const [tournamentGames, setTournamentGames] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [formData, setFormData] = useState({
-    game: "",
+    game: [], // array for multi-select
     paymentType: "",
     bankAccount: "",
     transactionId: "",
@@ -29,10 +29,9 @@ export default function GameRegistrationPage() {
       try {
         const res = await api.get(`/api/tournaments/${tournamentId}`);
         const fetchBankDetails = await api.get("/api/bankDetails");
-        console.log("Response:", res.data);
         const registrationData = res.data;
 
-        // Registered games for dropdown
+        // Registered games
         const registeredGames = registrationData?.games || [];
         setGames(
           registeredGames.map((g) => ({
@@ -41,20 +40,20 @@ export default function GameRegistrationPage() {
           }))
         );
 
-        // Tournament game details
-        const tournamentGamesData = registrationData?.games || [];
+        // Tournament games details
         setTournamentGames(
-          tournamentGamesData.map((g) => ({
-            _id: g.game?._id, // ✅ use the game ID string
+          registeredGames.map((g) => ({
+            _id: g.game?._id,
             entryFee: g.entryFee,
             format: g.format,
-            players: g.tournamentTeamType,
+            teamBased: g.tournamentTeamType === "double_player",
+            minPlayers: g.minPlayers || 1,
+            maxPlayers: g.maxPlayers || 1,
           }))
         );
 
-        // Bank accounts (array of objects)
         const bankObj = fetchBankDetails?.data?.data || [];
-        setBankAccounts(bankObj ? bankObj : []);
+        setBankAccounts(bankObj);
       } catch (err) {
         console.error("Error fetching data:", err);
         toast.error("Failed to load games or bank accounts.");
@@ -66,20 +65,16 @@ export default function GameRegistrationPage() {
     fetchData();
   }, [tournamentId]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!tournamentId) return toast.error("Tournament ID is required!");
+    if (!formData.game.length) return toast.error("Select at least one game!");
 
     try {
       setLoading(true);
-
       const payload = {
         tournamentId,
-        gameIds: formData.game,
+        gameIds: formData.game, // send array of selected games
         paymentMethod: formData.paymentType,
       };
 
@@ -91,17 +86,13 @@ export default function GameRegistrationPage() {
         };
       }
 
-      console.log("Payload:", payload); // <-- check what is being sent
-
       const res = await api.post("/api/tournamentRegister", payload, {
         headers: { "Content-Type": "application/json" },
       });
 
       toast.success("Registration successful!");
-      console.log("Response:", res.data);
-
       setFormData({
-        game: "",
+        game: [],
         paymentType: "",
         bankAccount: "",
         transactionId: "",
@@ -114,11 +105,6 @@ export default function GameRegistrationPage() {
       setLoading(false);
     }
   };
-
-  const selectedGameDetails = tournamentGames.find(
-    (g) => g._id === formData.game
-  );
-  const selectedBank = bankAccounts.find((b) => b._id === formData.bankAccount);
 
   if (fetching) return <p className="text-center mt-10">Loading...</p>;
 
@@ -138,68 +124,82 @@ export default function GameRegistrationPage() {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Game Selection */}
+        {/* Game Selection with Checkboxes */}
         <div>
           <label
-            className="block text-sm font-medium mb-1"
+            className="block text-sm font-medium mb-2"
             style={{ color: "var(--foreground)" }}
           >
-            Select Game
+            Select Games
           </label>
-          <select
-            name="game"
-            value={formData.game}
-            onChange={handleChange}
-            required
-            className="w-full rounded-lg px-3 py-2"
-            style={{
-              background: "var(--secondary-color)",
-              borderColor: "var(--border-color)",
-              color: "var(--foreground)",
-            }}
-          >
-            <option value="">-- Select Game --</option>
+
+          <div className="space-y-2">
             {games.map((g) => (
-              <option key={g._id} value={g._id}>
-                {g.name}
-              </option>
+              <label
+                key={g._id}
+                className="flex items-center space-x-2 cursor-pointer"
+                style={{ color: "var(--foreground)" }}
+              >
+                <input
+                  type="checkbox"
+                  value={g._id}
+                  checked={formData.game.includes(g._id)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      game: prev.game.includes(value)
+                        ? prev.game.filter((id) => id !== value)
+                        : [...prev.game, value],
+                    }));
+                  }}
+                  className="w-4 h-4 accent-[var(--accent-color)]"
+                />
+                <span>{g.name}</span>
+              </label>
             ))}
-          </select>
+          </div>
 
-          {selectedGameDetails && (
-            <div
-              className="mt-3 p-3 border rounded-lg"
-              style={{
-                background: "var(--secondary-color)",
-                borderColor: "var(--border-color)",
-                color: "var(--foreground)",
-              }}
-            >
-              <p>
-                <strong>Entry Fee:</strong> {selectedGameDetails.entryFee}
-              </p>
-              <p>
-                <strong>Format: </strong>
-                {selectedGameDetails.format === "single_elimination"
-                  ? "Single Elimination"
-                  : selectedGameDetails.format === "double_elimination"
+          {/* Display selected games details */}
+          {formData.game.map((gameId) => {
+            const game = tournamentGames.find((g) => g._id === gameId);
+            if (!game) return null;
+            return (
+              <div
+                key={game._id}
+                className="mt-3 p-3 border rounded-lg"
+                style={{
+                  background: "var(--secondary-color)",
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
+              >
+                <p>
+                  <strong>Game:</strong>{" "}
+                  {games.find((g) => g._id === game._id)?.name}
+                </p>
+                <p>
+                  <strong>Entry Fee:</strong> {game.entryFee}
+                </p>
+                <p>
+                  <strong>Format:</strong>{" "}
+                  {game.format === "single_elimination"
+                    ? "Single Elimination"
+                    : game.format === "double_elimination"
                     ? "Double Elimination"
-                    : selectedGameDetails.format === "round_robin"
-                      ? "Round Robin"
-                      : ""}
-              </p>
-
-              <p>
-                <strong>PLayer Required: </strong>
-                {selectedGameDetails.teamBased
-                  ? selectedGameDetails.minPlayers === 1 &&
-                    selectedGameDetails.maxPlayers === 1
-                    ? "Single"
-                    : "Double"
-                  : "Single Player"}
-              </p>
-            </div>
-          )}
+                    : "Round Robin"}
+                </p>
+                <p>
+                  <strong>Players Required:</strong>{" "}
+                  {game.teamBased
+                    ? game.minPlayers === 1 && game.maxPlayers === 1
+                      ? "Single"
+                      : "Double"
+                    : "Single Player"}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
         {/* Payment Method */}
@@ -213,7 +213,9 @@ export default function GameRegistrationPage() {
           <select
             name="paymentType"
             value={formData.paymentType}
-            onChange={handleChange}
+            onChange={(e) =>
+              setFormData({ ...formData, paymentType: e.target.value })
+            }
             required
             className="w-full rounded-lg px-3 py-2"
             style={{
@@ -228,6 +230,7 @@ export default function GameRegistrationPage() {
           </select>
         </div>
 
+        {/* Online Payment Details */}
         {formData.paymentType === "online" && (
           <div className="space-y-4">
             <div>
@@ -240,7 +243,9 @@ export default function GameRegistrationPage() {
               <select
                 name="bankAccount"
                 value={formData.bankAccount}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setFormData({ ...formData, bankAccount: e.target.value })
+                }
                 required
                 className="w-full rounded-lg px-3 py-2"
                 style={{
@@ -258,24 +263,6 @@ export default function GameRegistrationPage() {
               </select>
             </div>
 
-            {selectedBank && (
-              <div
-                className="p-3 rounded-lg shadow-sm border text-sm"
-                style={{
-                  background: "var(--secondary-color)",
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
-              >
-                <p>
-                  <strong>Account Name:</strong> {selectedBank.accountHolder}
-                </p>
-                <p>
-                  <strong>Account Number:</strong> {selectedBank.accountNumber}
-                </p>
-              </div>
-            )}
-
             <div>
               <label
                 className="block text-sm font-medium mb-1"
@@ -287,7 +274,9 @@ export default function GameRegistrationPage() {
                 type="text"
                 name="accountName"
                 value={formData.accountName}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setFormData({ ...formData, accountName: e.target.value })
+                }
                 className="w-full rounded-lg px-3 py-2"
                 style={{
                   background: "var(--secondary-color)",
@@ -309,7 +298,9 @@ export default function GameRegistrationPage() {
                 type="text"
                 name="transactionId"
                 value={formData.transactionId}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setFormData({ ...formData, transactionId: e.target.value })
+                }
                 className="w-full rounded-lg px-3 py-2"
                 style={{
                   background: "var(--secondary-color)",

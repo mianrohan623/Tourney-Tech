@@ -24,36 +24,35 @@ export const POST = asyncHandler(async (req, context) => {
     entryFee = 0,
     format,
     teamBased = true,
-    minPlayers,
-    maxPlayers,
+    tournamentTeamType,
   } = body;
 
-  if (!game || !format || !minPlayers || !maxPlayers) {
+  // ✅ Required fields
+  if (!game || !format || !tournamentTeamType) {
     throw new ApiError(400, "Missing required fields");
   }
 
-  if (minPlayers > maxPlayers) {
-    throw new ApiError(400, "minPlayers cannot be greater than maxPlayers");
-  }
-
-  const validFormats = [
-    "single_elimination",
-    "double_elimination",
-    "round_robin",
-  ];
+  // ✅ Validate enums
+  const validFormats = ["single_elimination", "double_elimination", "round_robin"];
   if (!validFormats.includes(format)) {
     throw new ApiError(400, "Invalid format");
   }
 
+  if (!["single_player", "double_player"].includes(tournamentTeamType)) {
+    throw new ApiError(400, "Invalid tournamentTeamType");
+  }
+
+  // ✅ Validate game exists
   const gameExists = await Game.exists({ _id: game });
   if (!gameExists) {
     throw new ApiError(404, "Game not found");
   }
 
+  // ✅ Validate tournament exists
   const tournament = await Tournament.findById(tournamentId);
-
   if (!tournament) throw new ApiError(404, "Tournament not found");
 
+  // ✅ Prevent duplicate games
   const alreadyExists = tournament.games.some(
     (g) => g.game.toString() === game
   );
@@ -61,13 +60,13 @@ export const POST = asyncHandler(async (req, context) => {
     throw new ApiError(409, "Game already added to this tournament");
   }
 
+  // ✅ Push new game config
   tournament.games.push({
     game,
     entryFee,
     format,
     teamBased,
-    minPlayers,
-    maxPlayers,
+    tournamentTeamType,
   });
   await tournament.save();
 

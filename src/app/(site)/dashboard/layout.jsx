@@ -20,7 +20,8 @@ const userNavItems = [
       icon: BellDot,
       children: [
         { href: "/dashboard/received-requests", label: "Received Request" },
-        { href: "/dashboard/send-requests", label: "Send Request" }
+        { href: "/dashboard/send-requests", label: "Send Request" },
+        { href: "/dashboard/select-partner", label: "Select Partner" }
       ],
     },
   { href: "/logOut", label: "Logout", icon: LogOut },

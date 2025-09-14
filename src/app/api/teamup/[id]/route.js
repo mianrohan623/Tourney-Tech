@@ -1,4 +1,7 @@
+// /api/teamup/[id]
+
 import { Registration } from "@/models/Registration";
+
 import { Team } from "@/models/Team";
 import { TeamUp } from "@/models/TeamUp";
 import { ApiResponse } from "@/utils/server/ApiResponse";
