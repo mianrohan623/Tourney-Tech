@@ -5,14 +5,18 @@ import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { User } from "@/models/User";
 import { parseForm } from "@/utils/server/parseForm";
+import { ApiResponse } from "@/utils/server/ApiResponse";
 
 const allowedRoles = ["owner", "organizer", "manager", "support"];
 
 // POST /api/tournaments/[id]/staff
-export const POST = asyncHandler(async (req, context) => {
+export const PATCH = asyncHandler(async (req, context) => {
   const authUser = await requireAuth(req);
   const { id: tournamentId } = await context.params;
-  const {userId, role} = await parseForm(req);
+  const { fields } = await parseForm(req);
+
+  const userId = fields?.userId?.toString();
+  const role = fields?.role?.toString();
 
   if (!userId || !role) throw new ApiError(400, "userId and role are required");
   if (!allowedRoles.includes(role)) throw new ApiError(400, "Invalid role");
@@ -58,10 +62,9 @@ export const POST = asyncHandler(async (req, context) => {
 
   await tournament.save();
 
-  return Response.json({
-    message: "Staff member updated",
-    staff: tournament.staff,
-  });
+  return Response.json(
+    new ApiResponse(200, tournament, "Tournament staff updated successfully")
+  );
 });
 
 // DELETE /api/tournaments/[id]/staff?userId=<id>
