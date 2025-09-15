@@ -7,6 +7,11 @@ const TeamUpSchema = new Schema(
       ref: "User",
       required: true,
     },
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
+    },
     to: {
       type: Schema.Types.ObjectId,
       ref: "User",

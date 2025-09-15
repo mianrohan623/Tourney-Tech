@@ -4,11 +4,12 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
 
-export const PATCH = asyncHandler(async (req) => {
+export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth(req);
+  const matchId = context.params.id;
 
   const { fields } = await parseForm(req);
-  const { matchId, teamAScore, teamBScore } = fields;
+  const { teamAScore, teamBScore } = fields;
 
   const match = await Match.findById(matchId).populate("teamA teamB");
   if (!match) {
@@ -35,6 +36,10 @@ export const PATCH = asyncHandler(async (req) => {
   await match.save();
 
   return Response.json(
-    new ApiResponse(200, match, `Match updated: ${match.teamA.name} vs ${match.teamB.name}`)
+    new ApiResponse(
+      200,
+      match,
+      `Match updated: ${match.teamA.name} vs ${match.teamB.name}`
+    )
   );
 });

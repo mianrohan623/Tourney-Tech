@@ -15,6 +15,7 @@ export const GET = asyncHandler(async (req) => {
     .populate("members", "firstname lastname username email")
     .lean();
 
+    console.log("teams::=======", teams);
   const tournamentIds = teams.map((t) => t.tournament?._id);
 
   const registrations = await Registration.find({
@@ -24,6 +25,8 @@ export const GET = asyncHandler(async (req) => {
     .populate("tournament")
     .populate("gameRegistrationDetails.games")
     .lean();
+
+    console.log("registration::=======,:", registrations);
 
   const tournaments = teams.map((team) => {
     const gameConfig = team.tournament?.games.find(

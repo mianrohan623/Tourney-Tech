@@ -4,6 +4,7 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
+import "@/models/Tournament";
 
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
@@ -81,9 +82,7 @@ export const GET = asyncHandler(async () => {
           _id: r.tournament._id,
           name: r.tournament.name,
         },
-        games: r.gameRegistrationDetails.games.flatMap((d) =>
-            d
-        ),
+        games: r.gameRegistrationDetails.games.flatMap((d) => d),
       });
     }
   }
@@ -149,10 +148,7 @@ export const GET = asyncHandler(async () => {
   );
 
   const acceptedUserIds = new Set(
-    acceptedRequests.flatMap((req) => [
-      req.from.toString(),
-      req.to.toString(),
-    ])
+    acceptedRequests.flatMap((req) => [req.from.toString(), req.to.toString()])
   );
 
   // ✅ Flags add karo

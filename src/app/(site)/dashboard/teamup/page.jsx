@@ -9,6 +9,15 @@ export default function TeamUp() {
   const [loading, setLoading] = useState(true);
   const [selectedTournament, setSelectedTournament] = useState("all");
   const [tournamentList, setTournamentList] = useState([]);
+  const [selectedTournamentIds, setSelectedTournamentIds] = useState({});
+
+  // ✅ Tournament select change handler (per player)
+  const handleTournamentChange = (playerId, value) => {
+    setSelectedTournamentIds((prev) => ({
+      ...prev,
+      [playerId]: value,
+    }));
+  };
 
   // ✅ Fetch matched users from API
   const fetchPlayers = async () => {
@@ -16,12 +25,17 @@ export default function TeamUp() {
       const res = await api.get("/api/tournaments/similar-players");
       const matchedUsers = res.data?.data?.matchedUsers || [];
 
-      // Extract unique tournaments
-      const tournamentsSet = new Set();
+      // ✅ Extract unique tournaments based on _id
+      const tournamentsMap = new Map();
       matchedUsers.forEach((u) => {
-        u.tournaments?.forEach((t) => tournamentsSet.add(JSON.stringify(t)));
+        u.tournaments?.forEach((t) => {
+          if (t?._id && !tournamentsMap.has(t._id)) {
+            tournamentsMap.set(t._id, t);
+          }
+        });
       });
-      const tournaments = Array.from(tournamentsSet).map((t) => JSON.parse(t));
+
+      const tournaments = Array.from(tournamentsMap.values());
       setTournamentList(tournaments);
 
       const formatted = matchedUsers.map((u) => ({
@@ -58,7 +72,11 @@ export default function TeamUp() {
   // ✅ Send request to backend
   const handleRequest = async (id) => {
     try {
-      await api.post("/api/teamup", { to: id });
+      const payload = {
+        to: id,
+        tournamentId: selectedTournamentIds[id],
+      };
+      await api.post("/api/teamup", payload);
 
       setPlayers((prev) =>
         prev.map((p) => (p.id === id ? { ...p, requested: true } : p))
@@ -88,9 +106,10 @@ export default function TeamUp() {
 
   // ✅ Filter by search + selected tournament
   const filteredPlayers = players.filter((p) => {
-    const matchesSearch = `${p.firstname} ${p.lastname} ${p.username} ${p.gender}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesSearch =
+      `${p.firstname} ${p.lastname} ${p.username} ${p.gender}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
     const matchesTournament =
       selectedTournament === "all" ||
@@ -153,7 +172,8 @@ export default function TeamUp() {
                   {player.firstname} {player.lastname}
                 </h2>
                 <p className="text-sm">
-                  <span className="font-semibold">Username:</span> {player.username}
+                  <span className="font-semibold">Username:</span>{" "}
+                  {player.username}
                 </p>
                 <p className="text-sm">
                   <span className="font-semibold">Location:</span> {player.city}
@@ -167,27 +187,52 @@ export default function TeamUp() {
                 </p>
 
                 {!player.requested ? (
-                  <button
-                    type="button"
-                    className="mt-4 w-full font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200"
-                    style={{ background: "var(--accent-color)", color: "black" }}
-                    onClick={() => handleRequest(player.id)}
-                  >
-                    Send Request
-                  </button>
+                  <div className="pt-4 flex gap-2">
+                    <select
+                      value={selectedTournamentIds[player.id] || "all"}
+                      onChange={(e) =>
+                        handleTournamentChange(player.id, e.target.value)
+                      }
+                      className="w-full mt-4 p-2 rounded-lg bg-[var(--card-background)] border border-[var(--border-color)] focus:outline-none"
+                    >
+                      <option value="all">All Tournaments</option>
+                      {tournamentList.map((t) => (
+                        <option key={t._id} value={t._id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="mt-4 w-full font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200"
+                      style={{
+                        background: "var(--accent-color)",
+                        color: "black",
+                      }}
+                      onClick={() => handleRequest(player.id)}
+                    >
+                      Send Request
+                    </button>
+                  </div>
                 ) : (
                   <div className="mt-4 flex gap-2">
                     <button
                       type="button"
                       className="flex-1 font-semibold py-2 px-4 rounded-lg shadow-md cursor-default"
-                      style={{ background: "var(--success-color)", color: "white" }}
+                      style={{
+                        background: "var(--success-color)",
+                        color: "white",
+                      }}
                     >
                       Requested
                     </button>
                     <button
                       type="button"
                       className="px-4 py-2 rounded-lg shadow-md font-semibold transition duration-200"
-                      style={{ background: "var(--error-color)", color: "white" }}
+                      style={{
+                        background: "var(--error-color)",
+                        color: "white",
+                      }}
                       onClick={() => handleCancel(player.id)}
                     >
                       Cancel

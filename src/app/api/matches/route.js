@@ -12,6 +12,15 @@ function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
+// ✅ Stage Generator
+function getStageName(round, totalRounds) {
+  if (round < totalRounds - 2) return "group";
+  if (round === totalRounds - 2) return "qualifier";
+  if (round === totalRounds - 1) return "semi_final";
+  if (round === totalRounds) return "final";
+  return "group";
+}
+
 export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);
 
@@ -22,37 +31,43 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiResponse(400, null, "Tournament ID and Game ID are required");
   }
 
-  // ✅ Tournament fetch karo
+  // ✅ Tournament fetch
   const tournamentDoc = await Tournament.findById(tournament);
   if (!tournamentDoc) {
     throw new ApiResponse(404, null, "Tournament not found");
   }
 
-  // ✅ Teams fetch karo
+  // ✅ Teams fetch
   const teams = await Team.find({ tournament, game });
   if (teams.length < 2) {
     throw new ApiResponse(400, null, "Not enough teams to create matches");
   }
 
-  // ✅ Round calculate karo
+  // ✅ Total rounds calculate (log2 style)
+  const totalRounds = Math.ceil(Math.log2(teams.length));
+
+  // ✅ Existing matches
   const existingMatches = await Match.find({ tournament, game });
   const round = Math.floor(existingMatches.length / (teams.length / 2)) + 1;
 
-  // ✅ Teams shuffle
+  // ✅ Stage name calculate
+  const stage = getStageName(round, totalRounds);
+
+  // ✅ Shuffle teams
   const shuffledTeams = shuffleArray(teams);
 
   // ✅ Bracket group check/create
   let bracketGroup = await BracketGroup.findOne({
     tournament,
     game,
-    name: `Round ${round} - Winner Bracket`,
+    name: `Round ${round} - ${stage}`,
   });
 
   if (!bracketGroup) {
     bracketGroup = await BracketGroup.create({
       tournament,
       game,
-      name: `Round ${round} - Winner Bracket`,
+      name: `Round ${round} - ${stage}`,
       order: round,
       bracketSide: "winner",
     });
@@ -66,7 +81,7 @@ export const POST = asyncHandler(async (req) => {
     const teamA = shuffledTeams[i];
     const teamB = shuffledTeams[i + 1];
 
-    if (!teamB) continue; // Odd team bach jaye toh skip
+    if (!teamB) continue; // odd team skip
 
     const match = await Match.create({
       tournament,
@@ -74,6 +89,7 @@ export const POST = asyncHandler(async (req) => {
       matchNumber,
       bracketGroup: bracketGroup._id,
       round,
+      stage, // ✅ stage save ho rahi hai
       teamA: teamA._id,
       teamB: teamB._id,
       admin: user._id,
@@ -84,9 +100,14 @@ export const POST = asyncHandler(async (req) => {
   }
 
   return Response.json(
-    new ApiResponse(201, matches, `Round ${round} matches created successfully`)
+    new ApiResponse(
+      201,
+      matches,
+      `${stage} (Round ${round}) matches created successfully`
+    )
   );
 });
+
 
 
 
