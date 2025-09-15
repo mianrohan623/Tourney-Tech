@@ -1,5 +1,5 @@
 import { Team } from "@/models/Team";
-import { Tournament } from "@/models/Tournament";
+// import { Tournament } from "@/models/Tournament";
 import { Registration } from "@/models/Registration";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";

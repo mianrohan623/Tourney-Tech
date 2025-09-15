@@ -136,10 +136,10 @@ export default function PartnerTournaments() {
                   Partner Assigned
                 </p>
                 <p className="text-sm text-[var(--foreground)]">
-                  {t.partner.firstname} {t.partner.lastname} ({t.partner.username})
+                  {t.partner.firstname} {t.partner.lastname} 
                 </p>
                 <p className="text-xs text-[var(--foreground)] opacity-70">
-                  {t.partner.email}
+                 {t.partner.username}
                 </p>
               </div>
             )}
