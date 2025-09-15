@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import api from "@/utils/axios"; // axios wrapper
+import api from "@/utils/axios"; 
 import { Loader2 } from "lucide-react";
 
 export default function PartnerTournaments() {
@@ -20,8 +20,8 @@ export default function PartnerTournaments() {
     const fetchData = async () => {
       try {
         const res = await api.get("/api/team/fetch-partner");
-        const withPartners = (res.data.data || []).filter((t) => t.partner);
-        setTournaments(withPartners);
+        const data = res.data?.data || [];
+        setTournaments(data); // keep all tournaments; filter/search later
       } catch (err) {
         console.error("Error fetching tournaments:", err);
       } finally {
@@ -31,7 +31,7 @@ export default function PartnerTournaments() {
     fetchData();
   }, []);
 
-  // ✅ Filtered + searched tournaments
+  // ✅ Filter + search
   const filteredTournaments = useMemo(() => {
     return tournaments
       .filter((t) =>
@@ -48,17 +48,15 @@ export default function PartnerTournaments() {
       });
   }, [tournaments, search, statusFilter]);
 
-  // ✅ Pagination logic
+  // Pagination
   const totalPages = Math.ceil(filteredTournaments.length / itemsPerPage);
   const paginated = filteredTournaments.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Reset page when filters/search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter]);
+  // Reset page on filter/search change
+  useEffect(() => setCurrentPage(1), [search, statusFilter]);
 
   if (loading) {
     return (
@@ -71,16 +69,15 @@ export default function PartnerTournaments() {
   if (!tournaments.length) {
     return (
       <p className="text-center text-[var(--foreground)] opacity-70">
-        No assigned partners found.
+        No tournaments found.
       </p>
     );
   }
 
   return (
     <div className="p-4 space-y-6">
-      {/* 🔍 Search & Filters */}
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        {/* Search */}
         <input
           type="text"
           placeholder="Search by tournament or partner..."
@@ -88,8 +85,6 @@ export default function PartnerTournaments() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-1/2 p-2 rounded-lg bg-[var(--card-background)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none"
         />
-
-        {/* Filters */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -102,7 +97,7 @@ export default function PartnerTournaments() {
         </select>
       </div>
 
-      {/* ✅ Tournament Cards */}
+      {/* Tournament Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {paginated.map((t) => (
           <div
@@ -117,6 +112,7 @@ export default function PartnerTournaments() {
               {new Date(t.startDate).toLocaleDateString()} -{" "}
               {new Date(t.endDate).toLocaleDateString()}
             </p>
+
             <p className="text-sm mb-2 text-[var(--foreground)]">
               📍 {t.location || "Online"}
             </p>
@@ -133,22 +129,41 @@ export default function PartnerTournaments() {
               {t.status}
             </p>
 
-            <div className="border-t border-[var(--border-color)] pt-3">
-              <p className="text-sm text-[var(--accent-color)] font-medium">
-                Partner Assigned
-              </p>
-              <p className="text-sm text-[var(--foreground)]">
-                {t.partner.firstname} {t.partner.lastname} ({t.partner.username})
-              </p>
-              <p className="text-xs text-[var(--foreground)] opacity-70">
-                {t.partner.email}
-              </p>
-            </div>
+            {/* Partner Info */}
+            {t.partner && (
+              <div className="border-t border-[var(--border-color)] pt-3">
+                <p className="text-sm text-[var(--accent-color)] font-medium">
+                  Partner Assigned
+                </p>
+                <p className="text-sm text-[var(--foreground)]">
+                  {t.partner.firstname} {t.partner.lastname} ({t.partner.username})
+                </p>
+                <p className="text-xs text-[var(--foreground)] opacity-70">
+                  {t.partner.email}
+                </p>
+              </div>
+            )}
+
+            {/* Registered Games */}
+            {t.registeredGames?.length > 0 && (
+              <div className="border-t border-[var(--border-color)] pt-3 mt-2">
+                <p className="text-sm text-[var(--accent-color)] font-medium mb-1">
+                  Registered Games
+                </p>
+                <ul className="list-disc list-inside text-sm text-[var(--foreground)]">
+                  {t.registeredGames.map((g) => (
+                    <li key={g._id}>
+                      {g.name} ({g.platform})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
-      {/* 📄 Pagination */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-3 mt-4">
           <button
@@ -158,11 +173,9 @@ export default function PartnerTournaments() {
           >
             Previous
           </button>
-
           <span className="text-sm text-[var(--foreground)]">
             Page {currentPage} of {totalPages}
           </span>
-
           <button
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}

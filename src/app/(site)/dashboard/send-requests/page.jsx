@@ -10,9 +10,10 @@ export default function SentRequests() {
 
   // Filters
   const [selectedTournament, setSelectedTournament] = useState("all");
+  const [selectedGame, setSelectedGame] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Function to fetch user and requests
+  // Load user and requests
   const fetchRequests = async () => {
     try {
       const resUser = await api.get("/api/me");
@@ -20,15 +21,8 @@ export default function SentRequests() {
       setUserId(id);
 
       const res = await api.get("/api/teamup");
-      const data = res.data?.data;
-
-      if (Array.isArray(data)) {
-        setRequests(data);
-      } else if (Array.isArray(data?.requests)) {
-        setRequests(data.requests);
-      } else {
-        setRequests([]);
-      }
+      const data = res.data?.data?.requests || [];
+      setRequests(data);
     } catch (err) {
       console.error("❌ Failed to fetch requests:", err);
       toast.error("Failed to load requests");
@@ -44,37 +38,44 @@ export default function SentRequests() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading) return <p className="p-6 text-center">Loading requests...</p>;
+  if (loading || !userId)
+    return <p className="p-6 text-center">Loading requests...</p>;
 
-  // ✅ Sent requests
-  const sentRequests = Array.isArray(requests)
-    ? requests.filter((r) => r.from?._id === userId)
-    : [];
+  // Filter only sent requests (where I am "from")
+  const sentRequests = requests.filter((r) => r.from?._id === userId);
 
-  // ✅ Extract unique tournaments for filter dropdown
+  // Unique tournaments
   const tournaments = [
+    ...new Set(sentRequests.map((r) => r.tournament?.name || "Unknown")),
+  ];
+
+  // Unique games
+  const games = [
     ...new Set(
-      sentRequests.map(
-        (r) => r.fromTournament?.name || r.toTournament?.name || "Unknown"
-      )
+      sentRequests.flatMap((r) => (r.games || []).map((g) => g.name))
     ),
   ];
 
-  // ✅ Apply filters + search
+  // Apply filters + search
   const filteredRequests = sentRequests.filter((req) => {
-    const tournamentName =
-      req.fromTournament?.name || req.toTournament?.name || "Unknown";
+    const tournamentName = req.tournament?.name || "Unknown";
+    const gameNames = (req.games || []).map((g) => g.name);
 
     const matchesTournament =
       selectedTournament === "all" || selectedTournament === tournamentName;
+
+    const matchesGame =
+      selectedGame === "all" || gameNames.includes(selectedGame);
 
     const matchesSearch =
       req.to?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tournamentName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesTournament && matchesSearch;
+    return matchesTournament && matchesGame && matchesSearch;
   });
+
+  const formatDate = (isoString) => new Date(isoString).toLocaleString();
 
   return (
     <div
@@ -83,10 +84,10 @@ export default function SentRequests() {
     >
       <h1 className="text-2xl font-bold mb-6">Sent Team Up Requests</h1>
 
-      {/* 🔎 Filters */}
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <select
-          className="p-2 rounded bg-[var(--card-background)] border"
+          className="p-2 rounded bg-[var(--card-background)] border border-[var(--border-color)]"
           value={selectedTournament}
           onChange={(e) => setSelectedTournament(e.target.value)}
         >
@@ -98,10 +99,23 @@ export default function SentRequests() {
           ))}
         </select>
 
+        <select
+          className="p-2 rounded bg-[var(--card-background)] border border-[var(--border-color)]"
+          value={selectedGame}
+          onChange={(e) => setSelectedGame(e.target.value)}
+        >
+          <option value="all">All Games</option>
+          {games.map((g, i) => (
+            <option key={i} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+
         <input
           type="text"
           placeholder="Search by username, message or tournament..."
-          className="flex-1 p-2 rounded bg-[var(--card-background)] border"
+          className="flex-1 p-2 rounded bg-[var(--card-background)] border border-[var(--border-color)]"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -118,33 +132,51 @@ export default function SentRequests() {
                 border: `1px solid var(--border-color)`,
               }}
             >
-              <h3 className="font-semibold text-lg mb-2 capitalize">
-                {req.to?.firstname} {req.to?.lastname}
+              {/* Recipient */}
+              <h3 className="font-semibold text-lg mb-2">
+                To: {req.to?.firstname} {req.to?.lastname} ({req.to?.username})
               </h3>
-
-              <p className="text-sm mb-1">
-                <strong>User Name: </strong>
-                {req.to?.username}
-              </p>
 
               {/* Tournament */}
               <p className="text-sm mb-1">
                 <strong>Tournament: </strong>
-                {req.fromTournament?.name ||
-                  req.toTournament?.name ||
-                  "Unknown"}
+                {req.tournament?.name || "Unknown"}
               </p>
+
+              {/* Games */}
+              <div className="text-sm mb-2">
+                <strong>Games: </strong>
+                {req.games?.length > 0 ? (
+                  <ul className="list-disc list-inside">
+                    {req.games.map((g) => (
+                      <li key={g._id} className="text-[var(--info-color)]">
+                        {g.name} ({g.platform})
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="opacity-70">No games</span>
+                )}
+              </div>
 
               {/* Message */}
               <p className="text-sm mb-1">
                 {req.status === "accepted"
-                  ? "You are now team members"
+                  ? "✅ Request accepted - you are now team members"
+                  : req.status === "rejected"
+                  ? "❌ Request rejected"
                   : req.message || "Request sent"}
               </p>
 
-              <p className="text-sm mb-1">
+              {/* Status */}
+              <p className="text-sm capitalize mb-1">
                 <span className="font-semibold">Status: </span>
-                <span className="capitalize">{req.status || "pending"}</span>
+                {req.status || "pending"}
+              </p>
+
+              {/* Sent time */}
+              <p className="text-xs opacity-70 mt-3">
+                <strong>Sent:</strong> {formatDate(req.createdAt)}
               </p>
             </div>
           ))}
