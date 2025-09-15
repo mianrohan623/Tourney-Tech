@@ -21,17 +21,17 @@ export const GET = asyncHandler(async (req) => {
     tournament: { $in: tournamentIds },
     user: user._id,
   })
-    .populate("gameRegistrationDetails.games")
     .populate("tournament")
+    .populate("gameRegistrationDetails.games")
     .lean();
 
   const tournaments = teams.map((team) => {
     const gameConfig = team.tournament?.games.find(
       (g) => g._id.toString() === team.game.toString()
     );
-   
+
     const registration = registrations.find(
-      (r) => r.tournament.toString() === team.tournament?._id.toString()
+      (r) => r.tournament?._id.toString() === team.tournament?._id.toString()
     );
 
     const partner =
@@ -48,6 +48,7 @@ export const GET = asyncHandler(async (req) => {
       status: team.tournament?.status,
       partner,
       registeredGames: registration?.gameRegistrationDetails?.games || [],
+      tournament: team.tournament,
     };
   });
 
