@@ -5,8 +5,8 @@ const TournamentGameSchema = new Schema({
   entryFee: { type: Number, default: 0 },
   format: {
     type: String,
-    enum: ["single_elimination", "double_elimination", "round_robin"],
-    required: true,
+    enum: ["double_elimination"],
+    default: "double_elimination",
   },
   teamBased: { type: Boolean, default: true },
   tournamentTeamType: {
@@ -14,6 +14,7 @@ const TournamentGameSchema = new Schema({
     enum: ["single_player", "double_player"],
     required: true,
   },
+  rounds: { type: Number, required: true }, 
 });
 
 const TournamentStaffSchema = new Schema(
