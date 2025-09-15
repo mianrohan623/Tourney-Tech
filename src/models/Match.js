@@ -2,24 +2,31 @@ import { Schema, model, models } from "mongoose";
 
 const MatchSchema = new Schema(
   {
-    tournament: {
-      type: Schema.Types.ObjectId,
-      ref: "Tournament",
-      required: true,
-    },
+    tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
     game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
     matchNumber: { type: Number, required: true },
     bracketGroup: { type: Schema.Types.ObjectId, ref: "BracketGroup" },
     round: { type: Number, required: true },
-    qr: { type: String },
+    stage: { 
+      type: String, 
+      enum: ["group", "qualifier", "eliminator", "semi_final", "final"], 
+      default: "group" 
+    },
     teamA: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     teamB: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+
+    // 🔹 Scores
+    teamAScore: { type: Number, default: 0 },
+    teamBScore: { type: Number, default: 0 },
+
     winner: { type: Schema.Types.ObjectId, ref: "Team" },
     loser: { type: Schema.Types.ObjectId, ref: "Team" },
-    score: { type: String },
+
+    status: { type: String, enum: ["pending", "completed"], default: "pending" },
     scheduledAt: { type: Date },
     completedAt: { type: Date },
-    nextMatch: { type: Schema.Types.ObjectId, ref: "Match" },
+
+    nextMatch: { type: Schema.Types.ObjectId, ref: "Match" }, // for bracket progression
     admin: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
