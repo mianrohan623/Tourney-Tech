@@ -1,18 +1,11 @@
 // GET /api/team/fetch-partner
 import { Team } from "@/models/Team";
-<<<<<<< Updated upstream
-import { Registration } from "@/models/Registration";
-import { ApiResponse } from "@/utils/server/ApiResponse";
-import { asyncHandler } from "@/utils/server/asyncHandler";
-import { requireAuth } from "@/utils/server/auth";
-=======
 // import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 // import { parseForm } from "@/utils/server/parseForm";
 
->>>>>>> Stashed changes
 
 export const GET = asyncHandler(async (req) => {
   const user = await requireAuth(req);
@@ -24,18 +17,7 @@ export const GET = asyncHandler(async (req) => {
     .lean();
     
 
-  // ✅ Collect tournament IDs for registration lookup
-  const tournamentIds = teams.map((t) => t.tournament?._id);
-
-  // ✅ Find user registrations for those tournaments
-  const registrations = await Registration.find({
-    tournament: { $in: tournamentIds },
-    user: user._id,
-  })
-    .populate("gameRegistrationDetails.games") // fetch game details
-    .lean();
-
-  // ✅ Group tournaments with partner + registration info
+  // ✅ Group tournaments
   const tournaments = teams.map((team) => {
     const gameConfig = team.tournament?.games.find(
       (g) => g._id.toString() === team.game.toString()
