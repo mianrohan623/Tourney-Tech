@@ -57,14 +57,23 @@ export const POST = asyncHandler(async (req) => {
   }
 
   const teamName = `${users[0].username}_${users[1].username}`;
+  const lastTeam = await Team.findOne({ tournament, game })
+    .sort({ serialNo: -1 })
+    .select("serialNo");
+
+  let newSerial = 1;
+  if (lastTeam) {
+    newSerial = parseInt(lastTeam.serialNo, 10) + 1;
+  }
 
   const team = await Team.create({
     name: teamName,
     logo: logo || null,
-    tournament, 
+    tournament,
     game,
     createdBy: memberIds[0],
     members: memberIds,
+    serialNo: newSerial.toString(), 
   });
 
   return Response.json(new ApiResponse(201, team, "Team created successfully"));

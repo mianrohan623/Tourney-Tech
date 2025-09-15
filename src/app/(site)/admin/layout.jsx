@@ -10,7 +10,7 @@ import AdminGuard from "@/components/gard/admin/AdminGard";
 import {
   LayoutDashboard,
   Users,
-  Settings,
+  // Settings,
   LogOut,
   BadgePlus,
   Gamepad2,

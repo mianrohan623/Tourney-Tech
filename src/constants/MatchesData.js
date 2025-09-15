@@ -1,12 +1,12 @@
 
 export const rawMatches = [
-  // Quarterfinals
+  // Round 1
   {
     id: 1,
     name: "Quarterfinal 1",
     nextMatchId: 5,
     startTime: "2025-07-24",
-    tournamentRoundText: "Quarterfinals",
+    tournamentRoundText: "Round 1",
     winnerId: "1a", // Alpha won
     participants: [
       { id: "1a", name: "Team Alpha" },
@@ -18,7 +18,7 @@ export const rawMatches = [
     name: "Quarterfinal 2",
     nextMatchId: 5,
     startTime: "2025-07-24",
-    tournamentRoundText: "Quarterfinals",
+    tournamentRoundText: "Round 1",
     winnerId: "2b", // Delta won
     participants: [
       { id: "2a", name: "Team Charlie" },
@@ -30,7 +30,7 @@ export const rawMatches = [
     name: "Quarterfinal 3",
     nextMatchId: 6,
     startTime: "2025-07-24",
-    tournamentRoundText: "Quarterfinals",
+    tournamentRoundText: "Round 1",
     winnerId: "3a", // Echo won
     participants: [
       { id: "3a", name: "Team Echo" },
@@ -42,7 +42,7 @@ export const rawMatches = [
     name: "Quarterfinal 4",
     nextMatchId: 6,
     startTime: "2025-07-24",
-    tournamentRoundText: "Quarterfinals",
+    tournamentRoundText: "Round 1",
     winnerId: "4b", // Hotel won
     participants: [
       { id: "4a", name: "Team Golf" },
@@ -50,13 +50,13 @@ export const rawMatches = [
     ],
   },
 
-  // Semifinals
+  // Round 2
   {
     id: 5,
     name: "Semifinal 1",
     nextMatchId: 7,
     startTime: "2025-07-25",
-    tournamentRoundText: "Semifinals",
+    tournamentRoundText: "Round 2",
     winnerId: "5a", // Alpha won
     participants: [
       { id: "5a", name: "Team Alpha" }, // from Match 1
@@ -68,7 +68,7 @@ export const rawMatches = [
     name: "Semifinal 2",
     nextMatchId: 7,
     startTime: "2025-07-25",
-    tournamentRoundText: "Semifinals",
+    tournamentRoundText: "Round 2",
     winnerId: "6b", // Hotel won
     participants: [
       { id: "6a", name: "Team Echo" },  // from Match 3

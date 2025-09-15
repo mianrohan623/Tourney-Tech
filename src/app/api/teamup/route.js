@@ -7,6 +7,8 @@ import { parseForm } from "@/utils/server/parseForm";
 // import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
 import { Team } from "@/models/Team";
+// import { Tournament } from "@/models/Tournament";
+import { Registration } from "@/models/Registration";
 // import { User } from "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
@@ -43,7 +45,34 @@ export const GET = asyncHandler(async () => {
     .populate("to", "firstname lastname username email")
     .lean();
 
-  // get teams only for accepted requests
+  const userIds = [
+    ...new Set([
+      ...requests.map((r) => r.from._id.toString()),
+      ...requests.map((r) => r.to._id.toString()),
+    ]),
+  ];
+
+  // 3) Get registrations of these users
+  const registrations = await Registration.find({ user: { $in: userIds } })
+    .populate("tournament")
+    .populate("gameRegistrationDetails.games")
+    .lean();
+
+  const requestsWithTournament = requests.map((req) => {
+    const toRegs = registrations.filter(
+      (r) => r.user.toString() === req.to._id.toString()
+    );
+    const toTournamentReg = toRegs.find(
+      (r) => r.tournament && r?.gameRegistrationDetails?.games?.length > 0
+    );
+
+    return {
+      ...req,
+      tournament: toTournamentReg?.tournament,
+      games: toTournamentReg?.gameRegistrationDetails?.games,
+    };
+  });
+
   const acceptedUserIds = requests
     .filter((r) => r.status === "accepted")
     .flatMap((r) => [r.from._id.toString(), r.to._id.toString()]);
@@ -63,7 +92,7 @@ export const GET = asyncHandler(async () => {
   return Response.json(
     new ApiResponse(
       200,
-      { requests, teams },
+      { requests: requestsWithTournament, teams },
       "Fetched team-up requests & teams"
     )
   );

@@ -1,130 +1,44 @@
 "use client";
-import {
-  SingleEliminationBracket,
-  SVGViewer,
-  Match,
-  createTheme,
-} from "@g-loot/react-tournament-brackets";
 
-import { useEffect, useState } from "react";
-
-
-import { rawMatches } from "@/constants/MatchesData";
+import { useState } from "react";
+import RoundOneMatches from "@/components/ui/dashboard/matches/RoundOne";
+import RoundTwoBracket from "@/components/ui/dashboard/matches/RoundTwo";
 import { mapMatches } from "@/utils/mapMatches";
+import { rawMatches as rawRound2Matches } from "@/constants/MatchesData";
 
-// Helper function to get CSS variable values from :root
-const getCSSVar = (name, fallback) => {
-  if (typeof window === "undefined") return fallback;
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    fallback
-  );
-};
+export default function TournamentPage() {
+  // Round 1 matches (cards)
+  const [round1Matches, setRound1Matches] = useState([
+    { id: 1, teamA: { id: "t1", name: "Team Alpha" }, teamB: { id: "t2", name: "Team Beta" }, scoreA: 2, scoreB: 1 },
+    { id: 2, teamA: { id: "t3", name: "Team Gamma" }, teamB: { id: "t4", name: "Team Delta" }, scoreA: 0, scoreB: 0 },
+    // add more matches here
+  ]);
 
-export default function MatchesOverview() {
-  const matches = mapMatches(rawMatches);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [theme, setTheme] = useState(
-    createTheme({
-      textColor: {
-        main: "#ededed",
-        highlighted: "#ffffff",
-        dark: "#cccccc",
-      },
-      matchBackground: {
-        wonColor: "#101828",
-        lostColor: "#1f2937",
-      },
-      score: {
-        background: {
-          wonColor: "#FBBF24",
-          lostColor: "rgba(251, 191, 36, 0.1)",
-        },
-        text: {
-          highlightedWonColor: "#ffffff",
-          highlightedLostColor: "#999999",
-        },
-      },
-      border: {
-        color: "#364153",
-        highlightedColor: "#FBBF24",
-      },
-      roundHeader: {
-        backgroundColor: "#FBBF24",
-        fontColor: "#030712",
-      },
-      connectorColor: "#364153",
-      connectorColorHighlight: "#FBBF24",
-      svgBackground: "#030712",
-    })
-  );
+  // Round 2 matches (single-elimination)
+  const round2Matches = mapMatches(rawRound2Matches);
 
-  useEffect(() => {
-    const updateDimensions = () => {
-      setDimensions({
-        width: window.innerWidth - 100,
-        height: window.innerHeight - 100,
-      });
-
-      setTheme(
-        createTheme({
-          textColor: {
-            main: getCSSVar("--foreground", "#ededed"),
-            highlighted: "#ffffff",
-            dark: "#cccccc",
-          },
-          matchBackground: {
-            wonColor: getCSSVar("--card-background", "#101828"),
-            lostColor: getCSSVar("--secondary-color", "#1f2937"),
-          },
-          score: {
-            background: {
-              wonColor: "#FBBF24",
-              lostColor: "rgba(251, 191, 36, 0.1)",
-            },
-            text: {
-              highlightedWonColor: getCSSVar("#ffffff"),
-              highlightedLostColor: "#999999",
-            },
-          },
-          border: {
-            color: getCSSVar("--border-color", "#364153"),
-            highlightedColor: getCSSVar("--accent-color", "#FBBF24"),
-          },
-          roundHeader: {
-            backgroundColor: getCSSVar("--accent-color", "#FBBF24"),
-            fontColor: getCSSVar("--background", "#030712"),
-          },
-          connectorColor: getCSSVar("--border-color", "#364153"),
-          connectorColorHighlight: getCSSVar("--accent-color", "#FBBF24"),
-          svgBackground: getCSSVar("--background", "#030712"),
-        })
-      );
-    };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
+  // Round 1 update handler
+  const handleRound1Update = (id, data) => {
+    console.log("Round 1 Update:", id, data);
+    setRound1Matches((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, ...data } : m))
+    );
+    // optionally call backend API here
+  };
 
   return (
-    <div className="overflow-auto scrollbar-x">
-      <SingleEliminationBracket
-        matches={matches}
-        matchComponent={Match}
-        theme={theme}
-        svgWrapper={({ children, ...props }) => (
-          <SVGViewer
-            background={theme.svgBackground}
-            SVGBackground={theme.svgBackground}
-            width={dimensions.width}
-            height={dimensions.height}
-            {...props}
-          >
-            {children}
-          </SVGViewer>
-        )}
-      />
+    <div className="p-4 space-y-12">
+      {/* ROUND 1 */}
+      <section>
+        <h2 className="text-2xl font-bold text-white mb-4">Round 1 Matches</h2>
+        <RoundOneMatches matches={round1Matches} onUpdate={handleRound1Update} />
+      </section>
+
+      {/* ROUND 2 */}
+      <section className="pb-5">
+        <h2 className="text-2xl font-bold text-white mb-4">Round 2 Bracket</h2>
+        <RoundTwoBracket matches={round2Matches} />
+      </section>
     </div>
   );
 }

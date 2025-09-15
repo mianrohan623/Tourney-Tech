@@ -1,5 +1,6 @@
 // /api/teamup/[id]
 
+import { getNextSequence } from "@/lib/utils";
 import { Registration } from "@/models/Registration";
 
 import { Team } from "@/models/Team";
@@ -89,11 +90,15 @@ export const PATCH = asyncHandler(async (req, context) => {
         await team.save();
       }
     } else {
+      const newSerial = await getNextSequence(
+        `team-${commonTournament}-${commonGame}`
+      );
       team = await Team.create({
         name: `${request.from.username}-${request.to.username} Team`,
         createdBy: request.from._id,
         tournament: commonTournament,
         game: commonGame,
+        serialNo: newSerial.toString(),
         members: [request.from._id, request.to._id],
       });
     }
