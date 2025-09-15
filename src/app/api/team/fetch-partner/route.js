@@ -22,6 +22,7 @@ export const GET = asyncHandler(async (req) => {
     user: user._id,
   })
     .populate("gameRegistrationDetails.games")
+    .populate("tournament")
     .lean();
 
   const tournaments = teams.map((team) => {
