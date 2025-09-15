@@ -54,3 +54,4 @@ export const PATCH = asyncHandler(async (req) => {
     new ApiResponse(200, team, "Partner selected successfully")
   );
 });
+
