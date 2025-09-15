@@ -58,24 +58,35 @@ export const GET = asyncHandler(async () => {
     .populate("gameRegistrationDetails.games")
     .lean();
 
-const requestsWithTournament = requests.map((req) => {
-  const fromRegs = registrations.filter(
-    (r) => r.user.toString() === req.from._id.toString()
-  );
-  const toRegs = registrations.filter(
-    (r) => r.user.toString() === req.to._id.toString()
-  );
+  const requestsWithTournament = requests.map((req) => {
+    const fromRegs = registrations.filter(
+      (r) => r.user.toString() === req.from._id.toString()
+    );
+    const toRegs = registrations.filter(
+      (r) => r.user.toString() === req.to._id.toString()
+    );
 
-  const fromTournamentReg = fromRegs.find((r) => r.tournament);
-  const toTournamentReg = toRegs.find((r) => r.tournament);
+    const fromTournamentReg = fromRegs.find(
+      (r) => r.tournament && r?.gameRegistrationDetails?.games?.length > 0
+    );
+    const toTournamentReg = toRegs.find(
+      (r) => r.tournament && r?.gameRegistrationDetails?.games?.length > 0
+    );
 
-  return {
-    ...req,
-    fromTournament: fromTournamentReg?.tournament || null,
-    toTournament: toTournamentReg?.tournament || null,
-  };
-});
-
+    return {
+      ...req,
+      fromTournament:
+        {
+          tournament: fromTournamentReg?.tournament,
+          games: fromTournamentReg?.gameRegistrationDetails?.games,
+        } || null,
+      toTournament:
+        {
+          tournament: toTournamentReg?.tournament,
+          games: toTournamentReg?.gameRegistrationDetails?.games,
+        } || null,
+    };
+  });
 
   const acceptedUserIds = requests
     .filter((r) => r.status === "accepted")

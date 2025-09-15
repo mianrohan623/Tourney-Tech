@@ -1,6 +1,5 @@
 import { Registration } from "@/models/Registration";
 import { TeamUp } from "@/models/TeamUp";
-// import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
@@ -30,7 +29,7 @@ export const GET = asyncHandler(async () => {
     );
   }
 
-  let allMatchedUsers = [];
+  let allMatchedUsersWithDetails = [];
 
   for (const reg of currentUserRegistrations) {
     // ✅ Tournament me check karo ke iske games me koi "double_player" type hai ya nahi
@@ -67,14 +66,70 @@ export const GET = asyncHandler(async () => {
       .populate({
         path: "gameRegistrationDetails.games",
         model: "Game",
+      })
+      .populate({
+        path: "tournament",
+        model: "Tournament",
+        select: "name games",
       });
 
-    const matchedUsers = matchingRegistrations.map((r) => r.user);
-    allMatchedUsers = [...allMatchedUsers, ...matchedUsers];
+    // 👇 har registration ko ek structured object banate hain
+    for (const r of matchingRegistrations) {
+      allMatchedUsersWithDetails.push({
+        user: r.user,
+        tournament: {
+          _id: r.tournament._id,
+          name: r.tournament.name,
+        },
+        games: r.gameRegistrationDetails.games.flatMap((d) =>
+            d
+        ),
+      });
+    }
   }
 
-  const uniqueMatchedUsers = Array.from(
-    new Map(allMatchedUsers.map((u) => [u._id.toString(), u])).values()
+  // ✅ Unique users ke saath tournaments + games merge karo
+  const userTournamentGameMap = new Map();
+
+  for (const entry of allMatchedUsersWithDetails) {
+    const userId = entry.user._id.toString();
+    if (!userTournamentGameMap.has(userId)) {
+      userTournamentGameMap.set(userId, {
+        ...entry.user.toObject(),
+        tournaments: [],
+      });
+    }
+
+    const existing = userTournamentGameMap.get(userId);
+
+    // check karo ke tournament already added hai ya nahi
+    const existingTournament = existing.tournaments.find(
+      (t) => t._id.toString() === entry.tournament._id.toString()
+    );
+
+    if (existingTournament) {
+      // agar tournament already hai to uske games merge kar do
+      const gameIds = new Set(
+        existingTournament.games.map((g) => g._id.toString())
+      );
+      for (const g of entry.games) {
+        if (!gameIds.has(g._id.toString())) {
+          existingTournament.games.push(g);
+        }
+      }
+    } else {
+      existing.tournaments.push({
+        _id: entry.tournament._id,
+        name: entry.tournament.name,
+        games: entry.games,
+      });
+    }
+
+    userTournamentGameMap.set(userId, existing);
+  }
+
+  const matchedUsersWithTournamentGames = Array.from(
+    userTournamentGameMap.values()
   );
 
   // ✅ Pending requests nikaalo
@@ -100,8 +155,9 @@ export const GET = asyncHandler(async () => {
     ])
   );
 
-  const matchedUsersWithFlags = uniqueMatchedUsers.map((u) => ({
-    ...u.toObject(),
+  // ✅ Flags add karo
+  const matchedUsersWithFlags = matchedUsersWithTournamentGames.map((u) => ({
+    ...u,
     isSendRequest: pendingUserIds.has(u._id.toString()),
     alreadyMember: acceptedUserIds.has(u._id.toString()),
   }));

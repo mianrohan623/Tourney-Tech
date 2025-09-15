@@ -18,6 +18,7 @@ const TeamSchema = new Schema(
       },
     ],
     partner: { type: Schema.Types.ObjectId, ref: "User" },
+    serialNo: { type: String, required: true },
   },
   { timestamps: true }
 );
