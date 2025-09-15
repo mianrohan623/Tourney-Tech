@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 
-
-export default function EditMatchModal({ 
-  isOpen, 
-  onClose, 
-  match, 
-  teams = [], 
-  onSave 
+export default function EditMatchModal({
+  isOpen,
+  onClose,
+  match,
+  teams = [],
+  onSave,
 }) {
   const [form, setForm] = useState({
     teamA: "",
@@ -47,7 +46,10 @@ export default function EditMatchModal({
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
       <div
         className="w-full max-w-lg rounded-xl p-6"
-        style={{ background: "var(--card-background)", border: "1px solid var(--border-color)" }}
+        style={{
+          background: "var(--card-background)",
+          border: "1px solid var(--border-color)",
+        }}
       >
         <h2 className="text-lg font-semibold mb-4">
           Edit Match {match?.id ? `#${match.id}` : ""}
@@ -77,13 +79,26 @@ export default function EditMatchModal({
                 value={form.teamAScore}
                 onChange={(e) => handleChange("teamAScore", e.target.value)}
                 className="w-full rounded-lg px-3 py-2 border bg-transparent"
-                style={{ borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
               />
+
+              <select
+                value={form.totaHandWon}
+                onChange={(e) => handleChange("teamAResult", e.target.value)}
+                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
+              >
+                <option value="">Total hand won</option>
+                <option value="win">1</option>
+                <option value="loss">2</option>
+              </select>
 
               <select
                 value={form.teamAResult}
                 onChange={(e) => handleChange("teamAResult", e.target.value)}
-                 className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
+                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
               >
                 <option value="">Select Result</option>
                 <option value="win">Win</option>
@@ -115,15 +130,26 @@ export default function EditMatchModal({
                 value={form.teamBScore}
                 onChange={(e) => handleChange("teamBScore", e.target.value)}
                 className="w-full rounded-lg px-3 py-2 border bg-transparent"
-                style={{ borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
               />
 
+               <select
+                value={form.totaHandWon}
+                onChange={(e) => handleChange("teamAResult", e.target.value)}
+                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
+              >
+                <option value="">Total hand won</option>
+                <option value="win">1</option>
+                <option value="loss">2</option>
+              </select>
 
-                
               <select
                 value={form.teamBResult}
                 onChange={(e) => handleChange("teamBResult", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
+                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
               >
                 <option value="">Select Result</option>
                 <option value="win">Win</option>
@@ -138,7 +164,10 @@ export default function EditMatchModal({
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg"
-            style={{ background: "var(--secondary-color)", color: "var(--foreground)" }}
+            style={{
+              background: "var(--secondary-color)",
+              color: "var(--foreground)",
+            }}
           >
             Cancel
           </button>

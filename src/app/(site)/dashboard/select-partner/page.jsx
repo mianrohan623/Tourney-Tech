@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
 
+import PartnerTournaments from "@/components/ui/dashboard/team/PartnerTournament";
+
 export default function SelectTeam() {
   const [teams, setTeams] = useState([]);
   const [tournaments, setTournaments] = useState([]);
@@ -56,7 +58,8 @@ export default function SelectTeam() {
         setTournaments(tournamentList);
 
         // Select first tournament & team if exists
-        if (tournamentList.length > 0) setSelectedTournamentId(tournamentList[0]._id);
+        if (tournamentList.length > 0)
+          setSelectedTournamentId(tournamentList[0]._id);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load your teams");
@@ -121,90 +124,127 @@ export default function SelectTeam() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 rounded-2xl shadow-lg" style={{ background: "var(--card-background)", border: "1px solid var(--border-color)" }}>
-      <h2 className="text-xl font-bold mb-4" style={{ color: "var(--accent-color)" }}>
-        Select Team Partner
-      </h2>
+    <>
+      <div
+        className="w-full p-6 rounded-2xl shadow-lg"
+        style={{
+          background: "var(--card-background)",
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        <h2
+          className="text-xl font-bold mb-4"
+          style={{ color: "var(--accent-color)" }}
+        >
+          Select Team Partner
+        </h2>
 
-      {fetchingTeams ? (
-        <p style={{ color: "var(--foreground)" }}>Loading your teams...</p>
-      ) : teams.length === 0 ? (
-        <p style={{ color: "var(--foreground)" }}>You have no teams</p>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Tournament select */}
-          <div>
-            <label className="block text-sm mb-2" style={{ color: "var(--foreground)" }}>
-              Choose Tournament
-            </label>
-            <select
-              value={selectedTournamentId}
-              onChange={(e) => setSelectedTournamentId(e.target.value)}
-              className="w-full p-2 rounded-lg bg-transparent border focus:outline-none"
-              style={{ borderColor: "var(--border-color)", color: "var(--foreground)" }}
-            >
-              {tournaments.map((t) => (
-                <option key={t._id} value={t._id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Team select */}
-          <div>
-            <label className="block text-sm mb-2" style={{ color: "var(--foreground)" }}>
-              Choose Team
-            </label>
-            <select
-              value={selectedTeamId}
-              onChange={(e) => setSelectedTeamId(e.target.value)}
-              className="w-full p-2 rounded-lg bg-transparent border focus:outline-none"
-              style={{ borderColor: "var(--border-color)", color: "var(--foreground)" }}
-            >
-              {filteredTeams.map((team) => (
-                <option key={team._id} value={team._id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Partner select */}
-          {fetchingMembers ? (
-            <p style={{ color: "var(--foreground)" }}>Loading members...</p>
-          ) : members.length === 0 ? (
-            <p style={{ color: "var(--foreground)" }}>No other members in this team</p>
-          ) : (
+        {fetchingTeams ? (
+          <p style={{ color: "var(--foreground)" }}>Loading your teams...</p>
+        ) : teams.length === 0 ? (
+          <p style={{ color: "var(--foreground)" }}>You have no teams</p>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Tournament select */}
             <div>
-              <label className="block text-sm mb-2" style={{ color: "var(--foreground)" }}>
-                Choose a partner
+              <label
+                className="block text-sm mb-2"
+                style={{ color: "var(--foreground)" }}
+              >
+                Choose Tournament
               </label>
               <select
-                value={partnerId}
-                onChange={(e) => setPartnerId(e.target.value)}
+                value={selectedTournamentId}
+                onChange={(e) => setSelectedTournamentId(e.target.value)}
                 className="w-full p-2 rounded-lg bg-transparent border focus:outline-none"
-                style={{ borderColor: "var(--border-color)", color: "var(--foreground)" }}
+                style={{
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
               >
-                {members.map((m) => (
-                  <option key={m._id} value={m._id}>
-                    {m.username || m.firstname || m.email}
+                {tournaments.map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.name}
                   </option>
                 ))}
               </select>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 rounded-lg font-semibold transition"
-            style={{ background: "var(--primary-color)", color: "var(--foreground)", opacity: loading ? 0.6 : 1 }}
-          >
-            {loading ? "Saving..." : "Confirm Partner"}
-          </button>
-        </form>
-      )}
-    </div>
+            {/* Team select */}
+            <div>
+              <label
+                className="block text-sm mb-2"
+                style={{ color: "var(--foreground)" }}
+              >
+                Choose Team
+              </label>
+              <select
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                className="w-full p-2 rounded-lg bg-transparent border focus:outline-none"
+                style={{
+                  borderColor: "var(--border-color)",
+                  color: "var(--foreground)",
+                }}
+              >
+                {filteredTeams.map((team) => (
+                  <option key={team._id} value={team._id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Partner select */}
+            {fetchingMembers ? (
+              <p style={{ color: "var(--foreground)" }}>Loading members...</p>
+            ) : members.length === 0 ? (
+              <p style={{ color: "var(--foreground)" }}>
+                No other members in this team
+              </p>
+            ) : (
+              <div>
+                <label
+                  className="block text-sm mb-2"
+                  style={{ color: "var(--foreground)" }}
+                >
+                  Choose a partner
+                </label>
+                <select
+                  value={partnerId}
+                  onChange={(e) => setPartnerId(e.target.value)}
+                  className="w-full p-2 rounded-lg bg-transparent border focus:outline-none"
+                  style={{
+                    borderColor: "var(--border-color)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {members.map((m) => (
+                    <option key={m._id} value={m._id}>
+                      {m.username || m.firstname || m.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2 px-4 rounded-lg font-semibold transition"
+              style={{
+                background: "var(--primary-color)",
+                color: "var(--foreground)",
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Saving..." : "Confirm Partner"}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <PartnerTournaments />
+    </>
   );
 }

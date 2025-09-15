@@ -79,7 +79,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           gameConfigId: g._id || "",
           game: typeof g.game === "object" ? g.game._id : g.game,
           entryFee: g.entryFee,
-          format: g.format || "single_elimination",
+          format: g.format || "double_elimination",
           teamBased: g.teamBased || false,
           tournamentTeamType: g.tournamentTeamType || "single_player",
         }))
@@ -123,7 +123,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
       {
         game: "",
         entryFee: 0,
-        format: "single_elimination",
+        format: "double_elimination",
         teamBased: false,
         tournamentTeamType: "single_player",
       },
@@ -227,6 +227,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
             format: g.format,
             teamBased: Boolean(g.teamBased),
             tournamentTeamType: g.tournamentTeamType,
+            rounds: Number(g.rounds),
           };
           if (g.gameConfigId) {
             // ✅ Update existing game
@@ -497,7 +498,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
               />
 
               {/* Format */}
-              <select
+              {/* <select
                 value={field.format}
                 onChange={(e) =>
                   handleGameFieldChange(index, "format", e.target.value)
@@ -507,7 +508,27 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 <option value="single_elimination">Single Elimination</option>
                 <option value="double_elimination">Double Elimination</option>
                 <option value="round_robin">Round Robin</option>
-              </select>
+              </select> */}
+
+              {/* select Round */}
+
+              {/* Rounds */}
+              <input
+                type="number"
+                placeholder="Rounds"
+                value={field.rounds || ""}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (val >= 1 && val <= 6) {
+                    handleGameFieldChange(index, "rounds", val);
+                  } else if (e.target.value === "") {
+                    handleGameFieldChange(index, "rounds", "");
+                  }
+                }}
+                min={1}
+                max={6}
+                className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
+              />
 
               {/* Team Based */}
               <label className="flex gap-2 items-center">
@@ -547,6 +568,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                       format: field.format,
                       teamBased: field.teamBased,
                       tournamentTeamType: field.tournamentTeamType,
+                      rounds: field.rounds,
                     })
                   }
                   className="bg-[var(--accent-color)] px-3 py-1 mt-2 rounded text-black text-sm"

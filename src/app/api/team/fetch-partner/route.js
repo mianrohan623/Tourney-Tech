@@ -1,9 +1,18 @@
 // GET /api/team/fetch-partner
 import { Team } from "@/models/Team";
+<<<<<<< Updated upstream
 import { Registration } from "@/models/Registration";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
+=======
+// import { Tournament } from "@/models/Tournament";
+import { ApiResponse } from "@/utils/server/ApiResponse";
+import { asyncHandler } from "@/utils/server/asyncHandler";
+import { requireAuth } from "@/utils/server/auth";
+// import { parseForm } from "@/utils/server/parseForm";
+
+>>>>>>> Stashed changes
 
 export const GET = asyncHandler(async (req) => {
   const user = await requireAuth(req);
@@ -13,6 +22,7 @@ export const GET = asyncHandler(async (req) => {
     .populate("tournament")
     .populate("members", "firstname lastname username email")
     .lean();
+    
 
   // ✅ Collect tournament IDs for registration lookup
   const tournamentIds = teams.map((t) => t.tournament?._id);

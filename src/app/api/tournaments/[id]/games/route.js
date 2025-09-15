@@ -22,6 +22,7 @@ export const POST = asyncHandler(async (req, context) => {
   const {
     game,
     entryFee = 0,
+    format,
     rounds,
     teamBased = true,
     tournamentTeamType,
@@ -65,6 +66,7 @@ export const POST = asyncHandler(async (req, context) => {
     game,
     entryFee,
     format,
+    rounds,
     teamBased,
     tournamentTeamType,
   });

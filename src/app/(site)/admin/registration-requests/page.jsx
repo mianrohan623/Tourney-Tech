@@ -106,7 +106,8 @@ export default function AdminRegistrationsTable() {
       </div>
 
       <div className="scrollbar-x overflow-x-auto">
-        <table className="min-w-full border border-[var(--border-color)] rounded-lg overflow-hidden">
+        <table className="border border-[var(--border-color)] rounded-lg overflow-hidden"
+        style={{ tableLayout: "auto", width: "max-content" }}>
           <thead className="bg-[var(--secondary-color)] text-[var(--foreground)]">
             <tr>
               <th className="py-2 px-4 text-left">User</th>
@@ -139,33 +140,39 @@ export default function AdminRegistrationsTable() {
                     .join(", ")}
                 </td>
                 <td className="py-2 px-4">
-                  {(r.gameRegistrationDetails?.games?.[0]?._id &&
-                    r.tournament?.games?.find(
-                      (g) =>
-                        g._id === r.gameRegistrationDetails.games[0]._id ||
-                        g.game === r.gameRegistrationDetails.games[0]._id
-                    )?.entryFee) ||
-                    0}{" "}
-                </td>
-                <td className="py-2 px-4">
-                  {(r.gameRegistrationDetails?.games?.[0]?._id &&
-                    (() => {
-                      const game = r.tournament?.games?.find(
-                        (g) =>
-                          g._id === r.gameRegistrationDetails.games[0]._id ||
-                          g.game === r.gameRegistrationDetails.games[0]._id
+                  {r.gameRegistrationDetails?.games?.reduce(
+                    (total, regGame) => {
+                      // Find the matching game inside tournament.games
+                      const match = r.tournament?.games?.find(
+                        (g) => g._id === regGame._id || g.game === regGame._id
                       );
-                      if (!game) return "-";
+                      return total + (match?.entryFee || 0);
+                    },
+                    0
+                  )}
+                </td>
 
-                      if (game.teamBased) {
-                        return game.minPlayers === 1 && game.maxPlayers === 1
-                          ? "1"
-                          : "2";
-                      } else {
-                        return "Single Player";
-                      }
-                    })()) ||
-                    "-"}
+                <td className="py-2 px-4">
+                  {r.gameRegistrationDetails?.games?.length > 0
+                    ? r.gameRegistrationDetails.games
+                        .map((regGame) => {
+                          const game = r.tournament?.games?.find(
+                            (g) =>
+                              g._id === regGame._id || g.game === regGame._id
+                          );
+                          if (!game) return null;
+
+                          if (game.teamBased) {
+                            return game.tournamentTeamType
+                              ? game.tournamentTeamType.replace("_", " ")
+                              : "Team Based";
+                          } else {
+                            return "Single Player";
+                          }
+                        })
+                        .filter(Boolean) // remove nulls if no match
+                        .join(" - ")
+                    : "-"}
                 </td>
 
                 <td className="py-2 px-4">
