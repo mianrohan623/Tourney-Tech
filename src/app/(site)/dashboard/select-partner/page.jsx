@@ -142,7 +142,7 @@ export default function SelectTeam() {
         {fetchingTeams ? (
           <p style={{ color: "var(--foreground)" }}>Loading your teams...</p>
         ) : teams.length === 0 ? (
-          <p style={{ color: "var(--foreground)" }}>You have no teams</p>
+          <p style={{ color: "var(--foreground)" }}>You are already in one team</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Tournament select */}
