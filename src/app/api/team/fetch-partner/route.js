@@ -26,11 +26,9 @@ export const GET = asyncHandler(async (req) => {
     .populate("gameRegistrationDetails.games")
     .lean();
 
-    console.log("registration::=======,:", registrations);
-
   const tournaments = teams.map((team) => {
     const gameConfig = team.tournament?.games.find(
-      (g) => g._id.toString() === team.game.toString()
+      (g) => g.game.toString() === team.game.toString()
     );
 
     const registration = registrations.find(
