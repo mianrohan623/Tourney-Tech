@@ -1,33 +1,77 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import api from "@/utils/axios";
 import EditMatchModal from "./EditMatchesModel";
 
-export default function RoundOneMatches({ matches, teams, onUpdate, pageSize = 12 }) {
+export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
   const [editingMatch, setEditingMatch] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
-  // Filter matches based on search input
+  // Fetch current user
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get("/api/me");
+        setCurrentUser(res.data.data.user);
+      } catch (err) {
+        console.error("Failed to fetch current user:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // Search filter (everyone can see all matches)
   const filteredMatches = useMemo(() => {
-    if (!search) return matches;
     return matches.filter(
       (m) =>
         m.teamA.name.toLowerCase().includes(search.toLowerCase()) ||
         m.teamB.name.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search, matches]);
+  }, [matches, search]);
 
-  // Pagination
   const totalPages = Math.ceil(filteredMatches.length / pageSize);
   const currentMatches = filteredMatches.slice(
     (page - 1) * pageSize,
     page * pageSize
   );
 
-  const handleSave = (id, data) => {
-    if (onUpdate) onUpdate(id, data);
+  const handleSave = (id, updatedMatch) => {
+    if (onUpdate) onUpdate(id, updatedMatch);
     setEditingMatch(null);
   };
+
+  const getResult = (match, teamId) => {
+    if (!match.winner) return "Pending";
+    const winnerId =
+      typeof match.winner === "object" ? match.winner._id : match.winner;
+    return teamId === winnerId ? "Win" : "Lose";
+  };
+
+  // Check if current user can edit
+  const isUserInMembers = (members, userId) => {
+    return (members || []).some((m) =>
+      typeof m === "string" ? m === userId : m._id === userId
+    );
+  };
+
+  const canEditMatch = (match) => {
+    if (!currentUser) return false;
+    const userId = currentUser._id;
+
+    if (currentUser.role === "admin") return true;
+
+    return (
+      isUserInMembers(match.teamA.members, userId) ||
+      isUserInMembers(match.teamB.members, userId)
+    );
+  };
+
+  if (loadingUser) return <p>Loading user...</p>;
 
   return (
     <div className="space-y-4">
@@ -47,47 +91,78 @@ export default function RoundOneMatches({ matches, teams, onUpdate, pageSize = 1
         />
       </div>
 
-      {/* Cards Grid */}
+      {/* Matches Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {currentMatches.map((match) => (
-          <div
-            key={match.id}
-            className="rounded-2xl p-4 shadow-md"
-            style={{
-              background: "var(--card-background)",
-              border: "1px solid var(--border-color)",
-            }}
-          >
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">Match #{match.id}</h3>
-              <span className="text-sm text-gray-400">
-                {match.roundName || "Round 1"}
-              </span>
-            </div>
+        {currentMatches.map((match) => {
+          const canEdit = canEditMatch(match);
 
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between">
-                <span className="font-medium">{match.teamA.name}</span>
-                <span className="font-mono">{match.scoreA ?? 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">{match.teamB.name}</span>
-                <span className="font-mono">{match.scoreB ?? 0}</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setEditingMatch(match)}
-              className="w-full rounded-xl px-3 py-2 text-sm font-medium"
+          return (
+            <div
+              key={match._id}
+              className="rounded-2xl p-4 shadow-md"
               style={{
-                background: "var(--primary-color)",
-                color: "var(--foreground)",
+                background: "var(--card-background)",
+                border: "1px solid var(--border-color)",
               }}
             >
-              Add / Edit Score
-            </button>
-          </div>
-        ))}
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold">
+                  Match #{match.matchNumber}
+                </h3>
+                <span className="text-sm text-gray-400">
+                  {match.stage || "Round 1"}
+                </span>
+              </div>
+
+              {/* Teams */}
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">
+                      {match.teamA.serialNo || ""}{" "}
+                    </span>
+                    <span className="font-medium">{match.teamA.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono">{match.teamAScore ?? 0}</span>
+                    <span className="font-medium text-sm">
+                      {getResult(match, match.teamA._id)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">
+                      {match.teamB.serialNo || ""}{" "}
+                    </span>
+                    <span className="font-medium">{match.teamB.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono">{match.teamBScore ?? 0}</span>
+                    <span className="font-medium text-sm">
+                      {getResult(match, match.teamB._id)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {!match.winner && (
+                <button
+                  onClick={() => setEditingMatch(match)}
+                  disabled={!canEdit}
+                  className={`w-full rounded-xl px-3 py-2 text-sm font-medium ${
+                    canEdit
+                      ? "bg-[var(--accent-color)] text-[var(--background)]"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Add / Edit Score
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Pagination */}
@@ -121,11 +196,9 @@ export default function RoundOneMatches({ matches, teams, onUpdate, pageSize = 1
         </div>
       )}
 
-      {/* Shared Modal */}
       <EditMatchModal
         isOpen={!!editingMatch}
         match={editingMatch}
-        teams={teams}
         onClose={() => setEditingMatch(null)}
         onSave={handleSave}
       />

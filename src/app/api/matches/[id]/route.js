@@ -1,11 +1,11 @@
 import { Match } from "@/models/Match";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import { requireAuth } from "@/utils/server/auth";
+// import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
 
 export const PATCH = asyncHandler(async (req, context) => {
-  const user = await requireAuth(req);
+  // const user = await requireAuth(req);
   const matchId = context.params.id;
 
   const { fields } = await parseForm(req);

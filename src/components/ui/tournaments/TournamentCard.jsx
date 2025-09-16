@@ -116,7 +116,7 @@ export default function TournamentCard({
             </Link>
           ) : status === "ongoing" ? (
             // ✅ Show Play Tournament for ongoing
-            <Link href={`/dashboard/${_id}`} className="flex-1">
+            <Link href={`/dashboard/game-play/${_id}`} className="flex-1">
               <button
                 onClick={() => onSelect(_id)}
                 className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01] hover:bg[]"

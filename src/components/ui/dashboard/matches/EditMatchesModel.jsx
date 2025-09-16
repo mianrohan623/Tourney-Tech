@@ -1,46 +1,62 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import api from "@/utils/axios";
+import { toast } from "react-hot-toast";
 
-export default function EditMatchModal({
-  isOpen,
-  onClose,
-  match,
-  teams = [],
-  onSave,
-}) {
+export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
   const [form, setForm] = useState({
-    teamA: "",
     teamAScore: "",
-    teamAResult: "",
-    teamB: "",
     teamBScore: "",
-    teamBResult: "",
+    winner: "", // store winner teamId
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (match) {
       setForm({
-        teamA: match.teamA?.id || "",
-        teamAScore: match.scoreA ?? "",
-        teamAResult: match.resultA ?? "",
-        teamB: match.teamB?.id || "",
-        teamBScore: match.scoreB ?? "",
-        teamBResult: match.resultB ?? "",
+        teamAScore: match.teamAScore ?? 0,
+        teamBScore: match.teamBScore ?? 0,
+        winner: match.winner?._id || "", // default winner if exists
       });
     }
   }, [match]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !match) return null;
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    if (onSave) onSave(match?.id, form);
+  const handleSave = async () => {
+  setSaving(true);
+  try {
+    const winnerId = form.winner;
+    let loserId = null;
+
+    if (winnerId === match.teamA._id) loserId = match.teamB._id;
+    else if (winnerId === match.teamB._id) loserId = match.teamA._id;
+
+    const payload = {
+      teamAScore: Number(form.teamAScore),
+      teamBScore: Number(form.teamBScore),
+      winner: winnerId || null,
+      loser: loserId,
+    };
+
+    const res = await api.patch(`/api/matches/${match._id}`, payload);
+    toast.success(res.data.message || "Match updated successfully");
+
+    if (onSave) onSave(match._id, res.data.data);
     onClose();
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error(err?.response?.data?.message || "Failed to update match");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
@@ -52,110 +68,41 @@ export default function EditMatchModal({
         }}
       >
         <h2 className="text-lg font-semibold mb-4">
-          Edit Match {match?.id ? `#${match.id}` : ""}
+          Edit Match #{match.matchNumber}
         </h2>
 
         <div className="space-y-6">
           {/* TEAM A */}
           <div>
-            <h3 className="font-semibold mb-2">Team A</h3>
-            <div className="space-y-2">
-              <select
-                value={form.teamA}
-                onChange={(e) => handleChange("teamA", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Select Team</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                placeholder="Score"
-                value={form.teamAScore}
-                onChange={(e) => handleChange("teamAScore", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border bg-transparent"
-                style={{
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
-              />
-
-              <select
-                value={form.totaHandWon}
-                onChange={(e) => handleChange("teamAResult", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Total hand won</option>
-                <option value="win">1</option>
-                <option value="loss">2</option>
-              </select>
-
-              <select
-                value={form.teamAResult}
-                onChange={(e) => handleChange("teamAResult", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Select Result</option>
-                <option value="win">Win</option>
-                <option value="loss">Loss</option>
-              </select>
-            </div>
-          </div>
+            <h3 className="font-semibold mb-2">{match.teamA.name}</h3>
+            <input
+              type="number"
+              placeholder="Score"
+              value={form.teamAScore}
+              onChange={(e) => handleChange("teamAScore", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-transparent"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            />
+          </div> 
 
           {/* TEAM B */}
           <div>
-            <h3 className="font-semibold mb-2">Team B</h3>
-            <div className="space-y-2">
-              <select
-                value={form.teamB}
-                onChange={(e) => handleChange("teamB", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Select Team</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                placeholder="Score"
-                value={form.teamBScore}
-                onChange={(e) => handleChange("teamBScore", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border bg-transparent"
-                style={{
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
-              />
-
-               <select
-                value={form.totaHandWon}
-                onChange={(e) => handleChange("teamAResult", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Total hand won</option>
-                <option value="win">1</option>
-                <option value="loss">2</option>
-              </select>
-
-              <select
-                value={form.teamBResult}
-                onChange={(e) => handleChange("teamBResult", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 border border-[var(--border-color)] bg-[var(--card-background)] text-white"
-              >
-                <option value="">Select Result</option>
-                <option value="win">Win</option>
-                <option value="loss">Loss</option>
-              </select>
-            </div>
+            <h3 className="font-semibold mb-2">{match.teamB.name}</h3>
+            <input
+              type="number"
+              placeholder="Score"
+              value={form.teamBScore}
+              onChange={(e) => handleChange("teamBScore", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-transparent"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            />
+          
           </div>
         </div>
 
@@ -168,6 +115,7 @@ export default function EditMatchModal({
               background: "var(--secondary-color)",
               color: "var(--foreground)",
             }}
+            disabled={saving}
           >
             Cancel
           </button>
@@ -175,8 +123,9 @@ export default function EditMatchModal({
             onClick={handleSave}
             className="px-4 py-2 rounded-lg"
             style={{ background: "var(--accent-color)", color: "black" }}
+            disabled={saving}
           >
-            Save
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>

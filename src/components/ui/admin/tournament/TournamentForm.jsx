@@ -82,6 +82,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           format: g.format || "double_elimination",
           teamBased: g.teamBased || false,
           tournamentTeamType: g.tournamentTeamType || "single_player",
+          rounds: g.rounds || "", 
         }))
       );
 
