@@ -6,7 +6,7 @@ import { BracketGroup } from "@/models/BracketGroup";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
-import { parseForm } from "@/utils/server/parse";
+import { parseForm } from "@/utils/server/parseForm";
 
 function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
@@ -53,27 +53,11 @@ export const POST = asyncHandler(async (req) => {
   // ✅ Stage name calculate
   const stage = getStageName(round, totalRounds);
 
+
   // ✅ Shuffle teams
   const shuffledTeams = shuffleArray(teams);
 
-  // ✅ Bracket group check/create
-  let bracketGroup = await BracketGroup.findOne({
-    tournament,
-    game,
-    name: `Round ${round} - ${stage}`,
-  });
-
-  if (!bracketGroup) {
-    bracketGroup = await BracketGroup.create({
-      tournament,
-      game,
-      name: `Round ${round} - ${stage}`,
-      order: round,
-      bracketSide: "winner",
-    });
-  }
-
-  // ✅ Matches create
+  // ✅ Matches create (without bracket group)
   const matches = [];
   let matchNumber = existingMatches.length + 1;
 
@@ -87,7 +71,6 @@ export const POST = asyncHandler(async (req) => {
       tournament,
       game,
       matchNumber,
-      bracketGroup: bracketGroup._id,
       round,
       stage, // ✅ stage save ho rahi hai
       teamA: teamA._id,
@@ -107,9 +90,6 @@ export const POST = asyncHandler(async (req) => {
     )
   );
 });
-
-
-
 
 
 export const GET = asyncHandler(async (req) => {
