@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import api from "@/utils/axios"; 
+import api from "@/utils/axios";
 import { Loader2 } from "lucide-react";
 
 export default function PartnerTournaments() {
@@ -122,8 +122,8 @@ export default function PartnerTournaments() {
                 t.status === "upcoming"
                   ? "bg-[var(--info-color)]/20 text-[var(--info-color)]"
                   : t.status === "completed"
-                  ? "bg-[var(--success-color)]/20 text-[var(--success-color)]"
-                  : "bg-[var(--accent-color)]/20 text-[var(--accent-color)]"
+                    ? "bg-[var(--success-color)]/20 text-[var(--success-color)]"
+                    : "bg-[var(--accent-color)]/20 text-[var(--accent-color)]"
               }`}
             >
               {t.status}
@@ -136,10 +136,10 @@ export default function PartnerTournaments() {
                   Partner Assigned
                 </p>
                 <p className="text-sm text-[var(--foreground)]">
-                  {t.partner.firstname} {t.partner.lastname} 
+                  {t.partner.firstname} {t.partner.lastname}
                 </p>
                 <p className="text-xs text-[var(--foreground)] opacity-70">
-                 {t.partner.username}
+                  {t.partner.username}
                 </p>
               </div>
             )}

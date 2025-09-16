@@ -70,6 +70,7 @@ export default function AdminTeamsTable() {
           <table className="min-w-full border-collapse">
             <thead className="bg-[var(--secondary-color)] text-[var(--foreground)]">
               <tr>
+                <th className="py-2 px-4 text-left font-semibold border-b border-[var(--border-color)]">Team Sr No.</th>
                 <th className="py-2 px-4 text-left font-semibold border-b border-[var(--border-color)]">Team Name</th>
                 <th className="py-2 px-4 text-left font-semibold border-b border-[var(--border-color)]">Tournament</th>
                 <th className="py-2 px-4 text-left font-semibold border-b border-[var(--border-color)]">Games</th>
@@ -85,6 +86,7 @@ export default function AdminTeamsTable() {
               ) : (
                 currentTeams.map((team) => (
                   <tr key={team._id} className="hover:bg-[var(--secondary-hover)] transition-colors">
+                    <td className="py-2 px-4 border-b border-[var(--border-color)]">{team.serialNo}</td>
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">{team.name}</td>
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">{team.tournament?.name || "N/A"}</td>
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">

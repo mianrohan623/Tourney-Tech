@@ -2,11 +2,8 @@
 
 import {
   Users,
-  DollarSign,
   Activity,
-  ClipboardList,
   FileText,
-  Clock,
   UserPlus,
 } from "lucide-react";
 
