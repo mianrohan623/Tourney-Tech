@@ -11,6 +11,9 @@ import { Tournament } from "@/models/Tournament";
 import { requireTournamentStaff } from "@/utils/server/tournamentPermissions";
 
 import { requireAuth } from "@/utils/server/auth";
+import { Team } from "@/models/Team";
+import { Registration } from "@/models/Registration";
+import { TeamUp } from "@/models/TeamUp";
 
 export const config = {
   api: { bodyParser: false },
@@ -99,6 +102,12 @@ export const DELETE = asyncHandler(async (req, context) => {
   const tournament = await Tournament.findByIdAndDelete(id);
 
   if (!tournament) throw new ApiError(404, "Tournament not found");
+
+  await Team.deleteMany({ tournament: tournament._id });
+  
+  await Registration.deleteMany({ tournament: tournament._id });
+
+  await TeamUp.deleteMany({ tournament: tournament._id });
 
   return Response.json({ message: "Tournament deleted" });
 });
