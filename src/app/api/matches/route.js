@@ -8,8 +8,41 @@ import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
 import "@/models/Game";
 
+// ✅ Utility: shuffle array
 function shuffleArray(array) {
-  return array.sort(() => Math.random() - 0.5);
+  return array
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+}
+
+// ✅ Round Robin pair generator
+function generateRoundRobin(teams) {
+  const fixtures = [];
+  const n = teams.length;
+
+  // Agar odd teams hain → ek dummy team add karo (bye system)
+  const hasDummy = n % 2 !== 0;
+  const allTeams = [...teams];
+  if (hasDummy) {
+    allTeams.push({ _id: "dummy" });
+  }
+
+  const total = allTeams.length;
+
+  for (let round = 0; round < total - 1; round++) {
+    for (let i = 0; i < total / 2; i++) {
+      const t1 = allTeams[i];
+      const t2 = allTeams[total - 1 - i];
+      if (t1._id !== "dummy" && t2._id !== "dummy") {
+        fixtures.push([t1, t2]);
+      }
+    }
+    // rotate array except first element
+    allTeams.splice(1, 0, allTeams.pop());
+  }
+
+  return fixtures;
 }
 
 export const POST = asyncHandler(async (req) => {
@@ -39,7 +72,7 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiResponse(400, null, "Not enough teams to create matches");
   }
 
-  // ✅ Total rounds (from tournament setting)
+  // ✅ Total rounds
   const totalRounds = gameDetail.rounds;
 
   // ✅ Existing matches check (to avoid duplicate creation)
@@ -48,23 +81,32 @@ export const POST = asyncHandler(async (req) => {
 
   const matches = [];
 
-  // ✅ Loop over total rounds
+  // ✅ Round Robin fixtures generate
+  const baseFixtures = generateRoundRobin(teams);
+
   for (let round = 1; round <= totalRounds; round++) {
-    // ✅ Shuffle teams fresh for each round
-    const shuffledTeams = shuffleArray([...teams]);
+    // ✅ shuffle each round fixtures to randomize order
+    const roundFixtures = shuffleArray([...baseFixtures]);
 
-    for (let i = 0; i < shuffledTeams.length; i += 2) {
-      const teamA = shuffledTeams[i];
-      const teamB = shuffledTeams[i + 1];
-
-      if (!teamB) continue; // odd team skip
+    for (const [teamA, teamB] of roundFixtures) {
+      // ✅ duplicate check (same round same match not allowed)
+      const existing = await Match.findOne({
+        tournament,
+        game,
+        round,
+        $or: [
+          { teamA: teamA._id, teamB: teamB._id },
+          { teamA: teamB._id, teamB: teamA._id },
+        ],
+      });
+      if (existing) continue;
 
       const match = await Match.create({
         tournament,
         game,
         matchNumber,
         round: 1,
-        stage: "group", // group matches
+        stage: "group",
         teamA: teamA._id,
         teamB: teamB._id,
         admin: user._id,
