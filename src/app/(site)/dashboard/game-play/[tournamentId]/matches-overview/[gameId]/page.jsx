@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import api from "@/utils/axios";
 import RoundOneMatches from "@/components/ui/dashboard/matches/RoundOne";
 import RoundTwoBracket from "@/components/ui/dashboard/matches/RoundTwo";
-import { mapMatches } from "@/utils/mapMatches";
 
 export default function TournamentPage() {
   const { tournamentId, gameId } = useParams();
@@ -37,7 +36,7 @@ export default function TournamentPage() {
         const round2Raw = allMatches.filter((m) => m.round === 2);
 
         setRound1Matches(round1);
-        setRound2Matches(mapMatches(round2Raw));
+        setRound2Matches(round2Raw); // ✅ send raw matches
       } catch (err) {
         console.error("Error fetching/creating matches:", err);
       } finally {
@@ -55,8 +54,14 @@ export default function TournamentPage() {
     );
 
     try {
-      // Update score on backend
       await api.patch(`/api/matches/${id}`, data);
+
+      // Re-fetch matches so round 2 appears automatically
+      const query = new URLSearchParams({ tournamentId, gameId });
+      const res = await api.get(`/api/matches?${query.toString()}`);
+      const allMatches = res.data?.data || [];
+      const round2Raw = allMatches.filter((m) => m.round === 2);
+      setRound2Matches(round2Raw); // ✅ send raw matches
     } catch (err) {
       console.error("Error updating match score:", err);
     }
@@ -73,7 +78,7 @@ export default function TournamentPage() {
   // Check if all round 1 matches are completed
   const isRound1Complete =
     round1Matches.length > 0 &&
-    round1Matches.every((m) => m.scoreA !== undefined && m.scoreB !== undefined);
+    round1Matches.every((m) => m.status === "completed");
 
   return (
     <div className="p-4 space-y-12">
@@ -81,7 +86,10 @@ export default function TournamentPage() {
       {!isRound1Complete && round1Matches.length > 0 && (
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Round 1 Matches</h2>
-          <RoundOneMatches matches={round1Matches} onUpdate={handleRound1Update} />
+          <RoundOneMatches
+            matches={round1Matches}
+            onUpdate={handleRound1Update}
+          />
         </section>
       )}
 

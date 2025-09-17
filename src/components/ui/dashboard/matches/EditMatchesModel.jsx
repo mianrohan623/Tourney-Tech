@@ -28,7 +28,7 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
   setSaving(true);
   try {
     const winnerId = form.winner;
@@ -38,8 +38,11 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     else if (winnerId === match.teamB._id) loserId = match.teamA._id;
 
     const payload = {
+      matchNumber: match.matchNumber,  // <-- required by backend
       teamAScore: Number(form.teamAScore),
       teamBScore: Number(form.teamBScore),
+      teamAtotalWon: Number(form.teamAScore) > Number(form.teamBScore) ? 1 : 0,
+      teamBtotalWon: Number(form.teamBScore) > Number(form.teamAScore) ? 1 : 0,
       winner: winnerId || null,
       loser: loserId,
     };
@@ -56,6 +59,7 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     setSaving(false);
   }
 };
+
 
 
   return (

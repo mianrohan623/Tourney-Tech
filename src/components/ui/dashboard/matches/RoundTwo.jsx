@@ -9,28 +9,46 @@ import {
 import { useEffect, useState } from "react";
 import EditMatchModal from "./EditMatchesModel";
 
-/**
- * RoundTwoBracket Component
- * @param {Array} matches - Matches data mapped for SingleEliminationBracket
- * @param {Array} teams - List of all teams for modal dropdown
- * @param {Function} onUpdate - Callback when match is updated
- */
-export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
+export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [theme, setTheme] = useState(createTheme({}));
   const [editingMatch, setEditingMatch] = useState(null);
+  const [mappedMatches, setMappedMatches] = useState([]);
 
-  // Helper to get CSS variable or fallback
-  const getCSSVar = (name, fallback) => {
-    if (typeof window === "undefined") return fallback;
-    return (
-      getComputedStyle(document.documentElement)
-        .getPropertyValue(name)
-        .trim() || fallback
-    );
+  // 🔹 Safe formatter for API matches
+  const formatMatches = (rawMatches) => {
+    return rawMatches.map((m) => {
+      const winnerId =
+        typeof m.winner === "object" ? m.winner?._id : m.winner || null;
+
+      return {
+        id: m._id,
+        name: m.stage || `Round ${m.round}`,
+        nextMatchId: null,
+        tournamentRoundText: `Round ${m.round}`,
+        startTime: m.createdAt,
+        state: m.status === "completed" ? "DONE" : "PENDING",
+        participants: [
+          {
+            id: m.teamA?._id || "TBD",
+            name: m.teamA?.name || "TBD",
+            isWinner: winnerId === m.teamA?._id,
+            resultText: "",
+            score: m.teamAScore ?? 0,
+          },
+          {
+            id: m.teamB?._id || "TBD",
+            name: m.teamB?.name || "TBD",
+            isWinner: winnerId === m.teamB?._id,
+            resultText: "",
+            score: m.teamBScore ?? 0,
+          },
+        ],
+      };
+    });
   };
 
-  // Update dimensions & theme dynamically
+  // 🔹 Update dimensions & theme dynamically
   useEffect(() => {
     const updateDimensions = () => {
       setDimensions({
@@ -40,36 +58,23 @@ export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
 
       setTheme(
         createTheme({
-          textColor: {
-            main: getCSSVar("--foreground", "#ededed"),
-            highlighted: "#ffffff",
-            dark: "#cccccc",
-          },
-          matchBackground: {
-            wonColor: getCSSVar("--card-background", "#101828"),
-            lostColor: getCSSVar("--secondary-color", "#1f2937"),
-          },
+          textColor: { main: "#ededed", highlighted: "#ffffff", dark: "#cccccc" },
+          matchBackground: { wonColor: "#101828", lostColor: "#1f2937" },
           score: {
             background: {
-              wonColor: getCSSVar("--accent-color", "#FBBF24"),
+              wonColor: "#FBBF24",
               lostColor: "rgba(251, 191, 36, 0.1)",
             },
             text: {
-              highlightedWonColor: getCSSVar("--foreground", "#ffffff"),
+              highlightedWonColor: "#ffffff",
               highlightedLostColor: "#999999",
             },
           },
-          border: {
-            color: getCSSVar("--border-color", "#364153"),
-            highlightedColor: getCSSVar("--accent-color", "#FBBF24"),
-          },
-          roundHeader: {
-            backgroundColor: getCSSVar("--accent-color", "#FBBF24"),
-            fontColor: getCSSVar("--background", "#030712"),
-          },
-          connectorColor: getCSSVar("--border-color", "#364153"),
-          connectorColorHighlight: getCSSVar("--accent-color", "#FBBF24"),
-          svgBackground: getCSSVar("--background", "#030712"),
+          border: { color: "#364153", highlightedColor: "#FBBF24" },
+          roundHeader: { backgroundColor: "#FBBF24", fontColor: "#030712" },
+          connectorColor: "#364153",
+          connectorColorHighlight: "#FBBF24",
+          svgBackground: "#030712",
         })
       );
     };
@@ -79,6 +84,15 @@ export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  // 🔹 Map matches when API data changes
+  useEffect(() => {
+    if (matches?.length) {
+      setMappedMatches(formatMatches(matches));
+    } else {
+      setMappedMatches([]);
+    }
+  }, [matches]);
+
   const handleSave = (id, data) => {
     if (onUpdate) onUpdate(id, data);
     setEditingMatch(null);
@@ -86,26 +100,30 @@ export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
 
   return (
     <div className="overflow-auto scrollbar-x">
-      <SingleEliminationBracket
-        matches={matches}
-        matchComponent={(props) => (
-          <div onClick={() => setEditingMatch(props.match)}>
-            <Match {...props} />
-          </div>
-        )}
-        theme={theme}
-        svgWrapper={({ children, ...props }) => (
-          <SVGViewer
-            background={theme.svgBackground}
-            SVGBackground={theme.svgBackground}
-            width={dimensions.width}
-            height={dimensions.height}
-            {...props}
-          >
-            {children}
-          </SVGViewer>
-        )}
-      />
+      {mappedMatches.length > 0 ? (
+        <SingleEliminationBracket
+          matches={mappedMatches}
+          matchComponent={(props) => (
+            <div onClick={() => setEditingMatch(props.match)}>
+              <Match {...props} />
+            </div>
+          )}
+          theme={theme}
+          svgWrapper={({ children, ...props }) => (
+            <SVGViewer
+              background={theme.svgBackground}
+              SVGBackground={theme.svgBackground}
+              width={dimensions.width}
+              height={dimensions.height}
+              {...props}
+            >
+              {children}
+            </SVGViewer>
+          )}
+        />
+      ) : (
+        <p className="text-center text-gray-400 p-6">No matches available</p>
+      )}
 
       {/* Shared Modal for Editing */}
       <EditMatchModal

@@ -159,7 +159,7 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
                 >
                   Add / Edit Score
                 </button>
-              )}
+               )}
             </div>
           );
         })}
