@@ -130,6 +130,7 @@ export default function TournamentCard({
             </Link>
           ) : (
             // ✅ Default: View Tournament
+             <Link href={`/dashboard/game-score/${_id}`} className="flex-1">
             <button
               onClick={() => onSelect(_id)}
               className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
@@ -140,6 +141,7 @@ export default function TournamentCard({
             >
               View ScoreBoard
             </button>
+          </Link>
           )}
         </div>
       </div>

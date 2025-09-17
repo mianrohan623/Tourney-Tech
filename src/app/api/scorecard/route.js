@@ -22,6 +22,7 @@ export const GET = asyncHandler(async (req) => {
     return Response.json(new ApiResponse(200, [], "No matches found"));
   }
 
+  
   // ✅ Group by rounds
   const scoreboard = {};
   for (let match of matches) {

@@ -1,12 +1,14 @@
+// src/app/api/sitting-arrangements/route.js
+
 import { SittingArrangment } from "@/models/SittingArrangment";
+import { Tournament } from "@/models/Tournament";
+import { Game } from "@/models/Game";
 import { ApiError } from "@/utils/server/ApiError";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { requireAuth } from "@/utils/server/auth";
 import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 import { parseForm } from "@/utils/server/parseForm";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import "@/models/Tournament";
-import "@/models/Game";
 import "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
@@ -19,46 +21,54 @@ export const POST = asyncHandler(async (req) => {
   const imagePath = Array.isArray(files.image)
     ? files.image[0]?.filepath
     : files.image?.filepath;
-  console.log(
-    "🚀 ~ file: route.js:27 ~ imagePath:",
-    imagePath,
-    "files====:",
-    files
-  );
+
   if (!tournamentId || !gameId || !imagePath) {
     throw new ApiError(400, "Missing required fields");
   }
 
-  const imageUpload = imagePath
-    ? await uploadOnCloudinary(imagePath, "sitting-arrangment")
-    : null;
+  // ✅ check tournament exists
+  const tournament = await Tournament.findById(tournamentId);
+  if (!tournament) throw new ApiError(404, "Tournament not found");
+
+  // ✅ check game exists
+  const game = await Game.findById(gameId);
+  if (!game) throw new ApiError(404, "Game not found");
+
+  // ✅ optional: check that the game is part of this tournament
+  const belongsToTournament = tournament.games.some(
+    (g) => g.game.toString() === gameId
+  );
+  if (!belongsToTournament) {
+    throw new ApiError(400, "This game does not belong to the selected tournament");
+  }
+
+  const imageUpload = await uploadOnCloudinary(imagePath, "sitting-arrangment");
 
   const sittingCreate = await SittingArrangment.create({
-    tournament: tournamentId,
-    game: gameId,
+    tournament: tournament._id,
+    game: game._id, // ✅ always store a valid Game ObjectId
     image: imageUpload?.secure_url,
     user: user._id,
   });
 
+  // ✅ populate right away so you return full data
+  const populated = await SittingArrangment.findById(sittingCreate._id)
+    .populate("game tournament user")
+    .lean();
+
   return Response.json(
-    new ApiResponse(
-      200,
-      sittingCreate,
-      "Sitting Arrangment created successfully"
-    )
+    new ApiResponse(201, populated, "Sitting Arrangment created successfully")
   );
 });
 
 export const GET = asyncHandler(async () => {
   const user = await requireAuth();
-  const sittingArrangments = await SittingArrangment.find({ user })
+
+  const sittingArrangements = await SittingArrangment.find({ user })
     .populate("game tournament user")
     .lean();
+
   return Response.json(
-    new ApiResponse(
-      200,
-      sittingArrangments,
-      "Sitting Arrangments fetched successfully"
-    )
+    new ApiResponse(200, sittingArrangements, "Sitting Arrangements fetched successfully")
   );
 });
