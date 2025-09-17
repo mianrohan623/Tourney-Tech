@@ -7,13 +7,11 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
-
+import "@/models/Game";
 
 function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
 }
-
-
 
 // ✅ Stage Generator
 function getStageName(round, totalRounds) {
@@ -56,7 +54,6 @@ export const POST = asyncHandler(async (req) => {
   // ✅ Stage name calculate
   const stage = getStageName(round, totalRounds);
 
-
   // ✅ Shuffle teams
   const shuffledTeams = shuffleArray(teams);
 
@@ -93,7 +90,6 @@ export const POST = asyncHandler(async (req) => {
     )
   );
 });
-
 
 export const GET = asyncHandler(async (req) => {
   const { searchParams } = new URL(req.url);

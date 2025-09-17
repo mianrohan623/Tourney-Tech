@@ -42,6 +42,4 @@ const MatchSchema = new Schema(
   { timestamps: true }
 );
 
-MatchSchema.index({ tournament: 1, game: 1, matchNumber: 1 }, { unique: true });
-
 export const Match = models.Match || model("Match", MatchSchema);

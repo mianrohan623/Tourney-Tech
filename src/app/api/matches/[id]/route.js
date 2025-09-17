@@ -1,5 +1,4 @@
 import { Match } from "@/models/Match";
-import { BracketGroup } from "@/models/BracketGroup";
 import { Team } from "@/models/Team";
 import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
@@ -69,43 +68,59 @@ export const PATCH = asyncHandler(async (req, context) => {
     if (nextRound <= totalRounds) {
       const nextStage = getStageName(nextRound, totalRounds);
 
-      // ✅ Agar odd number of winners hain → ek ko auto bye
+      // ✅ odd winners → bye system
       if (winners.length % 2 !== 0) {
-        const byeTeam = winners.pop(); // last wali team ko bye
-        winners.unshift(byeTeam); // usko winners list ke start me daal do
+        const byeTeam = winners.pop(); // ek ko bye de do
+        winners.unshift(byeTeam);
       }
 
       // ✅ Winners ke pairs banake next round ke matches create karo
-      for (let i = 0; i < winners.length; i += 2) {
-        const teamA = winners[i];
-        const teamB = winners[i + 1];
+      // ✅ Winners ke pairs banake next round ke matches create karo
+for (let i = 0; i < winners.length; i += 2) {
+  const teamA = winners[i];
+  const teamB = winners[i + 1];
 
-        if (!teamB) {
-          // bye team ko direct next round winner bana do
-          await Match.create({
-            tournament: match.tournament._id,
-            game: match.game._id,
-            round: nextRound,
-            stage: nextStage,
-            status: "completed", // direct win
-            teamA,
-            winner: teamA,
-          });
-          continue;
-        }
 
-        await Match.create({
-          tournament: match.tournament._id,
-          game: match.game._id,
-          round: nextRound,
-          stage: nextStage,
-          status: "pending",
-          teamA,
-          teamB,
-        });
-      }
+  console.log("nextRound", nextRound);
+
+  // ✅ Check existing matches in this round
+  const existingMatchesCount = await Match.countDocuments({
+    tournament: match.tournament._id,
+    game: match.game._id,
+  });
+
+console.log("existingMatchesCount", existingMatchesCount);
+
+  const nextMatchNumber = existingMatchesCount + 1; // safe numbering
+
+  if (!teamB) {
+    await Match.create({
+      tournament: match.tournament._id,
+      game: match.game._id,
+      round: nextRound,
+      stage: nextStage,
+      status: "completed", // bye = direct win
+      teamA,
+      winner: teamA,
+      matchNumber: nextMatchNumber, // ✅ unique ban gaya
+    });
+    continue;
+  }
+
+  await Match.create({
+    tournament: match.tournament._id,
+    game: match.game._id,
+    round: nextRound,
+    stage: nextStage,
+    status: "pending",
+    teamA,
+    teamB,
+    matchNumber: nextMatchNumber, // ✅ unique ban gaya
+  });
+}
+
     } else {
-      // ✅ Final winner decide → Tournament complete
+      // ✅ Tournament final complete
       const lastWinner = winners[0];
       await Tournament.findByIdAndUpdate(match.tournament._id, {
         status: "completed",
@@ -122,4 +137,3 @@ export const PATCH = asyncHandler(async (req, context) => {
     )
   );
 });
-
