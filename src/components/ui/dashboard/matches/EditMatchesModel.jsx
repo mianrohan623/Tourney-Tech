@@ -8,7 +8,8 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
   const [form, setForm] = useState({
     teamAScore: "",
     teamBScore: "",
-    winner: "", // store winner teamId
+    teamAtotalWon: 0,
+    teamBtotalWon: 0,
   });
   const [saving, setSaving] = useState(false);
 
@@ -17,7 +18,8 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
       setForm({
         teamAScore: match.teamAScore ?? 0,
         teamBScore: match.teamBScore ?? 0,
-        winner: match.winner?._id || "", // default winner if exists
+        teamAtotalWon: match.teamAtotalWon ?? 0,
+        teamBtotalWon: match.teamBtotalWon ?? 0,
       });
     }
   }, [match]);
@@ -28,39 +30,29 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
- const handleSave = async () => {
-  setSaving(true);
-  try {
-    const winnerId = form.winner;
-    let loserId = null;
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        matchNumber: match.matchNumber, // required by backend
+        teamAScore: Number(form.teamAScore),
+        teamBScore: Number(form.teamBScore),
+        teamAtotalWon: Number(form.teamAtotalWon),
+        teamBtotalWon: Number(form.teamBtotalWon),
+      };
 
-    if (winnerId === match.teamA._id) loserId = match.teamB._id;
-    else if (winnerId === match.teamB._id) loserId = match.teamA._id;
+      const res = await api.patch(`/api/matches/${match._id}`, payload);
+      toast.success(res.data.message || "Match updated successfully");
 
-    const payload = {
-      matchNumber: match.matchNumber,  // <-- required by backend
-      teamAScore: Number(form.teamAScore),
-      teamBScore: Number(form.teamBScore),
-      teamAtotalWon: Number(form.teamAScore) > Number(form.teamBScore) ? 1 : 0,
-      teamBtotalWon: Number(form.teamBScore) > Number(form.teamAScore) ? 1 : 0,
-      winner: winnerId || null,
-      loser: loserId,
-    };
-
-    const res = await api.patch(`/api/matches/${match._id}`, payload);
-    toast.success(res.data.message || "Match updated successfully");
-
-    if (onSave) onSave(match._id, res.data.data);
-    onClose();
-  } catch (err) {
-    console.error(err);
-    toast.error(err?.response?.data?.message || "Failed to update match");
-  } finally {
-    setSaving(false);
-  }
-};
-
-
+      if (onSave) onSave(match._id, res.data.data);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to update match");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
@@ -78,35 +70,64 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
         <div className="space-y-6">
           {/* TEAM A */}
           <div>
-            <h3 className="font-semibold mb-2">{match.teamA.name}</h3>
+            <h3 className="font-semibold mb-2">{match.teamA.serialNo} {match.teamA.name}</h3>
             <input
               type="number"
               placeholder="Score"
               value={form.teamAScore}
               onChange={(e) => handleChange("teamAScore", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 border bg-transparent"
+              className="w-full rounded-lg px-3 py-2 border bg-transparent mb-2"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--foreground)",
               }}
             />
-          </div> 
+            <select
+              value={form.teamAtotalWon}
+              onChange={(e) => handleChange("teamAtotalWon", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)]"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            >
+              {[0, 1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>
+                  Hands Won: {n}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* TEAM B */}
           <div>
-            <h3 className="font-semibold mb-2">{match.teamB.name}</h3>
+            <h3 className="font-semibold mb-2">{match.teamB.serialNo} {match.teamB.name}</h3>
             <input
               type="number"
               placeholder="Score"
               value={form.teamBScore}
               onChange={(e) => handleChange("teamBScore", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 border bg-transparent"
+              className="w-full rounded-lg px-3 py-2 border bg-transparent mb-2"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--foreground)",
               }}
             />
-          
+            <select
+              value={form.teamBtotalWon}
+              onChange={(e) => handleChange("teamBtotalWon", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)]"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            >
+              {[0, 1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>
+                  Hands Won: {n}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
