@@ -3,6 +3,9 @@ import { BracketGroup } from "@/models/BracketGroup";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
+import "@/models/Tournament";
+import "@/models/Game";
+import "@/models/Team";
 
 export const PATCH = asyncHandler(async (req, context) => {
   const matchId = context.params.id;
@@ -37,7 +40,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   await match.save();
 
   if (nextStage) {
-    const nextMatch = await Match.create({
+    await Match.create({
       tournament: match.tournament._id,
       game: match.game._id,
       teamA: match.winner, 

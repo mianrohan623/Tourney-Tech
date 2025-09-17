@@ -2,18 +2,22 @@ import { Schema, model, models } from "mongoose";
 
 const MatchSchema = new Schema(
   {
-    tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
-    game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
-    matchNumber: { type: Number, required: true },
-    bracketGroup: { type: Schema.Types.ObjectId, ref: "BracketGroup" },
-    round: { type: Number, required: true },
-    stage: { 
-      type: String, 
-      enum: ["group", "qualifier", "eliminator", "semi_final", "final"], 
-      default: "group" 
+    tournament: {
+      type: Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
     },
-    teamA: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    teamB: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+    game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
+    matchNumber: { type: Number },
+    bracketGroup: { type: Schema.Types.ObjectId, ref: "BracketGroup" },
+    round: { type: Number },
+    stage: {
+      type: String,
+      enum: ["group", "qualifier", "eliminator", "semi_final", "final"],
+      default: "group",
+    },
+    teamA: { type: Schema.Types.ObjectId, ref: "Team" },
+    teamB: { type: Schema.Types.ObjectId, ref: "Team" },
 
     // 🔹 Scores
     teamAScore: { type: Number, default: 0 },
@@ -22,7 +26,11 @@ const MatchSchema = new Schema(
     winner: { type: Schema.Types.ObjectId, ref: "Team" },
     loser: { type: Schema.Types.ObjectId, ref: "Team" },
 
-    status: { type: String, enum: ["pending", "completed"], default: "pending" },
+    status: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
     scheduledAt: { type: Date },
     completedAt: { type: Date },
 
