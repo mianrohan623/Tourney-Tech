@@ -36,6 +36,8 @@ const MatchSchema = new Schema(
 
     nextMatch: { type: Schema.Types.ObjectId, ref: "Match" }, // for bracket progression
     admin: { type: Schema.Types.ObjectId, ref: "User" },
+    teamAtotalWon: { type: Number, default: 0 },
+    teamBtotalWon: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

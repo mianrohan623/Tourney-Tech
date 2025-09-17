@@ -18,19 +18,20 @@ function getStageName(round, totalRounds) {
 export const PATCH = asyncHandler(async (req, context) => {
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
-  const { teamAScore, teamBScore } = fields;
+  const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon } = fields;
 
-  const match = await Match.findById(matchId).populate(
-    "teamA teamB tournament game"
-  );
+  const match = await Match.findById(matchId).populate("teamA teamB tournament game");
   if (!match) throw new ApiResponse(404, null, "Match not found");
 
   // ✅ Score update
   match.teamAScore = teamAScore;
   match.teamBScore = teamBScore;
+  match.teamAtotalWon = teamAtotalWon;
+  match.teamBtotalWon = teamBtotalWon;
   match.completedAt = new Date();
+  match.status = "completed";
 
-  // ✅ Winner / Loser decide
+  // ✅ Winner decide
   if (teamAScore > teamBScore) {
     match.winner = match.teamA._id;
     match.loser = match.teamB._id;
@@ -41,8 +42,6 @@ export const PATCH = asyncHandler(async (req, context) => {
     throw new ApiResponse(400, null, "Draw not supported in knockout format");
   }
 
-  // ✅ Mark match as completed
-  match.status = "completed";
   await match.save();
 
   // ✅ Check if current round is complete
@@ -55,8 +54,8 @@ export const PATCH = asyncHandler(async (req, context) => {
   const allCompleted = sameRoundMatches.every((m) => m.status === "completed");
 
   if (allCompleted) {
-    // ✅ Winners of this round
-    const winners = sameRoundMatches.map((m) => m.winner);
+    // ✅ Collect winners of this round
+    let winners = sameRoundMatches.map((m) => m.winner);
 
     // ✅ Tournament info
     const totalTeams = await Team.countDocuments({
@@ -66,15 +65,34 @@ export const PATCH = asyncHandler(async (req, context) => {
     const totalRounds = Math.ceil(Math.log2(totalTeams));
 
     const nextRound = match.round + 1;
+
     if (nextRound <= totalRounds) {
       const nextStage = getStageName(nextRound, totalRounds);
 
-      // ✅ Winners ko shuffle karke next round ke matches bana do
+      // ✅ Agar odd number of winners hain → ek ko auto bye
+      if (winners.length % 2 !== 0) {
+        const byeTeam = winners.pop(); // last wali team ko bye
+        winners.unshift(byeTeam); // usko winners list ke start me daal do
+      }
+
+      // ✅ Winners ke pairs banake next round ke matches create karo
       for (let i = 0; i < winners.length; i += 2) {
         const teamA = winners[i];
         const teamB = winners[i + 1];
 
-        if (!teamB) continue; // odd team skip
+        if (!teamB) {
+          // bye team ko direct next round winner bana do
+          await Match.create({
+            tournament: match.tournament._id,
+            game: match.game._id,
+            round: nextRound,
+            stage: nextStage,
+            status: "completed", // direct win
+            teamA,
+            winner: teamA,
+          });
+          continue;
+        }
 
         await Match.create({
           tournament: match.tournament._id,
@@ -86,6 +104,13 @@ export const PATCH = asyncHandler(async (req, context) => {
           teamB,
         });
       }
+    } else {
+      // ✅ Final winner decide → Tournament complete
+      const lastWinner = winners[0];
+      await Tournament.findByIdAndUpdate(match.tournament._id, {
+        status: "completed",
+        winner: lastWinner,
+      });
     }
   }
 
@@ -97,3 +122,4 @@ export const PATCH = asyncHandler(async (req, context) => {
     )
   );
 });
+
