@@ -13,6 +13,8 @@ function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
+
+
 // ✅ Stage Generator
 function getStageName(round, totalRounds) {
   if (round < totalRounds - 2) return "group";
