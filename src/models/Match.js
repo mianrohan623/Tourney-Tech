@@ -8,23 +8,38 @@ const MatchSchema = new Schema(
       required: true,
     },
     game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
-    matchNumber: { type: Number, required: true },
+    matchNumber: { type: Number },
     bracketGroup: { type: Schema.Types.ObjectId, ref: "BracketGroup" },
-    round: { type: Number, required: true },
-    qr: { type: String },
-    teamA: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    teamB: { type: Schema.Types.ObjectId, ref: "Team", required: true },
+    round: { type: Number },
+    stage: {
+      type: String,
+      enum: ["group", "qualifier", "eliminator", "semi_final", "final"],
+      default: "group",
+    },
+    teamA: { type: Schema.Types.ObjectId, ref: "Team" },
+    teamB: { type: Schema.Types.ObjectId, ref: "Team" },
+
+    // 🔹 Scores
+    teamAScore: { type: Number, default: 0 },
+    teamBScore: { type: Number, default: 0 },
+
     winner: { type: Schema.Types.ObjectId, ref: "Team" },
     loser: { type: Schema.Types.ObjectId, ref: "Team" },
-    score: { type: String },
+
+    status: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
     scheduledAt: { type: Date },
     completedAt: { type: Date },
-    nextMatch: { type: Schema.Types.ObjectId, ref: "Match" },
+
+    nextMatch: { type: Schema.Types.ObjectId, ref: "Match" }, // for bracket progression
     admin: { type: Schema.Types.ObjectId, ref: "User" },
+    teamAtotalWon: { type: Number, default: 0 },
+    teamBtotalWon: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
-
-MatchSchema.index({ tournament: 1, game: 1, matchNumber: 1 }, { unique: true });
 
 export const Match = models.Match || model("Match", MatchSchema);

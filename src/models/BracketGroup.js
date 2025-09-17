@@ -2,11 +2,7 @@ import { Schema, model, models } from "mongoose";
 
 const BracketGroupSchema = new Schema(
   {
-    tournament: {
-      type: Schema.Types.ObjectId,
-      ref: "Tournament",
-      required: true,
-    },
+    tournament: { type: Schema.Types.ObjectId, ref: "Tournament", required: true },
     game: { type: Schema.Types.ObjectId, ref: "Game", required: true },
     name: { type: String, required: true },
     order: { type: Number, required: true },
@@ -14,6 +10,7 @@ const BracketGroupSchema = new Schema(
   },
   { timestamps: true }
 );
+
 
 BracketGroupSchema.index({ tournament: 1, game: 1, name: 1 }, { unique: true });
 

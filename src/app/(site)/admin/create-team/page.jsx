@@ -72,9 +72,9 @@ export default function TeamForm() {
             value: t._id,
             label: t.name,
             games: t.games.map((g) => ({
-              value: g._id,
+              value: g.game._id, // ✅ FIX: use actual game ID instead of tournament-game ID
               label: g.game.name,
-              tournamentTeamType: g.tournamentTeamType, // store type in game
+              tournamentTeamType: g.tournamentTeamType,
             })),
           }))
         );
@@ -175,13 +175,17 @@ export default function TeamForm() {
     }
 
     try {
-      const formData = new FormData();
-      formData.append("tournament", form.tournament.value);
-      formData.append("game", form.game.value);
-      form.members.forEach((m) => formData.append("members", m));
+      // ✅ FIX: send correct game ID and use array for members
+      console.log("Submitting team:", {
+        tournament: form.tournament.value,
+        game: form.game.value,
+        members: form.members,
+      });
 
-      await api.post("/api/team", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      await api.post("/api/team", {
+        tournament: form.tournament.value,
+        game: form.game.value, // ✅ correct game ID
+        members: form.members,
       });
 
       toast.success("Team created successfully");
@@ -247,6 +251,7 @@ export default function TeamForm() {
 
       <button
         type="submit"
+        
         className="w-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white py-2 px-4 rounded-lg transition"
       >
         Create Team

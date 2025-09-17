@@ -6,70 +6,110 @@ import {
   Match,
   createTheme,
 } from "@g-loot/react-tournament-brackets";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import EditMatchModal from "./EditMatchesModel";
+import api from "@/utils/axios"; // ✅ your axios instance
 
-/**
- * RoundTwoBracket Component
- * @param {Array} matches - Matches data mapped for SingleEliminationBracket
- * @param {Array} teams - List of all teams for modal dropdown
- * @param {Function} onUpdate - Callback when match is updated
- */
-export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
+export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) {
+  const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [theme, setTheme] = useState(createTheme({}));
   const [editingMatch, setEditingMatch] = useState(null);
+  const [mappedMatches, setMappedMatches] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Helper to get CSS variable or fallback
-  const getCSSVar = (name, fallback) => {
-    if (typeof window === "undefined") return fallback;
-    return (
-      getComputedStyle(document.documentElement)
-        .getPropertyValue(name)
-        .trim() || fallback
-    );
+  // ✅ Fetch logged in user
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await api.get("/api/me");
+        setCurrentUser(data?.data?.user || null);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        setCurrentUser(null);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // 🔹 Safe formatter for API matches
+  const formatMatches = (rawMatches) => {
+    const matchIdMap = {};
+
+    rawMatches.forEach((m) => {
+      const winnerId =
+        typeof m.winner === "object" ? m.winner?._id : m.winner || null;
+
+      matchIdMap[m._id] = {
+        id: m._id,
+        name: m.stage || `Round ${m.round}`,
+        nextMatchId: null,
+        tournamentRoundText: `Round ${m.round}`,
+        startTime: m.createdAt,
+        state: m.status === "completed" ? "DONE" : "PENDING",
+        participants: [
+          {
+            id: m.teamA?._id || `TBD-${m._id}-A`,
+            name: `${m.teamA?.serialNo || ""} ${m.teamA?.name || "No Team"}`,
+            isWinner: winnerId === m.teamA?._id,
+            resultText:
+              m.status === "completed"
+                ? `${m.teamAScore ?? 0} ${
+                    winnerId === m.teamA?._id ? "Win" : "Lose"
+                  }`
+                : `${m.teamAScore ?? 0}`,
+          },
+          {
+            id: m.teamB?._id || `TBD-${m._id}-B`,
+            name: `${m.teamB?.serialNo || ""} ${m.teamB?.name || "No Team"}`,
+            isWinner: winnerId === m.teamB?._id,
+            resultText:
+              m.status === "completed"
+                ? `${m.teamBScore ?? 0} ${
+                    winnerId === m.teamB?._id ? "Win" : "Lose"
+                  }`
+                : `${m.teamBScore ?? 0}`,
+          },
+        ],
+      };
+    });
+
+    return Object.values(matchIdMap);
   };
 
-  // Update dimensions & theme dynamically
+  // 🔹 Update dimensions & theme dynamically
   useEffect(() => {
     const updateDimensions = () => {
-      setDimensions({
-        width: window.innerWidth - 100,
-        height: window.innerHeight - 100,
-      });
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: window.innerHeight - 150, // leave space for navbar etc.
+        });
+      }
 
       setTheme(
         createTheme({
           textColor: {
-            main: getCSSVar("--foreground", "#ededed"),
+            main: "#ededed",
             highlighted: "#ffffff",
             dark: "#cccccc",
           },
-          matchBackground: {
-            wonColor: getCSSVar("--card-background", "#101828"),
-            lostColor: getCSSVar("--secondary-color", "#1f2937"),
-          },
+          matchBackground: { wonColor: "#101828", lostColor: "#1f2937" },
           score: {
             background: {
-              wonColor: getCSSVar("--accent-color", "#FBBF24"),
+              wonColor: "#FBBF24",
               lostColor: "rgba(251, 191, 36, 0.1)",
             },
             text: {
-              highlightedWonColor: getCSSVar("--foreground", "#ffffff"),
+              highlightedWonColor: "#ffffff",
               highlightedLostColor: "#999999",
             },
           },
-          border: {
-            color: getCSSVar("--border-color", "#364153"),
-            highlightedColor: getCSSVar("--accent-color", "#FBBF24"),
-          },
-          roundHeader: {
-            backgroundColor: getCSSVar("--accent-color", "#FBBF24"),
-            fontColor: getCSSVar("--background", "#030712"),
-          },
-          connectorColor: getCSSVar("--border-color", "#364153"),
-          connectorColorHighlight: getCSSVar("--accent-color", "#FBBF24"),
-          svgBackground: getCSSVar("--background", "#030712"),
+          border: { color: "#364153", highlightedColor: "#FBBF24" },
+          roundHeader: { backgroundColor: "#FBBF24", fontColor: "#030712" },
+          connectorColor: "#364153",
+          connectorColorHighlight: "#FBBF24",
+          svgBackground: "#030712",
         })
       );
     };
@@ -79,33 +119,86 @@ export default function RoundTwoBracket({ matches, teams = [], onUpdate }) {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  // 🔹 Map matches when API data changes
+  useEffect(() => {
+    if (matches?.length) {
+      setMappedMatches(formatMatches(matches));
+    } else {
+      setMappedMatches([]);
+    }
+  }, [matches]);
+
   const handleSave = (id, data) => {
     if (onUpdate) onUpdate(id, data);
     setEditingMatch(null);
   };
 
   return (
-    <div className="overflow-auto scrollbar-x">
-      <SingleEliminationBracket
-        matches={matches}
-        matchComponent={(props) => (
-          <div onClick={() => setEditingMatch(props.match)}>
-            <Match {...props} />
-          </div>
-        )}
-        theme={theme}
-        svgWrapper={({ children, ...props }) => (
-          <SVGViewer
-            background={theme.svgBackground}
-            SVGBackground={theme.svgBackground}
-            width={dimensions.width}
-            height={dimensions.height}
-            {...props}
-          >
-            {children}
-          </SVGViewer>
-        )}
-      />
+    <div ref={containerRef} className="w-full overflow-auto scrollbar-x">
+      {mappedMatches.length > 0 ? (
+        <SingleEliminationBracket
+          matches={mappedMatches}
+          matchComponent={(props) => {
+            const originalMatch = matches.find((m) => m._id === props.match.id);
+
+            if (!originalMatch || originalMatch._id?.startsWith("placeholder-")) {
+              return (
+                <div className="cursor-not-allowed opacity-70">
+                  <Match {...props} />
+                </div>
+              );
+            }
+
+            // ✅ Completed matches can't be edited
+            if (originalMatch.winner) {
+              return (
+                <div className="cursor-not-allowed opacity-70">
+                  <Match {...props} />
+                </div>
+              );
+            }
+
+            // ✅ Permission logic
+            const userId = currentUser?._id;
+            const isAdmin = currentUser?.role === "admin";
+
+            const isUserInTeam =
+              originalMatch.teamA?.members?.some((m) =>
+                typeof m === "string" ? m === userId : m._id === userId
+              ) ||
+              originalMatch.teamB?.members?.some((m) =>
+                typeof m === "string" ? m === userId : m._id === userId
+              );
+
+            const canEdit = isAdmin || isUserInTeam;
+
+            return (
+              <div
+                onClick={() => canEdit && setEditingMatch(originalMatch)}
+                className={
+                  canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-70"
+                }
+              >
+                <Match {...props} />
+              </div>
+            );
+          }}
+          theme={theme}
+          svgWrapper={({ children, ...props }) => (
+            <SVGViewer
+              background={theme.svgBackground}
+              SVGBackground={theme.svgBackground}
+              width={dimensions.width}
+              height={dimensions.height}
+              {...props}
+            >
+              {children}
+            </SVGViewer>
+          )}
+        />
+      ) : (
+        <p className="text-center text-gray-400 p-6">No matches available</p>
+      )}
 
       {/* Shared Modal for Editing */}
       <EditMatchModal

@@ -27,7 +27,7 @@ export default function AdminRegistrationsTable() {
       }
     }
     fetchRegistrations();
-  }, []);
+  },[]);
 
   // Search filter
   useEffect(() => {

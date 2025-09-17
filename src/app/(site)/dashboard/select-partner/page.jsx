@@ -43,7 +43,6 @@ export default function SelectTeam() {
         setFetchingTeams(true);
         const res = await api.get("/api/teamup");
         const allTeams = res.data.data?.teams || [];
-
         // Only teams created by current user
         const myTeams = allTeams.filter(
           (team) => team.createdBy?._id === currentUserId

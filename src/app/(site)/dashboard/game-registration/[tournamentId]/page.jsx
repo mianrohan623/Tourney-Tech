@@ -46,7 +46,8 @@ export default function GameRegistrationPage() {
             _id: g.game?._id,
             entryFee: g.entryFee,
             format: g.format,
-            teamBased: g.tournamentTeamType === "double_player",
+            teamBased: g.teamBased, // keep original boolean if needed
+            tournamentTeamType: g.tournamentTeamType, // preserve actual type string
             minPlayers: g.minPlayers || 1,
             maxPlayers: g.maxPlayers || 1,
           }))
@@ -186,16 +187,16 @@ export default function GameRegistrationPage() {
                   {game.format === "single_elimination"
                     ? "Single Elimination"
                     : game.format === "double_elimination"
-                    ? "Double Elimination"
-                    : "Round Robin"}
+                      ? "Double Elimination"
+                      : "Round Robin"}
                 </p>
                 <p>
                   <strong>Players Required:</strong>{" "}
-                  {game.teamBased
-                    ? game.minPlayers === 1 && game.maxPlayers === 1
-                      ? "Single"
-                      : "Double"
-                    : "Single Player"}
+                  {game.tournamentTeamType === "double_player"
+                    ? "Double Player"
+                    : game.tournamentTeamType === "single_player"
+                      ? "Single Player"
+                      : "Unknown"}
                 </p>
               </div>
             );

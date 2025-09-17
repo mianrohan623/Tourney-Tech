@@ -38,8 +38,14 @@ export const PATCH = asyncHandler(async (req, context) => {
   let team = null;
 
   if (status === "accepted") {
-    const fromReg = await Registration.findOne({ user: request.from });
-    const toReg = await Registration.findOne({ user: request.to });
+    const fromReg = await Registration.findOne({
+      user: request.from,
+      tournament: request.tournament,
+    });
+    const toReg = await Registration.findOne({
+      user: request.to,
+      tournament: request.tournament,
+    });
 
     if (!fromReg || !toReg) {
       throw new ApiResponse(

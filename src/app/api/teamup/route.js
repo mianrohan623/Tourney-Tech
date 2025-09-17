@@ -16,16 +16,20 @@ export const POST = asyncHandler(async (req) => {
   const { fields } = await parseForm(req);
 
   const to = fields.to?.toString();
+  const tournamentId = fields.tournamentId?.toString();
   const message = fields.message?.toString();
-  if (!to) throw new ApiError(400, null, "Receiver user ID (to) is required");
+  console.log("to", to, "tournamentId", tournamentId, "message", message);
+  if (!to || !tournamentId)
+    throw new ApiResponse(400, null, "Receiver user ID (to) is required");
 
   if (to.toString() === user._id.toString())
-    throw new ApiError(400, null, "Cannot send team-up request to yourself");
+    throw new ApiResponse(400, null, "Cannot send team-up request to yourself");
 
   const request = await TeamUp.create({
     from: user._id,
     to,
     message,
+    tournament: tournamentId,
   });
 
   return Response.json(

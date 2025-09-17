@@ -15,6 +15,7 @@ export const GET = asyncHandler(async (req) => {
     .populate("members", "firstname lastname username email")
     .lean();
 
+    console.log("teams::=======", teams);
   const tournamentIds = teams.map((t) => t.tournament?._id);
 
   const registrations = await Registration.find({
@@ -27,7 +28,7 @@ export const GET = asyncHandler(async (req) => {
 
   const tournaments = teams.map((team) => {
     const gameConfig = team.tournament?.games.find(
-      (g) => g._id.toString() === team.game.toString()
+      (g) => g.game.toString() === team.game.toString()
     );
 
     const registration = registrations.find(

@@ -34,6 +34,21 @@ export const PATCH = asyncHandler(async (req) => {
     throw new ApiResponse(400, null, "Selected partner is not a team member");
   }
 
+  const existingPartnerTeam = await Team.findOne({
+    tournament: tournament._id,
+    game: team.game,
+    partner: partnerId,
+    _id: { $ne: team._id }, // apni team exclude
+  });
+
+  if (existingPartnerTeam) {
+    throw new ApiResponse(
+      400,
+      null,
+      "This user is already a partner in another team"
+    );
+  }
+
   // ✅ Check registrations for both users in same tournament & same game
   const [ownerReg, partnerReg] = await Promise.all([
     Registration.findOne({
