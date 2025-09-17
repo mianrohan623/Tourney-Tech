@@ -14,6 +14,7 @@ function getStageName(round, totalRounds) {
   return "group";
 }
 
+
 export const PATCH = asyncHandler(async (req, context) => {
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
