@@ -4,6 +4,7 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { requireAuth } from "@/utils/server/auth";
 import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 import { parseForm } from "@/utils/server/parseForm";
+import { asyncHandler } from "@/utils/server/asyncHandler";
 import "@/models/Tournament";
 import "@/models/Game";
 import "@/models/User";
@@ -18,7 +19,12 @@ export const POST = asyncHandler(async (req) => {
   const imagePath = Array.isArray(files.image)
     ? files.image[0]?.filepath
     : files.image?.filepath;
-
+  console.log(
+    "🚀 ~ file: route.js:27 ~ imagePath:",
+    imagePath,
+    "files====:",
+    files
+  );
   if (!tournamentId || !gameId || !imagePath) {
     throw new ApiError(400, "Missing required fields");
   }

@@ -6,13 +6,15 @@ import { requireAuth } from "@/utils/server/auth";
 import "@/models/Tournament";
 import "@/models/Game";
 import "@/models/User";
+import { parseForm } from "@/utils/server/parseForm";
+import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 
 export const DELETE = asyncHandler(async (_, context) => {
   const user = await requireAuth();
   const id = context.params.id;
 
-  if (!sittingArrangementId) {
-    throw new ApiError(400, "Sitting Arrangement ID is required");
+  if (!id) {
+    throw new ApiError(400, "ID is required");
   }
 
   const sittingArrangement = await SittingArrangment.findOne({
