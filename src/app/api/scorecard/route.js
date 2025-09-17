@@ -2,6 +2,7 @@
 import { Match } from "@/models/Match";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
+import "@/models/Team"
 
 export const GET = asyncHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -21,6 +22,7 @@ export const GET = asyncHandler(async (req) => {
     return Response.json(new ApiResponse(200, [], "No matches found"));
   }
 
+  
   // ✅ Group by rounds
   const scoreboard = {};
   for (let match of matches) {

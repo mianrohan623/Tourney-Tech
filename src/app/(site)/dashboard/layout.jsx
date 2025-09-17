@@ -5,7 +5,7 @@ import { useState } from "react";
 import DashboardNavbar from "@/components/ui/dashboard/DashboardNavbar";
 import DashboardSidebar from "@/components/ui/dashboard/DashboardSidebar";
 
-import { LayoutDashboard, Users, LogOut, BellDot } from "lucide-react";
+import { LayoutDashboard, Users, LogOut, BellDot,SquareChartGantt } from "lucide-react";
 
 import UserGuard from "@/components/gard/user/UserGard";
 
@@ -24,6 +24,7 @@ const userNavItems = [
         { href: "/dashboard/select-partner", label: "Select Partner" }
       ],
     },
+     { href: "/dashboard/check-sittings", label: "Sitting Arrangements", icon: SquareChartGantt },
   { href: "/logOut", label: "Logout", icon: LogOut },
 ];
 
