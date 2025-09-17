@@ -2,7 +2,6 @@
 import { Team } from "@/models/Team";
 import { Match } from "@/models/Match";
 import { Tournament } from "@/models/Tournament";
-// import { BracketGroup } from "@/models/BracketGroup";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { requireAuth } from "@/utils/server/auth";
@@ -11,15 +10,6 @@ import "@/models/Game";
 
 function shuffleArray(array) {
   return array.sort(() => Math.random() - 0.5);
-}
-
-// ✅ Stage Generator
-function getStageName(round, totalRounds) {
-  if (round < totalRounds - 2) return "group";
-  if (round === totalRounds - 2) return "qualifier";
-  if (round === totalRounds - 1) return "semi_final";
-  if (round === totalRounds) return "final";
-  return "group";
 }
 
 export const POST = asyncHandler(async (req) => {
@@ -38,55 +28,58 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiResponse(404, null, "Tournament not found");
   }
 
+  const gameDetail = tournamentDoc.games?.find(
+    (v) => v?.game.toString() === game
+  );
+  if (!gameDetail) throw new ApiResponse(400, null, "Game not found");
+
   // ✅ Teams fetch
   const teams = await Team.find({ tournament, game });
   if (teams.length < 2) {
     throw new ApiResponse(400, null, "Not enough teams to create matches");
   }
 
-  // ✅ Total rounds calculate (log2 style)
-  const totalRounds = Math.ceil(Math.log2(teams.length));
+  // ✅ Total rounds (from tournament setting)
+  const totalRounds = gameDetail.rounds;
 
-  // ✅ Existing matches
+  // ✅ Existing matches check (to avoid duplicate creation)
   const existingMatches = await Match.find({ tournament, game });
-  const round = Math.floor(existingMatches.length / (teams.length / 2)) + 1;
-
-  // ✅ Stage name calculate
-  const stage = getStageName(round, totalRounds);
-
-  // ✅ Shuffle teams
-  const shuffledTeams = shuffleArray(teams);
-
-  // ✅ Matches create (without bracket group)
-  const matches = [];
   let matchNumber = existingMatches.length + 1;
 
-  for (let i = 0; i < shuffledTeams.length; i += 2) {
-    const teamA = shuffledTeams[i];
-    const teamB = shuffledTeams[i + 1];
+  const matches = [];
 
-    if (!teamB) continue; // odd team skip
+  // ✅ Loop over total rounds
+  for (let round = 1; round <= totalRounds; round++) {
+    // ✅ Shuffle teams fresh for each round
+    const shuffledTeams = shuffleArray([...teams]);
 
-    const match = await Match.create({
-      tournament,
-      game,
-      matchNumber,
-      round,
-      stage, // ✅ stage save ho rahi hai
-      teamA: teamA._id,
-      teamB: teamB._id,
-      admin: user._id,
-    });
+    for (let i = 0; i < shuffledTeams.length; i += 2) {
+      const teamA = shuffledTeams[i];
+      const teamB = shuffledTeams[i + 1];
 
-    matches.push(match);
-    matchNumber++;
+      if (!teamB) continue; // odd team skip
+
+      const match = await Match.create({
+        tournament,
+        game,
+        matchNumber,
+        round: 1,
+        stage: "group", // group matches
+        teamA: teamA._id,
+        teamB: teamB._id,
+        admin: user._id,
+      });
+
+      matches.push(match);
+      matchNumber++;
+    }
   }
 
   return Response.json(
     new ApiResponse(
       201,
       matches,
-      `${stage} (Round ${round}) matches created successfully`
+      `Group matches created successfully with ${totalRounds} rounds`
     )
   );
 });
