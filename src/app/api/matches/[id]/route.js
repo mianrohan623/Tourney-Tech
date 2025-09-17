@@ -55,72 +55,135 @@ export const PATCH = asyncHandler(async (req, context) => {
   const allCompleted = sameRoundMatches.every((m) => m.status === "completed");
 
   if (allCompleted) {
-    // ✅ Agar current round = 2 hai → Top 50 logic lagana hai
-    if (match.round === 2) {
+    // ✅ If stage is "group" → Apply Top 50 logic (sum of scores)
+    if (match.stage === "group") {
       const allTeams = await Team.find({
         tournament: match.tournament._id,
         game: match.game._id,
       });
 
-      // ✅ Har team ke jeete huye matches gin lo
+      // ✅ Calculate total scores for each team (from completed matches in group stage)
       const teamScores = await Promise.all(
         allTeams.map(async (team) => {
-          const wonMatches = await Match.countDocuments({
-            tournament: match.tournament._id,
-            game: match.game._id,
-            winner: team._id,
-          });
-          return { teamId: team._id, score: wonMatches };
+          const scoreAggregation = await Match.aggregate([
+            {
+              $match: {
+                tournament: match.tournament._id,
+                game: match.game._id,
+                stage: "group",
+                status: "completed",
+                $or: [{ teamA: team._id }, { teamB: team._id }],
+              },
+            },
+            {
+              $addFields: {
+                teamScore: {
+                  $cond: {
+                    if: { $eq: ["$teamA", team._id] },
+                    then: { $toInt: "$teamAScore" },
+                    else: { $toInt: "$teamBScore" },
+                  },
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalScore: { $sum: "$teamScore" },
+              },
+            },
+          ]);
+          const totalScore =
+            scoreAggregation.length > 0 ? scoreAggregation[0].totalScore || 0 : 0;
+          return { teamId: team._id, score: totalScore };
         })
       );
 
-      // ✅ Sort descending
+
+      // ✅ Sort descending by score
       teamScores.sort((a, b) => b.score - a.score);
 
-      // ✅ Top 50 teams
-      const topTeams = teamScores.slice(0, 50).map((t) => t.teamId);
 
-      // ✅ Stage decide
-      let nextStage = "qualifier";
-      if (topTeams.length <= 4) nextStage = "semi_final";
-      if (topTeams.length === 2) nextStage = "final";
+      // ✅ Select top teams (top 50 or fewer, for odd counts take top n-1)
+      const maxTeams = allTeams.length % 2 === 1 ? allTeams.length - 1 : allTeams.length;
+      const topTeams = teamScores
+        .slice(0, Math.min(50, maxTeams))
+        .map((t) => t.teamId);
+
+
+      // ✅ Stage decide based on number of top teams
+      let nextStage;
+      if (topTeams.length === 2) {
+        nextStage = "final";
+      } else if (topTeams.length === 3 || topTeams.length === 4) {
+        nextStage = "semi_final";
+      } else if (topTeams.length >= 6) {
+        nextStage = "qualifier";
+      } else {
+        // Fallback for unexpected cases (e.g., 1 team)
+        nextStage = "semi_final";
+      }
 
       let nextRound = match.round + 1;
 
-      // ✅ Matches create
+      // ✅ Create matches for next round
       let matchNumber =
         (await Match.countDocuments({
           tournament: match.tournament._id,
           game: match.game._id,
         })) + 1;
 
-      const shuffled = topTeams.sort(() => Math.random() - 0.5);
+      // Shuffle top teams for random pairing
+      const shuffled = [...topTeams].sort(() => Math.random() - 0.5);
       for (let i = 0; i < shuffled.length; i += 2) {
         const teamA = shuffled[i];
         const teamB = shuffled[i + 1];
 
         if (!teamB) {
-          await Match.create({
+          // Odd number: create bye match
+          const existing = await Match.findOne({
             tournament: match.tournament._id,
             game: match.game._id,
             round: nextRound,
-            stage: nextStage,
-            status: "completed", // bye = direct win
             teamA,
-            winner: teamA,
-            matchNumber,
           });
+
+          if (!existing) {
+            await Match.create({
+              tournament: match.tournament._id,
+              game: match.game._id,
+              round: nextRound,
+              stage: nextStage,
+              status: "completed", // bye = direct win
+              teamA,
+              winner: teamA,
+              matchNumber,
+            });
+          }
         } else {
-          await Match.create({
+          // Normal match
+          const existing = await Match.findOne({
             tournament: match.tournament._id,
             game: match.game._id,
             round: nextRound,
-            stage: nextStage,
-            status: "pending",
-            teamA,
-            teamB,
-            matchNumber,
+            $or: [
+              { teamA, teamB },
+              { teamA: teamB, teamB: teamA },
+            ],
           });
+
+          if (!existing) {
+            await Match.create({
+              tournament: match.tournament._id,
+              game: match.game._id,
+              round: nextRound,
+              stage: nextStage,
+              status: "pending",
+              teamA,
+              teamB,
+              matchNumber,
+            });
+          }
         }
         matchNumber++;
       }
@@ -153,58 +216,57 @@ export const PATCH = asyncHandler(async (req, context) => {
           })) + 1;
 
         for (let i = 0; i < winners.length; i += 2) {
-  const teamA = winners[i];
-  const teamB = winners[i + 1];
+          const teamA = winners[i];
+          const teamB = winners[i + 1];
 
-  if (!teamB) {
-    // ✅ check if bye match already exists
-    const existing = await Match.findOne({
-      tournament: match.tournament._id,
-      game: match.game._id,
-      round: nextRound,
-      teamA,
-    });
+          if (!teamB) {
+            // ✅ check if bye match already exists
+            const existing = await Match.findOne({
+              tournament: match.tournament._id,
+              game: match.game._id,
+              round: nextRound,
+              teamA,
+            });
 
-    if (!existing) {
-      await Match.create({
-        tournament: match.tournament._id,
-        game: match.game._id,
-        round: nextRound,
-        stage: nextStage,
-        status: "completed", // bye = direct win
-        teamA,
-        winner: teamA,
-        matchNumber: matchNumber++,
-      });
-    }
-    continue;
-  }
+            if (!existing) {
+              await Match.create({
+                tournament: match.tournament._id,
+                game: match.game._id,
+                round: nextRound,
+                stage: nextStage,
+                status: "completed", // bye = direct win
+                teamA,
+                winner: teamA,
+                matchNumber: matchNumber++,
+              });
+            }
+            continue;
+          }
 
-  // ✅ check if match already exists (teamA vs teamB OR teamB vs teamA)
-  const existing = await Match.findOne({
-    tournament: match.tournament._id,
-    game: match.game._id,
-    round: nextRound,
-    $or: [
-      { teamA, teamB },
-      { teamA: teamB, teamB: teamA },
-    ],
-  });
+          // ✅ check if match already exists
+          const existing = await Match.findOne({
+            tournament: match.tournament._id,
+            game: match.game._id,
+            round: nextRound,
+            $or: [
+              { teamA, teamB },
+              { teamA: teamB, teamB: teamA },
+            ],
+          });
 
-  if (!existing) {
-    await Match.create({
-      tournament: match.tournament._id,
-      game: match.game._id,
-      round: nextRound,
-      stage: nextStage,
-      status: "pending",
-      teamA,
-      teamB,
-      matchNumber: matchNumber++,
-    });
-  }
-}
-
+          if (!existing) {
+            await Match.create({
+              tournament: match.tournament._id,
+              game: match.game._id,
+              round: nextRound,
+              stage: nextStage,
+              status: "pending",
+              teamA,
+              teamB,
+              matchNumber: matchNumber++,
+            });
+          }
+        }
       } else {
         // ✅ Tournament final complete
         const lastWinner = winners[0];
