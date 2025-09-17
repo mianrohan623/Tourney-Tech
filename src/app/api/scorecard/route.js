@@ -2,6 +2,7 @@
 import { Match } from "@/models/Match";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
+import "@/models/Team"
 
 export const GET = asyncHandler(async (req) => {
   const { searchParams } = new URL(req.url);
