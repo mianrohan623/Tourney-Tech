@@ -147,7 +147,7 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
                 </div>
               </div>
 
-              {!match.winner && (
+              {!match.winner ? (
                 <button
                   onClick={() => setEditingMatch(match)}
                   disabled={!canEdit}
@@ -158,8 +158,9 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
                   }`}
                 >
                   Add / Edit Score
+                
                 </button>
-               )}
+               ) : <p className="text-xs text-[var(--success-color)]"> Match Completed</p>}
             </div>
           );
         })}

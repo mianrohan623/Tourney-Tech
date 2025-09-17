@@ -6,22 +6,41 @@ import {
   Match,
   createTheme,
 } from "@g-loot/react-tournament-brackets";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import EditMatchModal from "./EditMatchesModel";
+import api from "@/utils/axios"; // ✅ your axios instance
 
 export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) {
+  const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [theme, setTheme] = useState(createTheme({}));
   const [editingMatch, setEditingMatch] = useState(null);
   const [mappedMatches, setMappedMatches] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // ✅ Fetch logged in user
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await api.get("/api/me");
+        setCurrentUser(data?.data?.user || null);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        setCurrentUser(null);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // 🔹 Safe formatter for API matches
   const formatMatches = (rawMatches) => {
-    return rawMatches.map((m) => {
+    const matchIdMap = {};
+
+    rawMatches.forEach((m) => {
       const winnerId =
         typeof m.winner === "object" ? m.winner?._id : m.winner || null;
 
-      return {
+      matchIdMap[m._id] = {
         id: m._id,
         name: m.stage || `Round ${m.round}`,
         nextMatchId: null,
@@ -30,35 +49,51 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
         state: m.status === "completed" ? "DONE" : "PENDING",
         participants: [
           {
-            id: m.teamA?._id || "TBD",
-            name: m.teamA?.name || "TBD",
+            id: m.teamA?._id || `TBD-${m._id}-A`,
+            name: `${m.teamA?.serialNo || ""} ${m.teamA?.name || "No Team"}`,
             isWinner: winnerId === m.teamA?._id,
-            resultText: "",
-            score: m.teamAScore ?? 0,
+            resultText:
+              m.status === "completed"
+                ? `${m.teamAScore ?? 0} ${
+                    winnerId === m.teamA?._id ? "Win" : "Lose"
+                  }`
+                : `${m.teamAScore ?? 0}`,
           },
           {
-            id: m.teamB?._id || "TBD",
-            name: m.teamB?.name || "TBD",
+            id: m.teamB?._id || `TBD-${m._id}-B`,
+            name: `${m.teamB?.serialNo || ""} ${m.teamB?.name || "No Team"}`,
             isWinner: winnerId === m.teamB?._id,
-            resultText: "",
-            score: m.teamBScore ?? 0,
+            resultText:
+              m.status === "completed"
+                ? `${m.teamBScore ?? 0} ${
+                    winnerId === m.teamB?._id ? "Win" : "Lose"
+                  }`
+                : `${m.teamBScore ?? 0}`,
           },
         ],
       };
     });
+
+    return Object.values(matchIdMap);
   };
 
   // 🔹 Update dimensions & theme dynamically
   useEffect(() => {
     const updateDimensions = () => {
-      setDimensions({
-        width: window.innerWidth - 100,
-        height: window.innerHeight - 100,
-      });
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: window.innerHeight - 150, // leave space for navbar etc.
+        });
+      }
 
       setTheme(
         createTheme({
-          textColor: { main: "#ededed", highlighted: "#ffffff", dark: "#cccccc" },
+          textColor: {
+            main: "#ededed",
+            highlighted: "#ffffff",
+            dark: "#cccccc",
+          },
           matchBackground: { wonColor: "#101828", lostColor: "#1f2937" },
           score: {
             background: {
@@ -99,15 +134,55 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
   };
 
   return (
-    <div className="overflow-auto scrollbar-x">
+    <div ref={containerRef} className="w-full overflow-auto scrollbar-x">
       {mappedMatches.length > 0 ? (
         <SingleEliminationBracket
           matches={mappedMatches}
-          matchComponent={(props) => (
-            <div onClick={() => setEditingMatch(props.match)}>
-              <Match {...props} />
-            </div>
-          )}
+          matchComponent={(props) => {
+            const originalMatch = matches.find((m) => m._id === props.match.id);
+
+            if (!originalMatch || originalMatch._id?.startsWith("placeholder-")) {
+              return (
+                <div className="cursor-not-allowed opacity-70">
+                  <Match {...props} />
+                </div>
+              );
+            }
+
+            // ✅ Completed matches can't be edited
+            if (originalMatch.winner) {
+              return (
+                <div className="cursor-not-allowed opacity-70">
+                  <Match {...props} />
+                </div>
+              );
+            }
+
+            // ✅ Permission logic
+            const userId = currentUser?._id;
+            const isAdmin = currentUser?.role === "admin";
+
+            const isUserInTeam =
+              originalMatch.teamA?.members?.some((m) =>
+                typeof m === "string" ? m === userId : m._id === userId
+              ) ||
+              originalMatch.teamB?.members?.some((m) =>
+                typeof m === "string" ? m === userId : m._id === userId
+              );
+
+            const canEdit = isAdmin || isUserInTeam;
+
+            return (
+              <div
+                onClick={() => canEdit && setEditingMatch(originalMatch)}
+                className={
+                  canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-70"
+                }
+              >
+                <Match {...props} />
+              </div>
+            );
+          }}
           theme={theme}
           svgWrapper={({ children, ...props }) => (
             <SVGViewer
