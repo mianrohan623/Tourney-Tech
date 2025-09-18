@@ -153,6 +153,7 @@ export const GET = asyncHandler(async () => {
       model: "BankDetails",
       strictPopulate: false,
     })
+    .sort({ createdAt: -1 })
     .lean();
 
   return Response.json(
