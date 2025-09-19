@@ -12,6 +12,13 @@ export default function AdminRegistrationsTable() {
   const [search, setSearch] = useState("");
   const rowsPerPage = 10;
 
+  // ✅ status order: pending → rejected → approved
+  const statusPriority = {
+    pending: 1,
+    rejected: 2,
+    approved: 3,
+  };
+
   // Fetch registrations
   useEffect(() => {
     async function fetchRegistrations() {
@@ -27,9 +34,9 @@ export default function AdminRegistrationsTable() {
       }
     }
     fetchRegistrations();
-  },[]);
+  }, []);
 
-  // Search filter
+  // ✅ Search + Sort
   useEffect(() => {
     const filteredData = registrations.filter((r) => {
       const username = r.user?.username?.toLowerCase() || "";
@@ -42,8 +49,21 @@ export default function AdminRegistrationsTable() {
         tournament.includes(query)
       );
     });
-    setFiltered(filteredData);
-    setCurrentPage(1); // reset to first page on search
+
+    const sortedData = filteredData.sort((a, b) => {
+      const statusA = a.gameRegistrationDetails?.status || "pending";
+      const statusB = b.gameRegistrationDetails?.status || "pending";
+
+      if (statusA !== statusB) {
+        return statusPriority[statusA] - statusPriority[statusB];
+      }
+
+      // If both same status → sort by newest first
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    setFiltered(sortedData);
+    setCurrentPage(1);
   }, [search, registrations]);
 
   // Approve/Reject handler
@@ -66,6 +86,7 @@ export default function AdminRegistrationsTable() {
                   status: res.data.data.gameRegistrationDetails.status,
                   paid: res.data.data.gameRegistrationDetails.paid,
                 },
+                updatedAt: res.data.data.updatedAt, // ✅ update timestamp too
               }
             : r
         )
@@ -106,8 +127,10 @@ export default function AdminRegistrationsTable() {
       </div>
 
       <div className="scrollbar-x overflow-x-auto">
-        <table className="border border-[var(--border-color)] rounded-lg overflow-hidden"
-        style={{ tableLayout: "auto", width: "max-content" }}>
+        <table
+          className="border border-[var(--border-color)] rounded-lg overflow-hidden"
+          style={{ tableLayout: "auto", width: "max-content" }}
+        >
           <thead className="bg-[var(--secondary-color)] text-[var(--foreground)]">
             <tr>
               <th className="py-2 px-4 text-left">User</th>
@@ -142,7 +165,6 @@ export default function AdminRegistrationsTable() {
                 <td className="py-2 px-4">
                   {r.gameRegistrationDetails?.games?.reduce(
                     (total, regGame) => {
-                      // Find the matching game inside tournament.games
                       const match = r.tournament?.games?.find(
                         (g) => g._id === regGame._id || g.game === regGame._id
                       );
@@ -170,7 +192,7 @@ export default function AdminRegistrationsTable() {
                             return "Single Player";
                           }
                         })
-                        .filter(Boolean) // remove nulls if no match
+                        .filter(Boolean)
                         .join(" - ")
                     : "-"}
                 </td>
@@ -203,8 +225,8 @@ export default function AdminRegistrationsTable() {
                     r.gameRegistrationDetails?.status === "approved"
                       ? "text-[var(--success-color)]"
                       : r.gameRegistrationDetails?.status === "rejected"
-                        ? "text-[var(--error-color)]"
-                        : "text-white"
+                      ? "text-[var(--error-color)]"
+                      : "text-white"
                   }`}
                 >
                   {r.gameRegistrationDetails?.status}

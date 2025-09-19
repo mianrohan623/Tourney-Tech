@@ -147,6 +147,7 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
                 </div>
               </div>
 
+              {/* Action Buttons */}
               {!match.winner ? (
                 <button
                   onClick={() => setEditingMatch(match)}
@@ -158,9 +159,23 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
                   }`}
                 >
                   Add / Edit Score
-                
                 </button>
-               ) : <p className="text-xs text-[var(--success-color)]"> Match Completed</p>}
+              ) : (
+                <>
+                  {currentUser?.role === "admin" ? (
+                    <button
+                      onClick={() => setEditingMatch(match)}
+                      className="w-full rounded-xl px-3 py-2 text-sm font-medium bg-yellow-500 text-white"
+                    >
+                      Update Score (Admin)
+                    </button>
+                  ) : (
+                    <p className="text-xs text-[var(--success-color)] text-center">
+                      Match Completed
+                    </p>
+                  )}
+                </>
+              )}
             </div>
           );
         })}

@@ -129,9 +129,35 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
   }, [matches]);
 
   const handleSave = (id, data) => {
-    if (onUpdate) onUpdate(id, data);
-    setEditingMatch(null);
-  };
+  if (onUpdate) onUpdate(id, data); // still notify parent
+
+  // ✅ Update local state immediately so UI refreshes
+  setMappedMatches((prev) =>
+    prev.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            participants: [
+              {
+                ...m.participants[0],
+                resultText: data.teamAScore,
+                isWinner: data.winner === m.participants[0].id,
+              },
+              {
+                ...m.participants[1],
+                resultText: data.teamBScore,
+                isWinner: data.winner === m.participants[1].id,
+              },
+            ],
+            state: data.winner ? "DONE" : "PENDING",
+          }
+        : m
+    )
+  );
+
+  setEditingMatch(null);
+};
+
 
   return (
     <div ref={containerRef} className="w-full overflow-auto scrollbar-x">
@@ -149,16 +175,6 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
               );
             }
 
-            // ✅ Completed matches can't be edited
-            if (originalMatch.winner) {
-              return (
-                <div className="cursor-not-allowed opacity-70">
-                  <Match {...props} />
-                </div>
-              );
-            }
-
-            // ✅ Permission logic
             const userId = currentUser?._id;
             const isAdmin = currentUser?.role === "admin";
 
@@ -170,7 +186,15 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
                 typeof m === "string" ? m === userId : m._id === userId
               );
 
-            const canEdit = isAdmin || isUserInTeam;
+            // ✅ Permission rules
+            let canEdit = false;
+            if (originalMatch.winner) {
+              // Match completed → only admin can edit
+              canEdit = isAdmin;
+            } else {
+              // Pending → admin or players can edit
+              canEdit = isAdmin || isUserInTeam;
+            }
 
             return (
               <div
