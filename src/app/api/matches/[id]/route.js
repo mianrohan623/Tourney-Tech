@@ -17,6 +17,7 @@ function getStageName(round, totalRounds) {
 
 export const PATCH = asyncHandler(async (req, context) => {
   const matchId = context.params.id;
+  console.log("run run")
   const { fields } = await parseForm(req);
   const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon } = fields;
 
@@ -111,7 +112,7 @@ export const PATCH = asyncHandler(async (req, context) => {
         .slice(0, Math.min(50, maxTeams))
         .map((t) => t.teamId);
 
-
+console.log("topTeams.length ============:", topTeams.length )
       // ✅ Stage decide based on number of top teams
       let nextStage;
       if (topTeams.length === 2) {

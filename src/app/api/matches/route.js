@@ -7,7 +7,6 @@ import { requireAuth } from "@/utils/server/auth";
 import { parseForm } from "@/utils/server/parseForm";
 import "@/models/Game";
 
-// Utility: shuffle array
 function shuffleArray(array) {
   return array
     .map((value) => ({ value, sort: Math.random() }))
@@ -15,24 +14,39 @@ function shuffleArray(array) {
     .map(({ value }) => value);
 }
 
-// Generate all unique team pairings for round-robin
 function generateRoundRobinSchedule(teams, numRounds) {
   const n = teams.length;
-  const allTeams = shuffleArray([...teams]); // Randomize initial order
+  const allTeams = shuffleArray([...teams]); 
   const schedule = [];
   const allPairs = [];
 
-  // Generate all possible unique pairs
+  const cities = [...new Set(teams.map((t) => t.owner?.city))];
+
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      allPairs.push([allTeams[i], allTeams[j]]);
+      const teamA = allTeams[i];
+      const teamB = allTeams[j];
+      const cityA = teamA.owner?.city;
+      const cityB = teamB.owner?.city;
+
+      if (cities.length > 1 && cityA === cityB) {
+        continue; 
+      }
+
+      allPairs.push([teamA, teamB]);
     }
   }
 
-  // Shuffle all pairs to randomize match order
+  if (allPairs.length === 0) {
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        allPairs.push([allTeams[i], allTeams[j]]);
+      }
+    }
+  }
+
   const shuffledPairs = shuffleArray([...allPairs]);
 
-  // Distribute pairs across rounds
   const matchesPerRound = Math.ceil(shuffledPairs.length / numRounds);
   for (let r = 0; r < numRounds; r++) {
     const start = r * matchesPerRound;
@@ -54,7 +68,6 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiResponse(400, null, "Tournament ID and Game ID are required");
   }
 
-  // Tournament fetch
   const tournamentDoc = await Tournament.findById(tournament);
   if (!tournamentDoc) {
     throw new ApiResponse(404, null, "Tournament not found");
@@ -65,36 +78,27 @@ export const POST = asyncHandler(async (req) => {
   );
   if (!gameDetail) throw new ApiResponse(400, null, "Game not found");
 
-  // Teams fetch
   const teams = await Team.find({ tournament, game });
   if (teams.length < 2) {
     throw new ApiResponse(400, null, "Not enough teams to create matches");
   }
 
-  console.log("teams:", teams);
-
-  // Calculate total rounds for full round-robin
   const originalN = teams.length;
-  const totalRounds = gameDetail.rounds || originalN - 1; // Use gameDetail.rounds or n-1
+  const totalRounds = gameDetail.rounds || originalN - 1; 
 
-  // Existing matches check (all matches for this tournament/game)
   const existingMatches = await Match.find({ tournament, game });
   let matchNumber = existingMatches.length + 1;
 
   const matches = [];
 
-  // Generate full Round Robin schedule
   const schedule = generateRoundRobinSchedule(teams, totalRounds);
 
-  // Create matches for each round
   for (let roundNum = 1; roundNum <= totalRounds; roundNum++) {
-    const roundFixtures = schedule[roundNum - 1] || []; // Handle empty rounds
+    const roundFixtures = schedule[roundNum - 1] || []; 
 
-    // Shuffle fixtures for this round to randomize order
     const shuffledRound = shuffleArray([...roundFixtures]);
 
     for (const [teamA, teamB] of shuffledRound) {
-      // Global duplicate check: same pair shouldn't exist already
       const existingPair = await Match.findOne({
         tournament,
         game,
