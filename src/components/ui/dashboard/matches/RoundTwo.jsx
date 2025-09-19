@@ -40,11 +40,17 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
       const winnerId =
         typeof m.winner === "object" ? m.winner?._id : m.winner || null;
 
+        let roundText = `Round ${m.round}`;
+    if (m.stage === "semi_final") roundText = "Semi Final";
+    else if (m.stage === "final") roundText = "Final";
+    else if (m.stage === "qualifier") roundText = "Qualifier";
+
+
       matchIdMap[m._id] = {
         id: m._id,
-        name: m.stage || `Round ${m.round}`,
+        name: roundText,
         nextMatchId: null,
-        tournamentRoundText: `Round ${m.round}`,
+        tournamentRoundText: roundText,
         startTime: m.createdAt,
         state: m.status === "completed" ? "DONE" : "PENDING",
         participants: [
@@ -76,6 +82,8 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
 
     return Object.values(matchIdMap);
   };
+
+  
 
   // 🔹 Update dimensions & theme dynamically
   useEffect(() => {
@@ -157,6 +165,7 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
 
   setEditingMatch(null);
 };
+
 
 
   return (

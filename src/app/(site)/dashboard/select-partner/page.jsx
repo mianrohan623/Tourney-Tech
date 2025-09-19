@@ -111,6 +111,8 @@ export default function SelectTeam() {
       (!selectedGameId || r.games?.some((g) => g._id === selectedGameId))
   );
 
+  console.log("filteredRequests===================", filteredRequests);
+
   // ✅ Default request when filteredRequests change
   useEffect(() => {
     if (filteredRequests.length > 0 && !selectedRequestId) {
@@ -140,9 +142,17 @@ export default function SelectTeam() {
     try {
       setLoading(true);
 
+      const selectedMembersObj = filteredRequests?.find(
+        (r) => r._id === selectedRequestId
+      );
+
+      const selectedMembers = [
+        selectedMembersObj?.from?._id,
+        selectedMembersObj?.to?._id,
+      ];
       // ✅ backend expects: teamId + partnerId
       const formData = new FormData();
-      formData.append("teamId", selectedRequestId); // send requestId as teamId
+      formData.append("memberIds", selectedMembers); // send requestId as teamId
       formData.append("partnerId", partnerId);
 
       await api.patch("/api/team/select-partner", formData, {
@@ -157,6 +167,11 @@ export default function SelectTeam() {
       setLoading(false);
     }
   };
+
+  console.log(
+    "selectedRequestId=========",
+    filteredRequests?.find((r) => r._id === selectedRequestId)
+  );
 
   return (
     <>
