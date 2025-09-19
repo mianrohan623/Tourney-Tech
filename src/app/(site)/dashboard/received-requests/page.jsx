@@ -1,16 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function ReceivedRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
-
   const [selectedTournament, setSelectedTournament] = useState("all");
   const [selectedGame, setSelectedGame] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const prevRequestsRef = useRef([]);
+  const router = useRouter();
 
   // Load user and requests
   const loadData = async () => {
@@ -29,16 +31,64 @@ export default function ReceivedRequests() {
     }
   };
 
+  // Periodically load requests
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
+  // Detect new requests and show toast
+  useEffect(() => {
+    const prevRequests = prevRequestsRef.current;
+    const newRequests = requests.filter(
+      (r) => !prevRequests.find((pr) => pr._id === r._id)
+    );
+
+    newRequests.forEach((req) => {
+      if (req.to?._id === userId && req.status === "pending") {
+        toast.custom(
+          (t) => (
+            <div
+              className={`p-4 rounded-lg shadow-lg bg-[var(--card-background)] border border-[var(--border-color)] flex flex-col`}
+            >
+              <p className="mb-2">
+                <strong>{req.from?.username}</strong> sent you a team up request
+              </p>
+              <div className="flex gap-2">
+                <button
+                  className="px-3 py-1 rounded bg-[var(--success-color)] text-white"
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    // Navigate to player page or focus player
+                    router.push(`/dashboard/players/${req.from?._id}`);
+                  }}
+                >
+                  View
+                </button>
+                <button
+                  className="px-3 py-1 rounded bg-[var(--error-color)] text-white"
+                  onClick={() => toast.dismiss(t.id)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 5000 }
+        );
+      }
+    });
+
+    prevRequestsRef.current = requests;
+  }, [requests, userId, router]);
+
   const updateRequest = async (id, status) => {
     try {
       await api.patch(`/api/teamup/${id}`, { status });
-      toast.success(status === "accepted" ? "Request accepted!" : "Request rejected");
+      toast.success(
+        status === "accepted" ? "Request accepted!" : "Request rejected"
+      );
       setRequests((prev) =>
         prev.map((req) => (req._id === id ? { ...req, status } : req))
       );
