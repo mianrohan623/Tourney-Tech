@@ -13,6 +13,8 @@ export default function TournamentPage() {
   const [round2Matches, setRound2Matches] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [isRefresh, setIsRefresh] = useState(false);
+
   // Fetch matches and create if none exist
   useEffect(() => {
     if (!tournamentId || !gameId) return;
@@ -45,7 +47,7 @@ export default function TournamentPage() {
     };
 
     fetchOrCreateMatches();
-  }, [tournamentId, gameId]);
+  }, [tournamentId, gameId, isRefresh]);
 
   // Round 1 update handler (updates backend)
   const handleRound1Update = async (id, data) => {
@@ -88,7 +90,8 @@ export default function TournamentPage() {
           <h2 className="text-2xl font-bold text-white mb-4">Round 1 Matches</h2>
           <RoundOneMatches
             matches={round1Matches}
-            onUpdate={handleRound1Update}
+            onUpdate={setIsRefresh}
+            
           />
         </section>
       )}

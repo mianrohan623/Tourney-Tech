@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+
 import api from "@/utils/axios";
 import EditMatchModal from "./EditMatchesModel";
 
@@ -41,8 +42,9 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
   );
 
   const handleSave = (id, updatedMatch) => {
-    if (onUpdate) onUpdate(id, updatedMatch);
+    if (onUpdate) onUpdate(true);
     setEditingMatch(null);
+    
   };
 
   const getResult = (match, teamId) => {

@@ -8,9 +8,9 @@ import {
 } from "@g-loot/react-tournament-brackets";
 import { useEffect, useState, useRef } from "react";
 import EditMatchModal from "./EditMatchesModel";
-import api from "@/utils/axios"; // ✅ your axios instance
+import api from "@/utils/axios";
 
-export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) {
+export default function RoundTwoBracket({ matches = [], teams = [], onEdit }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [theme, setTheme] = useState(createTheme({}));
@@ -32,86 +32,116 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
     fetchUser();
   }, []);
 
-  // 🔹 Safe formatter for API matches
+  // 🔹 Format matches for bracket
   const formatMatches = (rawMatches) => {
-    const matchIdMap = {};
+    return rawMatches.map((m) => {
+      const winnerId = typeof m.winner === "object" ? m.winner?._id : m.winner || null;
+      const roundText =
+        m.stage === "semi_final" ? "Semi Final" :
+        m.stage === "final" ? "Final" :
+        m.stage === "qualifier" ? "Qualifier" :
+        `Round ${m.round}`;
 
-    rawMatches.forEach((m) => {
-      const winnerId =
-        typeof m.winner === "object" ? m.winner?._id : m.winner || null;
-
-        let roundText = `Round ${m.round}`;
-    if (m.stage === "semi_final") roundText = "Semi Final";
-    else if (m.stage === "final") roundText = "Final";
-    else if (m.stage === "qualifier") roundText = "Qualifier";
-
-
-      matchIdMap[m._id] = {
+      return {
         id: m._id,
         name: roundText,
-        nextMatchId: null,
+        nextMatchId: m.nextMatchId || null,
         tournamentRoundText: roundText,
         startTime: m.createdAt,
         state: m.status === "completed" ? "DONE" : "PENDING",
         participants: [
           {
             id: m.teamA?._id || `TBD-${m._id}-A`,
-            name: `${m.teamA?.serialNo || ""} ${m.teamA?.name || "No Team"}`,
+            name: `${m.teamA?.serialNo || ""} ${m.teamA?.name || "TBD"}`,
             isWinner: winnerId === m.teamA?._id,
             resultText:
               m.status === "completed"
-                ? `${m.teamAScore ?? 0} ${
-                    winnerId === m.teamA?._id ? "Win" : "Lose"
-                  }`
+                ? `${m.teamAScore ?? 0} ${winnerId === m.teamA?._id ? "Win" : "Lose"}`
                 : `${m.teamAScore ?? 0}`,
           },
           {
             id: m.teamB?._id || `TBD-${m._id}-B`,
-            name: `${m.teamB?.serialNo || ""} ${m.teamB?.name || "No Team"}`,
+            name: `${m.teamB?.serialNo || ""} ${m.teamB?.name || "TBD"}`,
             isWinner: winnerId === m.teamB?._id,
             resultText:
               m.status === "completed"
-                ? `${m.teamBScore ?? 0} ${
-                    winnerId === m.teamB?._id ? "Win" : "Lose"
-                  }`
+                ? `${m.teamBScore ?? 0} ${winnerId === m.teamB?._id ? "Win" : "Lose"}`
                 : `${m.teamBScore ?? 0}`,
           },
         ],
       };
     });
-
-    return Object.values(matchIdMap);
   };
 
-  
+  // 🔹 Generate full bracket with placeholders for future rounds
+  const generateFullBracket = (matches) => {
+    if (!matches.length) return [];
 
-  // 🔹 Update dimensions & theme dynamically
+    // Group matches by round
+    const rounds = {};
+    matches.forEach((m) => {
+      if (!rounds[m.round]) rounds[m.round] = [];
+      rounds[m.round].push(m);
+    });
+
+    const allMatches = [...matches];
+
+    // Generate placeholders for next rounds
+    let currentRound = Math.max(...matches.map((m) => m.round));
+    while (rounds[currentRound].length > 1) {
+      const nextRound = currentRound + 1;
+      const nextRoundMatches = [];
+
+      for (let i = 0; i < Math.ceil(rounds[currentRound].length / 2); i++) {
+        nextRoundMatches.push({
+          _id: `placeholder-${nextRound}-${i}`,
+          round: nextRound,
+          stage:
+            rounds[currentRound][0].stage === "qualifier"
+              ? "semi_final"
+              : rounds[currentRound][0].stage === "semi_final"
+              ? "final"
+              : "final",
+          teamA: { _id: null, name: "TBD" },
+          teamB: { _id: null, name: "TBD" },
+          status: "pending",
+          teamAScore: 0,
+          teamBScore: 0,
+          nextMatchId: null,
+        });
+
+        // Link previous matches to next match
+        const matchA = rounds[currentRound][i * 2];
+        const matchB = rounds[currentRound][i * 2 + 1];
+        if (matchA) matchA.nextMatchId = nextRoundMatches[i]._id;
+        if (matchB) matchB.nextMatchId = nextRoundMatches[i]._id;
+      }
+
+      rounds[nextRound] = nextRoundMatches;
+      allMatches.push(...nextRoundMatches);
+      currentRound = nextRound;
+    }
+
+    return allMatches;
+  };
+
+  // 🔹 Update dimensions & theme
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         setDimensions({
           width: containerRef.current.offsetWidth,
-          height: window.innerHeight - 150, // leave space for navbar etc.
+          height: window.innerHeight - 150,
         });
       }
 
       setTheme(
         createTheme({
-          textColor: {
-            main: "#ededed",
-            highlighted: "#ffffff",
-            dark: "#cccccc",
-          },
+          textColor: { main: "#ededed", highlighted: "#ffffff", dark: "#cccccc" },
           matchBackground: { wonColor: "#101828", lostColor: "#1f2937" },
           score: {
-            background: {
-              wonColor: "#FBBF24",
-              lostColor: "rgba(251, 191, 36, 0.1)",
-            },
-            text: {
-              highlightedWonColor: "#ffffff",
-              highlightedLostColor: "#999999",
-            },
+            background: { wonColor: "#FBBF24", lostColor: "rgba(251, 191, 36, 0.1)" },
+            text: { highlightedWonColor: "#ffffff", highlightedLostColor: "#999999" },
           },
           border: { color: "#364153", highlightedColor: "#FBBF24" },
           roundHeader: { backgroundColor: "#FBBF24", fontColor: "#030712" },
@@ -127,23 +157,25 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  // 🔹 Map matches when API data changes
+  // 🔹 Map matches with placeholders
   useEffect(() => {
-    if (matches?.length) {
-      setMappedMatches(formatMatches(matches));
+    if (matches.length) {
+      const fullBracket = generateFullBracket(matches);
+      setMappedMatches(formatMatches(fullBracket));
     } else {
       setMappedMatches([]);
     }
   }, [matches]);
 
+  // 🔹 Handle match save and update next match participants
   const handleSave = (id, data) => {
-  if (onUpdate) onUpdate(id, data); // still notify parent
+    if (onEdit) onEdit(id, data);
 
-  // ✅ Update local state immediately so UI refreshes
-  setMappedMatches((prev) =>
-    prev.map((m) =>
-      m.id === id
-        ? {
+    setMappedMatches((prev) =>
+      prev.map((m) => {
+        if (m.id === id) {
+          // Update current match
+          const updatedMatch = {
             ...m,
             participants: [
               {
@@ -158,15 +190,32 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
               },
             ],
             state: data.winner ? "DONE" : "PENDING",
+          };
+
+          // Update next match participant if nextMatchId exists
+          if (m.nextMatchId && data.winner) {
+            const nextMatch = prev.find((nm) => nm.id === m.nextMatchId);
+            if (nextMatch) {
+              const nextParticipantIndex = nextMatch.participants[0].id.startsWith("TBD")
+                ? 0
+                : 1;
+              nextMatch.participants[nextParticipantIndex] = {
+                id: data.winner,
+                name: data.winnerName || "Winner",
+                isWinner: false,
+                resultText: "",
+              };
+            }
           }
-        : m
-    )
-  );
 
-  setEditingMatch(null);
-};
+          return updatedMatch;
+        }
+        return m;
+      })
+    );
 
-
+    setEditingMatch(null);
+  };
 
   return (
     <div ref={containerRef} className="w-full overflow-auto scrollbar-x">
@@ -174,9 +223,9 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
         <SingleEliminationBracket
           matches={mappedMatches}
           matchComponent={(props) => {
-            const originalMatch = matches.find((m) => m._id === props.match.id);
+            const originalMatch = mappedMatches.find((m) => m.id === props.match.id);
 
-            if (!originalMatch || originalMatch._id?.startsWith("placeholder-")) {
+            if (!originalMatch) {
               return (
                 <div className="cursor-not-allowed opacity-70">
                   <Match {...props} />
@@ -188,29 +237,16 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
             const isAdmin = currentUser?.role === "admin";
 
             const isUserInTeam =
-              originalMatch.teamA?.members?.some((m) =>
-                typeof m === "string" ? m === userId : m._id === userId
-              ) ||
-              originalMatch.teamB?.members?.some((m) =>
-                typeof m === "string" ? m === userId : m._id === userId
-              );
+              originalMatch.participants.some((p) => p.id === userId);
 
-            // ✅ Permission rules
             let canEdit = false;
-            if (originalMatch.winner) {
-              // Match completed → only admin can edit
-              canEdit = isAdmin;
-            } else {
-              // Pending → admin or players can edit
-              canEdit = isAdmin || isUserInTeam;
-            }
+            if (originalMatch.state === "DONE") canEdit = isAdmin;
+            else canEdit = isAdmin || isUserInTeam;
 
             return (
               <div
                 onClick={() => canEdit && setEditingMatch(originalMatch)}
-                className={
-                  canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-70"
-                }
+                className={canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-70"}
               >
                 <Match {...props} />
               </div>
@@ -233,7 +269,6 @@ export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) 
         <p className="text-center text-gray-400 p-6">No matches available</p>
       )}
 
-      {/* Shared Modal for Editing */}
       <EditMatchModal
         isOpen={!!editingMatch}
         match={editingMatch}
