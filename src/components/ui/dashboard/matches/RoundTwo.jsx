@@ -1,206 +1,133 @@
 "use client";
 
-import {
-  SingleEliminationBracket,
-  SVGViewer,
-  Match,
-  createTheme,
-} from "@g-loot/react-tournament-brackets";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import EditMatchModal from "./EditMatchesModel";
-import api from "@/utils/axios"; // ✅ your axios instance
+import api from "@/utils/axios";
 
-export default function RoundTwoBracket({ matches = [], teams = [], onUpdate }) {
-  const containerRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [theme, setTheme] = useState(createTheme({}));
+function MatchCard({ match, onClick, canEdit }) {
+  return (
+    <div
+      className="bg-gray-800 border border-gray-700 rounded-xl shadow-md text-white text-sm p-3 cursor-pointer 
+                 hover:ring-2 hover:ring-yellow-400 transition-all duration-200 min-w-[180px]"
+      onClick={() => canEdit && onClick(match)}
+    >
+      <div
+        className={`flex justify-between items-center px-2 py-1 rounded-md mb-1 ${
+          match.winner === match.teamA?._id ? "bg-green-600" : "bg-gray-700"
+        }`}
+      >
+        <span className="truncate">{match.teamA?.name || "TBD"}</span>
+        <span>{match.teamAScore ?? 0}</span>
+      </div>
+
+      <div
+        className={`flex justify-between items-center px-2 py-1 rounded-md ${
+          match.winner === match.teamB?._id ? "bg-green-600" : "bg-gray-700"
+        }`}
+      >
+        <span className="truncate">{match.teamB?.name || "TBD"}</span>
+        <span>{match.teamBScore ?? 0}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function RoundTwoBracket({ matches = [], teams = [] }) {
   const [editingMatch, setEditingMatch] = useState(null);
-  const [mappedMatches, setMappedMatches] = useState([]);
+  const [data, setData] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // ✅ Fetch logged in user
+  useEffect(() => {
+    if (matches?.length) setData(matches);
+  }, [matches]);
+
+  // Fetch current user
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const { data } = await api.get("/api/me");
-        setCurrentUser(data?.data?.user || null);
+        const res = await api.get("/api/me");
+        setCurrentUser(res.data.data.user);
       } catch (err) {
-        console.error("Failed to fetch user:", err);
-        setCurrentUser(null);
+        console.error("Failed to fetch current user:", err);
       }
     };
     fetchUser();
   }, []);
 
-  // 🔹 Safe formatter for API matches
-  const formatMatches = (rawMatches) => {
-    const matchIdMap = {};
-
-    rawMatches.forEach((m) => {
-      const winnerId =
-        typeof m.winner === "object" ? m.winner?._id : m.winner || null;
-
-      matchIdMap[m._id] = {
-        id: m._id,
-        name: m.stage || `Round ${m.round}`,
-        nextMatchId: null,
-        tournamentRoundText: `Round ${m.round}`,
-        startTime: m.createdAt,
-        state: m.status === "completed" ? "DONE" : "PENDING",
-        participants: [
-          {
-            id: m.teamA?._id || `TBD-${m._id}-A`,
-            name: `${m.teamA?.serialNo || ""} ${m.teamA?.name || "No Team"}`,
-            isWinner: winnerId === m.teamA?._id,
-            resultText:
-              m.status === "completed"
-                ? `${m.teamAScore ?? 0} ${
-                    winnerId === m.teamA?._id ? "Win" : "Lose"
-                  }`
-                : `${m.teamAScore ?? 0}`,
-          },
-          {
-            id: m.teamB?._id || `TBD-${m._id}-B`,
-            name: `${m.teamB?.serialNo || ""} ${m.teamB?.name || "No Team"}`,
-            isWinner: winnerId === m.teamB?._id,
-            resultText:
-              m.status === "completed"
-                ? `${m.teamBScore ?? 0} ${
-                    winnerId === m.teamB?._id ? "Win" : "Lose"
-                  }`
-                : `${m.teamBScore ?? 0}`,
-          },
-        ],
-      };
+  const groupByRounds = (matches) => {
+    const grouped = {};
+    matches.forEach((m) => {
+      const round = Number(m.round);
+      if (!grouped[round]) grouped[round] = [];
+      grouped[round].push(m);
     });
-
-    return Object.values(matchIdMap);
+    return grouped;
   };
 
-  // 🔹 Update dimensions & theme dynamically
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.offsetWidth,
-          height: window.innerHeight - 150, // leave space for navbar etc.
-        });
-      }
+  const rounds = groupByRounds(data);
 
-      setTheme(
-        createTheme({
-          textColor: {
-            main: "#ededed",
-            highlighted: "#ffffff",
-            dark: "#cccccc",
-          },
-          matchBackground: { wonColor: "#101828", lostColor: "#1f2937" },
-          score: {
-            background: {
-              wonColor: "#FBBF24",
-              lostColor: "rgba(251, 191, 36, 0.1)",
-            },
-            text: {
-              highlightedWonColor: "#ffffff",
-              highlightedLostColor: "#999999",
-            },
-          },
-          border: { color: "#364153", highlightedColor: "#FBBF24" },
-          roundHeader: { backgroundColor: "#FBBF24", fontColor: "#030712" },
-          connectorColor: "#364153",
-          connectorColorHighlight: "#FBBF24",
-          svgBackground: "#030712",
-        })
-      );
-    };
-
-    updateDimensions();
-    window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
-  }, []);
-
-  // 🔹 Map matches when API data changes
-  useEffect(() => {
-    if (matches?.length) {
-      setMappedMatches(formatMatches(matches));
-    } else {
-      setMappedMatches([]);
-    }
-  }, [matches]);
-
-  const handleSave = (id, data) => {
-    if (onUpdate) onUpdate(id, data);
+  const handleSave = (id, updated) => {
+    setData((prev) =>
+      prev.map((m) => (m._id === id ? { ...m, ...updated } : m))
+    );
     setEditingMatch(null);
   };
 
+  // 🔹 Check if user can edit a match
+  const canEditMatch = (match) => {
+    if (!currentUser) return false;
+    if (currentUser.role === "admin") return true; // admin can edit all matches
+    if (match.status === "completed") return false; // completed matches only editable by admin
+
+    // User can edit if they are in teamA or teamB
+    const userId = currentUser._id;
+    const inTeamA = (match.teamA.members || []).some(
+      (m) => (typeof m === "string" ? m === userId : m._id === userId)
+    );
+    const inTeamB = (match.teamB.members || []).some(
+      (m) => (typeof m === "string" ? m === userId : m._id === userId)
+    );
+
+    return inTeamA || inTeamB;
+  };
+
   return (
-    <div ref={containerRef} className="w-full overflow-auto scrollbar-x">
-      {mappedMatches.length > 0 ? (
-        <SingleEliminationBracket
-          matches={mappedMatches}
-          matchComponent={(props) => {
-            const originalMatch = matches.find((m) => m._id === props.match.id);
-
-            if (!originalMatch || originalMatch._id?.startsWith("placeholder-")) {
-              return (
-                <div className="cursor-not-allowed opacity-70">
-                  <Match {...props} />
-                </div>
-              );
-            }
-
-            // ✅ Completed matches can't be edited
-            if (originalMatch.winner) {
-              return (
-                <div className="cursor-not-allowed opacity-70">
-                  <Match {...props} />
-                </div>
-              );
-            }
-
-            // ✅ Permission logic
-            const userId = currentUser?._id;
-            const isAdmin = currentUser?.role === "admin";
-
-            const isUserInTeam =
-              originalMatch.teamA?.members?.some((m) =>
-                typeof m === "string" ? m === userId : m._id === userId
-              ) ||
-              originalMatch.teamB?.members?.some((m) =>
-                typeof m === "string" ? m === userId : m._id === userId
-              );
-
-            const canEdit = isAdmin || isUserInTeam;
-
-            return (
+    <div className="w-full overflow-x-auto relative bg-gray-900 p-6">
+      {Object.keys(rounds).length ? (
+        <div className="flex gap-12 min-w-max" style={{ scrollSnapType: "x mandatory" }}>
+          {Object.keys(rounds)
+            .map((r) => Number(r))
+            .sort((a, b) => a - b)
+            .map((round) => (
               <div
-                onClick={() => canEdit && setEditingMatch(originalMatch)}
-                className={
-                  canEdit ? "cursor-pointer" : "cursor-not-allowed opacity-70"
-                }
+                key={round}
+                className="flex flex-col gap-8 items-center min-w-[200px] scroll-snap-align-start"
               >
-                <Match {...props} />
+                <h3 className="text-center text-yellow-400 font-bold text-lg mb-2">
+                  Stage {round - 1}
+                </h3>
+                {rounds[round].map((match, idx) => {
+                  const canEdit = canEditMatch(match);
+                  return (
+                    <div key={match._id} className="relative">
+                      {idx !== rounds[round].length - 1 && (
+                        <div className="absolute left-1/2 top-full w-0.5 h-8 bg-gray-600"></div>
+                      )}
+                      <MatchCard
+                        match={match}
+                        onClick={setEditingMatch}
+                        canEdit={canEdit}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            );
-          }}
-          theme={theme}
-          svgWrapper={({ children, ...props }) => (
-            <SVGViewer
-              background={theme.svgBackground}
-              SVGBackground={theme.svgBackground}
-              width={dimensions.width}
-              height={dimensions.height}
-              {...props}
-            >
-              {children}
-            </SVGViewer>
-          )}
-        />
+            ))}
+        </div>
       ) : (
-        <p className="text-center text-gray-400 p-6">No matches available</p>
+        <p className="text-center text-gray-400">No matches available</p>
       )}
 
-      {/* Shared Modal for Editing */}
       <EditMatchModal
         isOpen={!!editingMatch}
         match={editingMatch}

@@ -13,8 +13,6 @@ const MatchSchema = new Schema(
     round: { type: Number },
     stage: {
       type: String,
-      enum: ["group", "qualifier", "eliminator", "semi_final", "final"],
-      default: "group",
     },
     teamA: { type: Schema.Types.ObjectId, ref: "Team" },
     teamB: { type: Schema.Types.ObjectId, ref: "Team" },

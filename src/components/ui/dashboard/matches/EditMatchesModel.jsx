@@ -41,6 +41,7 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
         teamBtotalWon: Number(form.teamBtotalWon),
       };
 
+      
       const res = await api.patch(`/api/matches/${match._id}`, payload);
       toast.success(res.data.message || "Match updated successfully");
 

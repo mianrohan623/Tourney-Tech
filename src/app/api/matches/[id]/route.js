@@ -14,7 +14,6 @@ function getStageName(round, totalRounds) {
   return "group";
 }
 
-
 export const PATCH = asyncHandler(async (req, context) => {
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
@@ -95,22 +94,22 @@ export const PATCH = asyncHandler(async (req, context) => {
             },
           ]);
           const totalScore =
-            scoreAggregation.length > 0 ? scoreAggregation[0].totalScore || 0 : 0;
+            scoreAggregation.length > 0
+              ? scoreAggregation[0].totalScore || 0
+              : 0;
           return { teamId: team._id, score: totalScore };
         })
       );
 
-
       // ✅ Sort descending by score
       teamScores.sort((a, b) => b.score - a.score);
 
-
       // ✅ Select top teams (top 50 or fewer, for odd counts take top n-1)
-      const maxTeams = allTeams.length % 2 === 1 ? allTeams.length - 1 : allTeams.length;
+      const maxTeams =
+        allTeams.length % 2 === 1 ? allTeams.length - 1 : allTeams.length;
       const topTeams = teamScores
         .slice(0, Math.min(50, maxTeams))
         .map((t) => t.teamId);
-
 
       // ✅ Stage decide based on number of top teams
       let nextStage;

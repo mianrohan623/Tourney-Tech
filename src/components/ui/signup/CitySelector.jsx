@@ -1,48 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Country, State, City } from "country-state-city";
+import { Country, State } from "country-state-city";
 
 export default function CitySelector({ stateCode, setStateCode, city, setCity }) {
-  const [allStates, setAllStates] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [selectedState, setSelectedState] = useState(null); // ← Store full state info
+  const [regions, setRegions] = useState([]); // Countries (Regions)
+  const [states, setStates] = useState([]);   // States filtered by region
+  const [selectedState, setSelectedState] = useState(null);
 
   useEffect(() => {
-    const loadAllStates = () => {
-      const countries = Country.getAllCountries();
-      let combinedStates = [];
-
-      countries.forEach((country) => {
-        const states = State.getStatesOfCountry(country.isoCode);
-        states.forEach((state) => {
-          combinedStates.push({
-            ...state,
-            countryCode: country.isoCode,
-          });
-        });
-      });
-
-      setAllStates(combinedStates);
-    };
-
-    loadAllStates();
+    // ✅ Load all regions (countries)
+    const countries = Country.getAllCountries();
+    setRegions(countries);
   }, []);
 
+  // ✅ When region (city variable) changes → load states of that region
   useEffect(() => {
-    if (selectedState) {
-      const stateCities = City.getCitiesOfState(selectedState.countryCode, selectedState.isoCode);
-      setCities(stateCities);
+    if (city) {
+      const stateList = State.getStatesOfCountry(city);
+      setStates(stateList);
+      setSelectedState(null);
+      setStateCode(""); // reset state when region changes
     } else {
-      setCities([]);
+      setStates([]);
+      setSelectedState(null);
+      setStateCode("");
     }
-  }, [selectedState]);
+  }, [city]);
 
   const handleStateChange = (e) => {
     const selectedIsoCode = e.target.value;
     setStateCode(selectedIsoCode);
 
-    const matchedState = allStates.find((s) => s.countryCode + "-" + s.isoCode === selectedIsoCode);
+    const matchedState = states.find((s) => s.isoCode === selectedIsoCode);
     if (matchedState) {
       setSelectedState(matchedState);
     } else {
@@ -52,14 +42,38 @@ export default function CitySelector({ stateCode, setStateCode, city, setCity })
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* State Dropdown */}
+      {/* Region Dropdown (Countries) */}
+      <div>
+        <label className="block mb-2 text-sm font-medium">Region</label>
+        <select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className="w-full px-4 py-2 rounded-md border"
+          required
+          style={{
+            backgroundColor: "var(--secondary-color)",
+            borderColor: "var(--border-color)",
+            color: "var(--foreground)",
+          }}
+        >
+          <option value="">Select Region</option>
+          {regions.map((region) => (
+            <option key={region.isoCode} value={region.isoCode}>
+              {region.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* State Dropdown (filtered by region) */}
       <div>
         <label className="block mb-2 text-sm font-medium">State</label>
         <select
-          value={selectedState ? selectedState.countryCode + "-" + selectedState.isoCode : ""}
+          value={selectedState ? selectedState.isoCode : ""}
           onChange={handleStateChange}
           className="w-full px-4 py-2 rounded-md border"
           required
+          disabled={!states.length}
           style={{
             backgroundColor: "var(--secondary-color)",
             borderColor: "var(--border-color)",
@@ -67,33 +81,9 @@ export default function CitySelector({ stateCode, setStateCode, city, setCity })
           }}
         >
           <option value="">Select State</option>
-          {allStates.map((state) => (
-            <option key={state.countryCode + "-" + state.isoCode} value={state.countryCode + "-" + state.isoCode}>
+          {states.map((state) => (
+            <option key={state.isoCode} value={state.isoCode}>
               {state.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* City Dropdown */}
-      <div>
-        <label className="block mb-2 text-sm font-medium">City</label>
-        <select
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          className="w-full px-4 py-2 rounded-md border"
-          required
-          disabled={!cities.length}
-          style={{
-            backgroundColor: "var(--secondary-color)",
-            borderColor: "var(--border-color)",
-            color: "var(--foreground)",
-          }}
-        >
-          <option value="">Select City</option>
-          {cities.map((city) => (
-            <option key={city.name} value={city.name}>
-              {city.name}
             </option>
           ))}
         </select>
