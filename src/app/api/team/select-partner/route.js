@@ -8,81 +8,112 @@ import { parseForm } from "@/utils/server/parseForm";
 import mongoose from "mongoose";
 
 function isValidObjectId(id) {
-  return mongoose.Types.ObjectId.isValid(id);
+  return mongoose.Types.ObjectId.isValid(String(id));
 }
 
-export const PATCH = asyncHandler(async (req) => {
+export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);
 
   const { fields } = await parseForm(req);
-  const partnerId = fields.partnerId?.toString();
+  const tournamentId = fields.tournamentId?.toString();
+  const gameId = fields.gameId?.toString();
+  const partnerIdRaw = fields.partnerId?.toString();
+  const teamName = fields.teamName?.toString();
+
+  if (!tournamentId || !gameId) {
+    throw new ApiResponse(400, null, "tournamentId and gameId are required");
+  }
+
+  if (!isValidObjectId(tournamentId) || !isValidObjectId(gameId)) {
+    throw new ApiResponse(400, null, "Invalid tournamentId or gameId");
+  }
+
   let memberIds = [];
 
-if (Array.isArray(fields.memberIds)) {
-  memberIds = fields.memberIds.flatMap((item) =>
-    item.split(",").map((id) => id.trim())
-  );
-} else if (typeof fields.memberIds === "string") {
-  memberIds = fields.memberIds.split(",").map((id) => id.trim());
-}
-
-memberIds = memberIds
-  .filter((id) => isValidObjectId(id))
-  .map((id) => new mongoose.Types.ObjectId(id));
-
-console.log("Normalized memberIds:", memberIds);
-
-if (memberIds.length === 0) {
-  throw new ApiResponse(400, null, "Invalid or missing memberIds");
-}
-  const team = await Team.findOne({ members: { $all: memberIds } })
-    .populate("tournament")
-    .populate("members", "firstname lastname username email")
-    .populate("partner", "firstname lastname username email");
-
-  if (!team) throw new ApiResponse(404, null, "Team not found");
-
-  console.log("team==============:", team);
-
-  console.log("user==============:", user);
-
-  const tournament = team.tournament;
-  if (!tournament) throw new ApiResponse(404, null, "Tournament not found");
-
-  if (team.createdBy.toString() !== user._id.toString()) {
-    throw new ApiResponse(403, null, "Only team owner can select partner");
+  if (Array.isArray(fields.memberIds)) {
+    memberIds = fields.memberIds.flatMap((item) =>
+      String(item)
+        .split(",")
+        .map((id) => id.trim())
+    );
+  } else if (typeof fields.memberIds === "string") {
+    memberIds = String(fields.memberIds)
+      .split(",")
+      .map((id) => id.trim());
   }
 
-  if (!team.members.some((m) => m._id.toString() === partnerId)) {
-    throw new ApiResponse(400, null, "Selected partner is not a team member");
+  memberIds = memberIds
+    .filter((id) => isValidObjectId(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+  if (memberIds.length === 0) {
+    throw new ApiResponse(400, null, "Invalid or missing memberIds");
   }
 
-  const existingPartnerTeam = await Team.findOne({
-    tournament: tournament._id,
-    game: team.game,
-    partner: partnerId,
-    _id: { $ne: team._id },
-  });
-
-  if (existingPartnerTeam) {
+  const userIdStr = user._id.toString();
+  if (!memberIds.some((m) => m.toString() === userIdStr)) {
     throw new ApiResponse(
       400,
       null,
-      "This user is already a partner in another team"
+      "Creator (authenticated user) must be included in members"
+    );
+  }
+
+  if (!partnerIdRaw || !isValidObjectId(partnerIdRaw)) {
+    throw new ApiResponse(400, null, "Invalid or missing partnerId");
+  }
+  const partnerId = new mongoose.Types.ObjectId(partnerIdRaw);
+
+  if (!memberIds.some((m) => m.toString() === partnerId.toString())) {
+    throw new ApiResponse(
+      400,
+      null,
+      "Selected partner must be one of the members"
+    );
+  }
+
+  const possibleTeams = await Team.find({
+    tournament: tournamentId,
+    game: gameId,
+    members: { $all: memberIds },
+  }).lean();
+
+  const exactTeam = possibleTeams.find(
+    (t) => Array.isArray(t.members) && t.members.length === memberIds.length
+  );
+
+  if (exactTeam) {
+    throw new ApiResponse(
+      400,
+      null,
+      "Team already created for these members in this tournament/game"
+    );
+  }
+
+  const partnerTaken = await Team.findOne({
+    tournament: tournamentId,
+    game: gameId,
+    partner: partnerId,
+  });
+
+  if (partnerTaken) {
+    throw new ApiResponse(
+      400,
+      null,
+      "Selected partner is already partnered in another team for this tournament/game"
     );
   }
 
   const [ownerReg, partnerReg] = await Promise.all([
     Registration.findOne({
-      tournament: tournament._id,
-      user: team.createdBy,
-      "gameRegistrationDetails.games": team.game,
+      tournament: tournamentId,
+      user: user._id,
+      "gameRegistrationDetails.games": gameId,
     }).populate("gameRegistrationDetails.games"),
-
     Registration.findOne({
-      tournament: tournament._id,
+      tournament: tournamentId,
       user: partnerId,
-      "gameRegistrationDetails.games": team.game,
+      "gameRegistrationDetails.games": gameId,
     }).populate("gameRegistrationDetails.games"),
   ]);
 
@@ -90,26 +121,47 @@ if (memberIds.length === 0) {
     throw new ApiResponse(
       400,
       null,
-      "Both users must be registered in this game for the tournament"
+      "Both creator and selected partner must be registered for this game in the tournament"
     );
   }
+  const lastTeam = await Team.findOne({
+    tournament: tournamentId,
+    game: gameId,
+  })
+    .sort({ serialNo: -1 })
+    .select("serialNo");
 
-  // ✅ Save partner
-  team.partner = partnerId;
-  await team.save();
+  let newSerial = 1;
+  if (lastTeam) {
+    newSerial = parseInt(lastTeam.serialNo, 10) + 1;
+  }
+  const newTeam = await Team.create({
+    tournament: new mongoose.Types.ObjectId(tournamentId),
+    game: new mongoose.Types.ObjectId(gameId),
+    members: memberIds,
+    partner: partnerId,
+    createdBy: user._id,
+    serialNo: newSerial.toString(),
+    name: `${teamName}-${newSerial}`,
+  });
+
+  const populatedTeam = await Team.findById(newTeam._id)
+    .populate("tournament")
+    .populate("members", "firstname lastname username email")
+    .populate("partner", "firstname lastname username email")
+    .populate("createdBy", "firstname lastname username email");
 
   return Response.json(
     new ApiResponse(
-      200,
+      201,
       {
-        team,
-        tournament: {
-          ...tournament.toObject(),
-          ownerRegisteredGames: ownerReg.gameRegistrationDetails.games,
-          partnerRegisteredGames: partnerReg.gameRegistrationDetails.games,
-        },
+        team: populatedTeam,
+        tournament: populatedTeam?.tournament || null,
+        ownerRegisteredGames: ownerReg?.gameRegistrationDetails?.games || [],
+        partnerRegisteredGames:
+          partnerReg?.gameRegistrationDetails?.games || [],
       },
-      "Partner selected successfully"
+      "Team created successfully"
     )
   );
 });

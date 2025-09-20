@@ -154,8 +154,14 @@ export default function SelectTeam() {
       const formData = new FormData();
       formData.append("memberIds", selectedMembers); // send requestId as teamId
       formData.append("partnerId", partnerId);
+      formData.append("tournamentId", selectedTournamentId); // send requestId as teamId
+      formData.append("gameId", selectedGameId);
+      formData.append(
+        "teamName",
+        `${selectedMembersObj?.from?.firstName}_${selectedMembersObj?.to?.firstName}`
+      );
 
-      await api.patch("/api/team/select-partner", formData, {
+      await api.post("/api/team/select-partner", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

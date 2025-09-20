@@ -4,7 +4,12 @@ import { useState, useEffect, useMemo } from "react";
 import api from "@/utils/axios";
 import EditMatchModal from "./EditMatchesModel";
 
-export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
+export default function RoundOneMatches({
+  matches,
+  onUpdate,
+  pageSize = 12,
+  isRefresh,
+}) {
   const [editingMatch, setEditingMatch] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -42,9 +47,8 @@ export default function RoundOneMatches({ matches, onUpdate, pageSize = 12 }) {
   );
 
   const handleSave = (id, updatedMatch) => {
-    if (onUpdate) onUpdate(true);
+    if (onUpdate) onUpdate(!isRefresh);
     setEditingMatch(null);
-    
   };
 
   const getResult = (match, teamId) => {

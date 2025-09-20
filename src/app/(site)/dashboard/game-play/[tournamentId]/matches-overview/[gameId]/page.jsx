@@ -12,6 +12,7 @@ export default function TournamentPage() {
   const [round1Matches, setRound1Matches] = useState([]);
   const [round2Matches, setRound2Matches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFirstTime, setIsFirstTime] = useState(false);
 
   const [isRefresh, setIsRefresh] = useState(false);
 
@@ -20,7 +21,9 @@ export default function TournamentPage() {
     if (!tournamentId || !gameId) return;
 
     const fetchOrCreateMatches = async () => {
-      setLoading(true);
+      if (!isFirstTime) {
+        setLoading(true);
+      }
       try {
         const query = new URLSearchParams({ tournamentId, gameId });
         let res = await api.get(`/api/matches?${query.toString()}`);
@@ -43,6 +46,8 @@ export default function TournamentPage() {
         console.error("Error fetching/creating matches:", err);
       } finally {
         setLoading(false);
+        setIsFirstTime(true);
+        setIsRefresh(false)
       }
     };
 
@@ -87,19 +92,19 @@ export default function TournamentPage() {
       {/* ROUND 1 */}
       {!isRound1Complete && round1Matches.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Round 1 Matches</h2>
-          <RoundOneMatches
-            matches={round1Matches}
-            onUpdate={setIsRefresh}
-            
-          />
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Round 1 Matches
+          </h2>
+          <RoundOneMatches isRefresh={isRefresh} matches={round1Matches} onUpdate={setIsRefresh} />
         </section>
       )}
 
       {/* ROUND 2 */}
       {isRound1Complete && round2Matches.length > 0 && (
         <section className="pb-5">
-          <h2 className="text-2xl font-bold text-white mb-4">Round 2 Bracket</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Round 2 Bracket
+          </h2>
           <RoundTwoBracket matches={round2Matches} />
         </section>
       )}
