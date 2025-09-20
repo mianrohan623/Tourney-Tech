@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import api from "@/utils/axios";
 import RoundOneMatches from "@/components/ui/dashboard/matches/RoundOne";
@@ -10,51 +10,71 @@ export default function TournamentPage() {
   const { tournamentId, gameId } = useParams();
 
   const [round1Matches, setRound1Matches] = useState([]);
-  const [round2Matches, setRound2Matches] = useState([]);
+  const [round2PlusMatches, setRound2PlusMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFirstTime, setIsFirstTime] = useState(false);
+  const intervalRef = useRef(null);
 
-  const [isRefresh, setIsRefresh] = useState(false);
+  // 🔹 Fetch matches (filtered by tournamentId & gameId)
+  const fetchMatches = async () => {
+    if (!tournamentId || !gameId) return;
 
-  // Fetch matches and create if none exist
+    try {
+      const query = new URLSearchParams({ tournamentId, gameId });
+      const res = await api.get(`/api/matches?${query.toString()}`);
+      const allMatches = res.data?.data || [];
+
+      // Split matches
+      const round1 = allMatches.filter((m) => m.round === 1);
+      const rounds2Plus = allMatches.filter((m) => m.round >= 2);
+
+      setRound1Matches(round1);
+      setRound2PlusMatches(rounds2Plus);
+    } catch (err) {
+      console.error("Error fetching matches:", err);
+    }
+  };
+
+  // 🔹 Initial fetch + live polling
   useEffect(() => {
     if (!tournamentId || !gameId) return;
 
     const fetchOrCreateMatches = async () => {
-      if (!isFirstTime) {
-        setLoading(true);
-      }
+      setLoading(true);
       try {
         const query = new URLSearchParams({ tournamentId, gameId });
         let res = await api.get(`/api/matches?${query.toString()}`);
         let allMatches = res.data?.data || [];
 
-        // If no matches exist, create them
         if (allMatches.length === 0) {
           await api.post("/api/matches", { tournamentId, gameId });
           res = await api.get(`/api/matches?${query.toString()}`);
           allMatches = res.data?.data || [];
         }
 
-        // Split matches by round
+        // Split matches
         const round1 = allMatches.filter((m) => m.round === 1);
-        const round2Raw = allMatches.filter((m) => m.round === 2);
+        const rounds2Plus = allMatches.filter((m) => m.round >= 2);
 
         setRound1Matches(round1);
-        setRound2Matches(round2Raw); // ✅ send raw matches
+        setRound2PlusMatches(rounds2Plus);
       } catch (err) {
-        console.error("Error fetching/creating matches:", err);
+        console.error(err);
       } finally {
         setLoading(false);
         setIsFirstTime(true);
-        setIsRefresh(false)
       }
     };
 
     fetchOrCreateMatches();
-  }, [tournamentId, gameId, isRefresh]);
 
-  // Round 1 update handler (updates backend)
+    // 🔹 Polling for live updates every 5s
+    intervalRef.current = setInterval(fetchMatches, 5000);
+
+    return () => clearInterval(intervalRef.current);
+  }, [tournamentId, gameId]);
+
+  // 🔹 Round 1 update
   const handleRound1Update = async (id, data) => {
     setRound1Matches((prev) =>
       prev.map((m) => (m._id === id ? { ...m, ...data } : m))
@@ -62,15 +82,9 @@ export default function TournamentPage() {
 
     try {
       await api.patch(`/api/matches/${id}`, data);
-
-      // Re-fetch matches so round 2 appears automatically
-      const query = new URLSearchParams({ tournamentId, gameId });
-      const res = await api.get(`/api/matches?${query.toString()}`);
-      const allMatches = res.data?.data || [];
-      const round2Raw = allMatches.filter((m) => m.round === 2);
-      setRound2Matches(round2Raw); // ✅ send raw matches
+      await fetchMatches(); // refresh rounds 2+ after update
     } catch (err) {
-      console.error("Error updating match score:", err);
+      console.error(err);
     }
   };
 
@@ -82,7 +96,6 @@ export default function TournamentPage() {
     );
   }
 
-  // Check if all round 1 matches are completed
   const isRound1Complete =
     round1Matches.length > 0 &&
     round1Matches.every((m) => m.status === "completed");
@@ -95,22 +108,24 @@ export default function TournamentPage() {
           <h2 className="text-2xl font-bold text-white mb-4">
             Round 1 Matches
           </h2>
-          <RoundOneMatches isRefresh={isRefresh} matches={round1Matches} onUpdate={setIsRefresh} />
+          <RoundOneMatches
+            matches={round1Matches}
+            onUpdate={handleRound1Update}
+          />
         </section>
       )}
 
-      {/* ROUND 2 */}
-      {isRound1Complete && round2Matches.length > 0 && (
+      {/* ROUND 2+ */}
+      {isRound1Complete && round2PlusMatches.length > 0 && (
         <section className="pb-5">
           <h2 className="text-2xl font-bold text-white mb-4">
-            Round 2 Bracket
+            Round 2
           </h2>
-          <RoundTwoBracket matches={round2Matches} />
+          <RoundTwoBracket matches={round2PlusMatches} />
         </section>
       )}
 
-      {/* No matches message */}
-      {!round1Matches.length && !round2Matches.length && (
+      {!round1Matches.length && !round2PlusMatches.length && (
         <p className="text-center text-gray-400">
           No matches found for this tournament & game.
         </p>
