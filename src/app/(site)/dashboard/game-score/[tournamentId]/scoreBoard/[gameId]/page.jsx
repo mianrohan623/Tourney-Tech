@@ -9,13 +9,13 @@ export default function Scoreboard() {
   const [scoreboard, setScoreboard] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ✅ Filters
-  const [roundFilter, setRoundFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  // ✅ Independent search + pagination
+  const [searchRound1, setSearchRound1] = useState("");
+  const [searchRound2, setSearchRound2] = useState("");
+  const [pageRound1, setPageRound1] = useState(1);
+  const [pageRound2, setPageRound2] = useState(1);
 
-  // ✅ Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 6; // matches per page
+  const perPage = 5;
 
   useEffect(() => {
     if (!tournamentId || !gameId) return;
@@ -36,33 +36,37 @@ export default function Scoreboard() {
     fetchScoreboard();
   }, [tournamentId, gameId]);
 
-  // ✅ Flatten matches for filtering & pagination
+  // ✅ Flatten matches
   const allMatches = useMemo(() => {
     return Object.entries(scoreboard).flatMap(([round, data]) =>
       data.matches.map((match) => ({
         ...match,
-        round,
+        round: Number(round),
         stage: data.stage,
       }))
     );
   }, [scoreboard]);
 
-  // ✅ Apply filters
-  const filteredMatches = useMemo(() => {
-    return allMatches.filter((match) => {
-      const roundOk = roundFilter === "all" || match.round === roundFilter;
-      const statusOk =
-        statusFilter === "all" || match.status === statusFilter;
-      return roundOk && statusOk;
-    });
-  }, [allMatches, roundFilter, statusFilter]);
+  // ✅ Grouped + search (independent)
+  const groupedRounds = useMemo(() => {
+    const roundOne = allMatches.filter(
+      (m) =>
+        m.round === 1 &&
+        (searchRound1.trim() === "" ||
+          m.teamA?.toLowerCase().includes(searchRound1.toLowerCase()) ||
+          m.teamB?.toLowerCase().includes(searchRound1.toLowerCase()))
+    );
 
-  // ✅ Pagination
-  const totalPages = Math.ceil(filteredMatches.length / pageSize);
-  const paginatedMatches = filteredMatches.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+    const roundTwoPlus = allMatches.filter(
+      (m) =>
+        m.round >= 2 &&
+        (searchRound2.trim() === "" ||
+          m.teamA?.toLowerCase().includes(searchRound2.toLowerCase()) ||
+          m.teamB?.toLowerCase().includes(searchRound2.toLowerCase()))
+    );
+
+    return { roundOne, roundTwoPlus };
+  }, [allMatches, searchRound1, searchRound2]);
 
   if (loading) {
     return (
@@ -79,126 +83,148 @@ export default function Scoreboard() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-4">
-          {/* Round Filter */}
-          <select
-            value={roundFilter}
-            onChange={(e) => {
-              setRoundFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-2 rounded-lg bg-[var(--secondary-color)] text-white border border-[var(--border-color)]"
-          >
-            <option value="all">All Rounds</option>
-            {Object.keys(scoreboard).map((round) => (
-              <option key={round} value={round}>
-                Round {round}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-10">
+      {/* Round 1 Table */}
+      <TableSection
+        title="Round 1"
+        matches={groupedRounds.roundOne}
+        search={searchRound1}
+        setSearch={setSearchRound1}
+        page={pageRound1}
+        setPage={setPageRound1}
+        perPage={perPage}
+      />
 
+      {/* Round 2 Table */}
+      <TableSection
+        title="Round 2"
+        matches={groupedRounds.roundTwoPlus}
+        search={searchRound2}
+        setSearch={setSearchRound2}
+        page={pageRound2}
+        setPage={setPageRound2}
+        perPage={perPage}
+      />
+    </div>
+  );
+}
 
+// ✅ Reusable Table Section
+function TableSection({
+  title,
+  matches,
+  search,
+  setSearch,
+  page,
+  setPage,
+  perPage,
+}) {
+  const totalPages = Math.ceil(matches.length / perPage);
+  const start = (page - 1) * perPage;
+  const paginated = matches.slice(start, start + perPage);
 
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-2 rounded-lg bg-[var(--secondary-color)] text-white border border-[var(--border-color)]"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-          </select>
-        </div>
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-yellow-400 mb-4">{title}</h2>
 
-        {/* Pagination Controls */}
-        <div className="flex items-center gap-2">
+      {/* Local Search */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder={`Search in ${title}...`}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // reset pagination when searching
+          }}
+          className="px-3 py-2 rounded-lg bg-[var(--secondary-color)] text-white border border-[var(--border-color)] w-full md:w-1/3"
+        />
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse rounded-lg overflow-hidden">
+          <thead className="bg-gray-800 text-white">
+            <tr>
+              <th className="p-3 text-left">Match #</th>
+              <th className="p-3 text-left">Team A</th>
+              <th className="p-3 text-left">Score</th>
+              <th className="p-3 text-left">Team B</th>
+              <th className="p-3 text-left">Score</th>
+              <th className="p-3 text-left">Winner</th>
+              <th className="p-3 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody className="bg-gray-900 text-gray-200">
+            {paginated.length > 0 ? (
+              paginated.map((match, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-700 hover:bg-gray-800 transition"
+                >
+                  <td className="p-3">#{match.matchNumber}</td>
+                  <td
+                    className={`p-3 ${
+                      match.winner === match.teamA ? "text-green-400 font-bold" : ""
+                    }`}
+                  >
+                    {match.teamA || "TBD"}
+                  </td>
+                  <td className="p-3">{match.teamAScore ?? "-"}</td>
+                  <td
+                    className={`p-3 ${
+                      match.winner === match.teamB ? "text-green-400 font-bold" : ""
+                    }`}
+                  >
+                    {match.teamB || "TBD"}
+                  </td>
+                  <td className="p-3">{match.teamBScore ?? "-"}</td>
+                  <td className="p-3 text-yellow-400 font-semibold">
+                    {match.winner || "TBD"}
+                  </td>
+                  <td
+                    className={`p-3 ${
+                      match.status === "completed"
+                        ? "text-green-400"
+                        : "text-blue-400"
+                    }`}
+                  >
+                    {match.status}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="p-4 text-center text-gray-400 italic">
+                  No data found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && paginated.length > 0 && (
+        <div className="flex justify-center mt-4 gap-2">
           <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => p - 1)}
-            className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] text-white disabled:opacity-50"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
           >
             Prev
           </button>
-          <span className="text-gray-300 text-sm">
-            Page {currentPage} of {totalPages}
+          <span className="text-white px-2">
+            {page} / {totalPages}
           </span>
           <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
-            className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] text-white disabled:opacity-50"
+            disabled={page === totalPages}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
           >
             Next
           </button>
         </div>
-      </div>
-
-      {/* Matches Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {paginatedMatches.map((match) => (
-          <div
-            key={`${match.round}-${match.matchNumber}`}
-            className="p-4 rounded-2xl shadow-md border border-[var(--border-color)] bg-[var(--card-background)] hover:bg-[var(--card-hover)] transition duration-300"
-          >
-            <h3 className="text-sm text-gray-400 mb-3">
-              Round {match.round} – Match #{match.matchNumber}
-            </h3>
-
-            {/* Team A */}
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">{match.teamA}</span>
-              <span
-                className={`px-2 py-1 rounded-md text-sm ${
-                  match.winner === match.teamA
-                    ? "bg-[var(--success-color)] text-white"
-                    : "bg-[var(--secondary-color)]"
-                }`}
-              >
-                {match.teamAScore ?? "-"}
-              </span>
-            </div>
-
-            {/* Team B */}
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">{match.teamB}</span>
-              <span
-                className={`px-2 py-1 rounded-md text-sm ${
-                  match.winner === match.teamB
-                    ? "bg-[var(--success-color)] text-white"
-                    : "bg-[var(--secondary-color)]"
-                }`}
-              >
-                {match.teamBScore ?? "-"}
-              </span>
-            </div>
-
-            {/* Status */}
-            <div className="mt-3 text-xs text-gray-400">
-              Status:{" "}
-              <span
-                className={`font-semibold ${
-                  match.status === "completed"
-                    ? "text-[var(--success-color)]"
-                    : "text-[var(--info-color)]"
-                }`}
-              >
-                {match.status}
-              </span>
-            </div>
-
-          <div className="text-xs mt-2 ">
-                <strong>Winner Team: </strong> 
-                <span className="text-[var(--accent-color)]">{match.winner ?? "-"}</span> 
-            </div>
-          </div>
-        ))}
-      </div>
+      )}
     </div>
   );
 }
