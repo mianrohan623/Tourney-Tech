@@ -5,6 +5,7 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
+
 export const PATCH = asyncHandler(async (req, context) => {
   await requireAdmin();
   const { id } = context.params;
