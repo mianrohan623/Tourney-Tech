@@ -22,7 +22,6 @@ export const GET = asyncHandler(async (_, context) => {
     }).populate("gameRegistrationDetails.games");
   }
 
-  console.log("RegisteredGames: ===========", registeredGames);
 
   return Response.json(
     new ApiResponse(
