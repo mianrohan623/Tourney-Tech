@@ -3,13 +3,11 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import "@/models/Game";
 import { requireAuth } from "@/utils/server/auth";
-import { requireAdmin } from "@/utils/server/roleGuards";
 import { Tournament } from "@/models/Tournament";
 
 export const GET = asyncHandler(async (_, context) => {
   const id = context.params?.id;
   const user = await requireAuth();
-  // const adminUser = await requireAdmin();
 
   if (!id) throw new ApiResponse(400, null, "ID parameter is missing");
 
