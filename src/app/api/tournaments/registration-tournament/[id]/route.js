@@ -9,13 +9,13 @@ import { Tournament } from "@/models/Tournament";
 export const GET = asyncHandler(async (_, context) => {
   const id = context.params?.id;
   const user = await requireAuth();
-  const adminUser = await requireAdmin();
+  // const adminUser = await requireAdmin();
 
   if (!id) throw new ApiResponse(400, null, "ID parameter is missing");
 
   let registeredGames;
 
-  if (adminUser) {
+  if (user?.role === "admin") {
     registeredGames = await Tournament.findById(id).populate("games.game");
   } else {
     registeredGames = await Registration.find({
