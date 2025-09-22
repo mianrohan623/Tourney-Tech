@@ -4,6 +4,7 @@ import { Tournament } from "@/models/Tournament";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import { parseForm } from "@/utils/server/parseForm";
+import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
 
 function getStageName(round, totalRounds) {
@@ -15,6 +16,7 @@ function getStageName(round, totalRounds) {
 }
 
 export const PATCH = asyncHandler(async (req, context) => {
+  const user = await requireAuth(req);
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
   const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon } = fields;
@@ -24,23 +26,99 @@ export const PATCH = asyncHandler(async (req, context) => {
   );
   if (!match) throw new ApiResponse(404, null, "Match not found");
 
-  // ✅ Score update
-  match.teamAScore = teamAScore;
-  match.teamBScore = teamBScore;
-  match.teamAtotalWon = teamAtotalWon;
-  match.teamBtotalWon = teamBtotalWon;
-  match.completedAt = new Date();
-  match.status = "completed";
+  // ✅ Role-based access
+  if (user.role !== "admin") {
+  // Normal user → check if user belongs to teamA or teamB
+  const userTeam = await Team.findOne({ createdBy: user._id });
 
-  // ✅ Winner decide
-  if (teamAScore > teamBScore) {
-    match.winner = match.teamA._id;
-    match.loser = match.teamB._id;
-  } else if (teamBScore > teamAScore) {
-    match.winner = match.teamB._id;
-    match.loser = match.teamA._id;
-  } else {
-    throw new ApiResponse(400, null, "Draw not supported in knockout format");
+  if (!userTeam) {
+    throw new ApiResponse(403, null, "You are not the owner of any team");
+  }
+
+  // ✅ Check if this userTeam is playing in this match
+  const isTeamA = match.teamA._id.toString() === userTeam._id.toString();
+  const isTeamB = match.teamB._id.toString() === userTeam._id.toString();
+
+  if (!isTeamA && !isTeamB) {
+    throw new ApiResponse(
+      403,
+      null,
+      "You are not the owner of this team or this match does not belong to your team"
+    );
+  }
+
+  // ✅ Strict check: User cannot update the other team's score
+  if (isTeamA) {
+    if (teamBScore || teamBtotalWon) {
+      throw new ApiResponse(
+        403,
+        null,
+        "You cannot update opponent's score (Team B)"
+      );
+    }
+    match.teamAScore = teamAScore;
+    match.teamAtotalWon = teamAtotalWon;
+  } else if (isTeamB) {
+    if (teamAScore || teamAtotalWon) {
+      throw new ApiResponse(
+        403,
+        null,
+        "You cannot update opponent's score (Team A)"
+      );
+    }
+    match.teamBScore = teamBScore;
+    match.teamBtotalWon = teamBtotalWon;
+  }
+
+  // ✅ Check if both teams have submitted scores
+  if (
+    match.teamAScore !== undefined &&
+    match.teamBScore !== undefined &&
+    match.teamAScore !== null &&
+    match.teamBScore !== null &&
+    match.teamAScore > 0 &&
+    match.teamBScore > 0
+  ) {
+    if (match.teamAScore > match.teamBScore) {
+      match.winner = match.teamA._id;
+      match.loser = match.teamB._id;
+      match.status = "completed";
+      match.completedAt = new Date();
+    } else if (match.teamBScore > match.teamAScore) {
+      match.winner = match.teamB._id;
+      match.loser = match.teamA._id;
+      match.status = "completed";
+      match.completedAt = new Date();
+    } else {
+      throw new ApiResponse(
+        400,
+        null,
+        "Draw not supported in knockout format"
+      );
+    }
+  }
+}
+
+ else {
+    // ✅ Admin can update both teams’ scores
+    console.log("running Admin");
+    match.teamAScore = teamAScore;
+    match.teamBScore = teamBScore;
+    match.teamAtotalWon = teamAtotalWon;
+    match.teamBtotalWon = teamBtotalWon;
+    match.completedAt = new Date();
+    match.status = "completed";
+
+    // ✅ Winner decide (after scores set)
+    if (match.teamAScore > match.teamBScore) {
+      match.winner = match.teamA._id;
+      match.loser = match.teamB._id;
+    } else if (match.teamBScore > match.teamAScore) {
+      match.winner = match.teamB._id;
+      match.loser = match.teamA._id;
+    } else {
+      throw new ApiResponse(400, null, "Draw not supported in knockout format");
+    }
   }
 
   await match.save();
@@ -55,14 +133,14 @@ export const PATCH = asyncHandler(async (req, context) => {
   const allCompleted = sameRoundMatches.every((m) => m.status === "completed");
 
   if (allCompleted) {
-    // ✅ If stage is "group" → Apply Top 50 logic (sum of scores)
+    // ✅ If stage is "group" → Apply Top 50 logic
     if (match.stage === "group") {
       const allTeams = await Team.find({
         tournament: match.tournament._id,
         game: match.game._id,
       });
 
-      // ✅ Calculate total scores for each team (from completed matches in group stage)
+      // ✅ Calculate total scores for each team
       const teamScores = await Promise.all(
         allTeams.map(async (team) => {
           const scoreAggregation = await Match.aggregate([
@@ -104,14 +182,14 @@ export const PATCH = asyncHandler(async (req, context) => {
       // ✅ Sort descending by score
       teamScores.sort((a, b) => b.score - a.score);
 
-      // ✅ Select top teams (top 50 or fewer, for odd counts take top n-1)
+      // ✅ Select top teams
       const maxTeams =
         allTeams.length % 2 === 1 ? allTeams.length - 1 : allTeams.length;
       const topTeams = teamScores
         .slice(0, Math.min(50, maxTeams))
         .map((t) => t.teamId);
 
-      // ✅ Stage decide based on number of top teams
+      // ✅ Stage decide
       let nextStage;
       if (topTeams.length === 2) {
         nextStage = "final";
@@ -120,7 +198,6 @@ export const PATCH = asyncHandler(async (req, context) => {
       } else if (topTeams.length >= 6) {
         nextStage = "qualifier";
       } else {
-        // Fallback for unexpected cases (e.g., 1 team)
         nextStage = "semi_final";
       }
 
@@ -133,57 +210,33 @@ export const PATCH = asyncHandler(async (req, context) => {
           game: match.game._id,
         })) + 1;
 
-      // Shuffle top teams for random pairing
       const shuffled = [...topTeams].sort(() => Math.random() - 0.5);
       for (let i = 0; i < shuffled.length; i += 2) {
         const teamA = shuffled[i];
         const teamB = shuffled[i + 1];
 
         if (!teamB) {
-          // Odd number: create bye match
-          const existing = await Match.findOne({
+          await Match.create({
             tournament: match.tournament._id,
             game: match.game._id,
             round: nextRound,
+            stage: nextStage,
+            status: "completed",
             teamA,
+            winner: teamA,
+            matchNumber,
           });
-
-          if (!existing) {
-            await Match.create({
-              tournament: match.tournament._id,
-              game: match.game._id,
-              round: nextRound,
-              stage: nextStage,
-              status: "completed", // bye = direct win
-              teamA,
-              winner: teamA,
-              matchNumber,
-            });
-          }
         } else {
-          // Normal match
-          const existing = await Match.findOne({
+          await Match.create({
             tournament: match.tournament._id,
             game: match.game._id,
             round: nextRound,
-            $or: [
-              { teamA, teamB },
-              { teamA: teamB, teamB: teamA },
-            ],
+            stage: nextStage,
+            status: "pending",
+            teamA,
+            teamB,
+            matchNumber,
           });
-
-          if (!existing) {
-            await Match.create({
-              tournament: match.tournament._id,
-              game: match.game._id,
-              round: nextRound,
-              stage: nextStage,
-              status: "pending",
-              teamA,
-              teamB,
-              matchNumber,
-            });
-          }
         }
         matchNumber++;
       }
@@ -191,19 +244,16 @@ export const PATCH = asyncHandler(async (req, context) => {
       // ✅ Normal knockout flow
       let winners = sameRoundMatches.map((m) => m.winner);
 
-      // ✅ Tournament info
       const totalTeams = await Team.countDocuments({
         tournament: match.tournament._id,
         game: match.game._id,
       });
       const totalRounds = Math.ceil(Math.log2(totalTeams));
-
       const nextRound = match.round + 1;
 
       if (nextRound <= totalRounds) {
         const nextStage = getStageName(nextRound, totalRounds);
 
-        // ✅ odd winners → bye system
         if (winners.length % 2 !== 0) {
           const byeTeam = winners.pop();
           winners.unshift(byeTeam);
@@ -220,55 +270,31 @@ export const PATCH = asyncHandler(async (req, context) => {
           const teamB = winners[i + 1];
 
           if (!teamB) {
-            // ✅ check if bye match already exists
-            const existing = await Match.findOne({
-              tournament: match.tournament._id,
-              game: match.game._id,
-              round: nextRound,
-              teamA,
-            });
-
-            if (!existing) {
-              await Match.create({
-                tournament: match.tournament._id,
-                game: match.game._id,
-                round: nextRound,
-                stage: nextStage,
-                status: "completed", // bye = direct win
-                teamA,
-                winner: teamA,
-                matchNumber: matchNumber++,
-              });
-            }
-            continue;
-          }
-
-          // ✅ check if match already exists
-          const existing = await Match.findOne({
-            tournament: match.tournament._id,
-            game: match.game._id,
-            round: nextRound,
-            $or: [
-              { teamA, teamB },
-              { teamA: teamB, teamB: teamA },
-            ],
-          });
-
-          if (!existing) {
             await Match.create({
               tournament: match.tournament._id,
               game: match.game._id,
               round: nextRound,
               stage: nextStage,
-              status: "pending",
+              status: "completed",
               teamA,
-              teamB,
+              winner: teamA,
               matchNumber: matchNumber++,
             });
+            continue;
           }
+
+          await Match.create({
+            tournament: match.tournament._id,
+            game: match.game._id,
+            round: nextRound,
+            stage: nextStage,
+            status: "pending",
+            teamA,
+            teamB,
+            matchNumber: matchNumber++,
+          });
         }
       } else {
-        // ✅ Tournament final complete
         const lastWinner = winners[0];
         await Tournament.findByIdAndUpdate(match.tournament._id, {
           status: "completed",
