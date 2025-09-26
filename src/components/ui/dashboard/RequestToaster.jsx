@@ -43,34 +43,35 @@ export default function RequestToaster() {
 
     newRequests.forEach((req) => {
       if (req.to?._id === userId && req.status === "pending") {
-        toast.custom((t) => (
-          <div
-            className="p-4 rounded-lg shadow-lg bg-[var(--card-background)] border border-[var(--border-color)] flex flex-col"
-          >
-            <p className="mb-2">
-              <strong>{req.from?.username}</strong> sent you a team up request
-            </p>
-            <div className="flex gap-2">
-              <Link href={`/dashboard/teamup`}>
-              <button
-                className="px-3 py-1 rounded bg-[var(--success-color)] text-white"
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  router.push(`/dashboard/players/${req.from?._id}`);
-                }}
-              >
-                View
-              </button>
-              </Link>
-              <button
-                className="px-3 py-1 rounded bg-[var(--error-color)] text-white"
-                onClick={() => toast.dismiss(t.id)}
-              >
-                Cancel
-              </button>
+        toast.custom(
+          (t) => (
+            <div className="p-4 rounded-lg shadow-lg bg-[var(--card-background)] border border-[var(--border-color)] flex flex-col">
+              <p className="mb-2">
+                <strong>{req.from?.username}</strong> sent you a team up request
+              </p>
+              <div className="flex gap-2">
+                <Link href={`/dashboard/teamup`}>
+                  <button
+                    className="px-3 py-1 rounded bg-[var(--success-color)] text-white"
+                    onClick={() => {
+                      toast.dismiss(t.id);
+                      router.push(`/dashboard/players/${req.from?._id}`);
+                    }}
+                  >
+                    View
+                  </button>
+                </Link>
+                <button
+                  className="px-3 py-1 rounded bg-[var(--error-color)] text-white"
+                  onClick={() => toast.dismiss(t.id)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        ), { duration: 5000 });
+          ),
+          { duration: 5000 }
+        );
       }
     });
 
