@@ -9,6 +9,8 @@ import { LayoutDashboard, Users, LogOut, BellDot,SquareChartGantt } from "lucide
 
 import UserGuard from "@/components/gard/user/UserGard";
 
+import RequestToaster from "@/components/ui/dashboard/RequestToaster";
+
 // Change this to adminNavItems if needed
 const userNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -34,6 +36,7 @@ export default function DashboardLayout({ children }) {
   return (
     <UserGuard>
       <div className="flex h-screen overflow-hidden">
+
         {/* Sidebar */}
         <DashboardSidebar
           isOpen={isSidebarOpen}
@@ -45,6 +48,7 @@ export default function DashboardLayout({ children }) {
         <div className="flex flex-col flex-1 w-0">
           <DashboardNavbar onMenuClick={() => setIsSidebarOpen(true)} />
           <main className="flex-1 overflow-y-auto p-6 bg-background text-foreground scrollbar">
+             <RequestToaster />
             {children}
           </main>
         </div>
