@@ -73,7 +73,8 @@ export const POST = asyncHandler(async (req) => {
     game,
     createdBy: memberIds[0],
     members: memberIds,
-    serialNo: newSerial.toString(), 
+    serialNo: newSerial.toString(),
+    partner: memberIds[1],
   });
 
   return Response.json(new ApiResponse(201, team, "Team created successfully"));

@@ -12,6 +12,9 @@ import { requireAdmin } from "@/utils/server/roleGuards";
 export const GET = asyncHandler(async (req, context) => {
   await requireAdmin(req);
   const { id: tournamentId } = context.params;
+  const { searchParams } = new URL(req.url);
+  const gameId = searchParams.get("gameId");
+
   // const { fields } = await parseForm(req);
   // const tournamentId = fields?.tournamentId?.toString();
   const tournament = await Tournament.findById(tournamentId);
@@ -23,35 +26,36 @@ export const GET = asyncHandler(async (req, context) => {
   const registrations = await Registration.find({
     tournament: tournamentId,
     "gameRegistrationDetails.status": "approved",
+    ...(gameId && { "gameRegistrationDetails.games": { $in: [gameId] } }),
   }).populate({
     path: "user",
     model: "User",
     select: "-password -refreshToken -accessToken -__v",
   });
 
-  // ✅ Tournament ki sab teams
-  const teams = await Team.find({ tournament: tournamentId });
+  const teams = await Team.find({ tournament: tournamentId, game: gameId });
 
-  // ✅ Team members ka set banao
-  const assignedUserIds = new Set();
+  const restrictedUserIds = new Set();
   teams.forEach((team) => {
-    assignedUserIds.add(team.createdBy.toString());
-    team.members.forEach((m) => assignedUserIds.add(m.toString()));
+    // Agar user ne team create ki hai
+    restrictedUserIds.add(team.createdBy.toString());
+
+    // Agar user kisi ka partner bana hai
     if (team.partner) {
-      assignedUserIds.add(team.partner.toString());
+      restrictedUserIds.add(team.partner.toString());
     }
   });
 
-  // ✅ Filter un users ko jo assigned list me nahi hain
-  const unassignedUsers = registrations
+  // ✅ Filter out wo users jo na partner hain aur na creator
+  const validUsers = registrations
     .map((r) => r.user)
-    .filter((u) => !assignedUserIds.has(u._id.toString()));
+    .filter((u) => !restrictedUserIds.has(u._id.toString()));
 
   return Response.json(
     new ApiResponse(
       200,
-      { unassignedUsers },
-      "Fetched users who are registered but not in any team of this tournament"
+      { validUsers },
+      "Fetched users who are not a partner and have not created any team"
     )
   );
 });
