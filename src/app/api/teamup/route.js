@@ -7,7 +7,7 @@ import { parseForm } from "@/utils/server/parseForm";
 // import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
 import { Team } from "@/models/Team";
-// import { Tournament } from "@/models/Tournament";
+import  "@/models/Tournament";
 import { Registration } from "@/models/Registration";
 // import { User } from "@/models/User";
 
