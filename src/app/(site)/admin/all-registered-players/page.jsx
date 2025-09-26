@@ -8,7 +8,7 @@ export default function AllRegisteredPlayers() {
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(30); // ✅ default 30
   const [search, setSearch] = useState("");
 
   const fetchRegistrations = async () => {
@@ -43,10 +43,11 @@ export default function AllRegisteredPlayers() {
   }, [search, registrations]);
 
   // Pagination logic
-  const indexOfLast = currentPage * rowsPerPage;
-  const indexOfFirst = indexOfLast - rowsPerPage;
+  const indexOfLast = rowsPerPage === "all" ? filtered.length : currentPage * rowsPerPage;
+  const indexOfFirst = rowsPerPage === "all" ? 0 : indexOfLast - rowsPerPage;
   const currentRows = filtered.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const totalPages =
+    rowsPerPage === "all" ? 1 : Math.ceil(filtered.length / rowsPerPage);
 
   if (loading)
     return <p className="text-center mt-10 text-white">Loading registrations...</p>;
@@ -58,8 +59,8 @@ export default function AllRegisteredPlayers() {
     <div className="min-h-screen p-6 bg-[var(--background)] text-[var(--foreground)]">
       <h1 className="text-2xl font-bold mb-6">Registered Users</h1>
 
-      {/* Search input */}
-      <div className="mb-4">
+      {/* Search + Rows per page */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
         <input
           type="text"
           placeholder="Search by user, email, or tournament"
@@ -67,8 +68,29 @@ export default function AllRegisteredPlayers() {
           onChange={(e) => setSearch(e.target.value)}
           className="p-2 rounded border border-[var(--border-color)] bg-[var(--card-background)] text-white w-full sm:w-64"
         />
+
+        {/* Rows per page dropdown */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="rowsPerPage" className="text-sm">
+            Rows per page:
+          </label>
+          <select
+            id="rowsPerPage"
+            value={rowsPerPage}
+            onChange={(e) =>
+              setRowsPerPage(e.target.value === "all" ? "all" : Number(e.target.value))
+            }
+            className="p-2 rounded border border-[var(--border-color)] bg-[var(--card-background)]"
+          >
+            <option value={10}>10</option>
+            <option value={30}>30</option>
+            <option value={50}>50</option>
+            <option value="all">All</option>
+          </select>
+        </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto scrollbar rounded-lg border border-[var(--border-color)]">
         <table className="min-w-full border-collapse">
           <thead className="bg-[var(--secondary-color)] text-[var(--foreground)]">
@@ -125,25 +147,27 @@ export default function AllRegisteredPlayers() {
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2 text-[var(--foreground)]">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] hover:bg-[var(--secondary-hover)] disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] hover:bg-[var(--secondary-hover)] disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+      {rowsPerPage !== "all" && (
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2 text-[var(--foreground)]">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] hover:bg-[var(--secondary-hover)] disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 rounded-lg bg-[var(--secondary-color)] hover:bg-[var(--secondary-hover)] disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

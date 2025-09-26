@@ -8,7 +8,6 @@ const GameSchema = new Schema(
     genre: { type: String, trim: true },
     platform: {
       type: String,
-      enum: ["pc", "console", "mobile", "table"],
       required: true,
     },
     description: { type: String },
