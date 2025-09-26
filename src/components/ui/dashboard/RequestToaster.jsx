@@ -4,6 +4,8 @@ import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
+import Link from "next/link";
+
 export default function RequestToaster() {
   const [requests, setRequests] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -49,6 +51,7 @@ export default function RequestToaster() {
               <strong>{req.from?.username}</strong> sent you a team up request
             </p>
             <div className="flex gap-2">
+              <Link href={`/dashboard/teamup`}>
               <button
                 className="px-3 py-1 rounded bg-[var(--success-color)] text-white"
                 onClick={() => {
@@ -58,6 +61,7 @@ export default function RequestToaster() {
               >
                 View
               </button>
+              </Link>
               <button
                 className="px-3 py-1 rounded bg-[var(--error-color)] text-white"
                 onClick={() => toast.dismiss(t.id)}
