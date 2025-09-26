@@ -1,0 +1,48 @@
+// src/data/regionData.js
+
+export const regionList = [
+  "NY-NJ-DE",
+  "PHIL / PA CITIES",
+  "CT/MAS/NH/VT (NE)",
+  "DMV / BALTIMORE",
+  "7-Cities / Richmond",
+  "Detroit",
+  "Atlanta",
+  "Birmingham",
+  "Columbus",
+  "Florida",
+  "Cincinnati",
+  "Chicago",
+  "Dallas",
+  "Austin",
+  "Houston",
+  "San Antonio",
+  "New Orleans",
+  "Los Angeles",
+  "Las Vegas",
+  "Other",
+];
+
+// Map regions → states (like country-state-city style)
+export const regionStatesMap = {
+  "NY-NJ-DE": ["New York City", "Newark", "Wilmington"],
+  "PHIL / PA CITIES": ["Philadelphia", "Pittsburgh", "Allentown"],
+  "CT/MAS/NH/VT (NE)": ["Hartford", "Boston", "Concord", "Burlington"],
+  "DMV / BALTIMORE": ["Washington DC", "Baltimore", "Arlington"],
+  "7-Cities / Richmond": ["Norfolk", "Virginia Beach", "Richmond"],
+  Detroit: ["Downtown", "Dearborn", "Southfield"],
+  Atlanta: ["Downtown", "Midtown", "Buckhead"],
+  Birmingham: ["Hoover", "Homewood", "Mountain Brook"],
+  Columbus: ["Downtown", "Dublin", "Westerville"],
+  Florida: ["Miami", "Orlando", "Tampa", "Jacksonville"],
+  Cincinnati: ["Downtown", "Hyde Park", "Over-the-Rhine"],
+  Chicago: ["Downtown", "Evanston", "Oak Park"],
+  Dallas: ["Irving", "Plano", "Arlington"],
+  Austin: ["Downtown", "Round Rock", "Cedar Park"],
+  Houston: ["Sugar Land", "Katy", "The Woodlands"],
+  "San Antonio": ["Downtown", "Alamo Heights", "Stone Oak"],
+  "New Orleans": ["French Quarter", "Garden District", "Uptown"],
+  "Los Angeles": ["Hollywood", "Santa Monica", "Burbank"],
+  "Las Vegas": ["Summerlin", "Henderson", "Paradise"],
+  Other: ["Other Region"],
+};

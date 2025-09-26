@@ -1,26 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Country, State } from "country-state-city";
+import { useState, useEffect } from "react";
+import { regionList, regionStatesMap } from "@/constants/RegionData";
 
 export default function CitySelector({ stateCode, setStateCode, city, setCity }) {
-  const [regions, setRegions] = useState([]); // Countries (Regions)
-  const [states, setStates] = useState([]);   // States filtered by region
+  const [regions, setRegions] = useState([]); 
+  const [states, setStates] = useState([]);   
   const [selectedState, setSelectedState] = useState(null);
 
   useEffect(() => {
-    // ✅ Load all regions (countries)
-    const countries = Country.getAllCountries();
-    setRegions(countries);
+    // Load regions from imported data
+    setRegions(regionList);
   }, []);
 
-  // ✅ When region (city variable) changes → load states of that region
   useEffect(() => {
     if (city) {
-      const stateList = State.getStatesOfCountry(city);
-      setStates(stateList);
+      const stateList = regionStatesMap[city] || [];
+      setStates(stateList.map((s) => ({ isoCode: s, name: s })));
       setSelectedState(null);
-      setStateCode(""); // reset state when region changes
+      setStateCode("");
     } else {
       setStates([]);
       setSelectedState(null);
@@ -33,16 +31,12 @@ export default function CitySelector({ stateCode, setStateCode, city, setCity })
     setStateCode(selectedIsoCode);
 
     const matchedState = states.find((s) => s.isoCode === selectedIsoCode);
-    if (matchedState) {
-      setSelectedState(matchedState);
-    } else {
-      setSelectedState(null);
-    }
+    setSelectedState(matchedState || null);
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Region Dropdown (Countries) */}
+      {/* Region Dropdown */}
       <div>
         <label className="block mb-2 text-sm font-medium">Region</label>
         <select
@@ -58,14 +52,14 @@ export default function CitySelector({ stateCode, setStateCode, city, setCity })
         >
           <option value="">Select Region</option>
           {regions.map((region) => (
-            <option key={region.isoCode} value={region.isoCode}>
-              {region.name}
+            <option key={region} value={region}>
+              {region}
             </option>
           ))}
         </select>
       </div>
 
-      {/* State Dropdown (filtered by region) */}
+      {/* State Dropdown */}
       <div>
         <label className="block mb-2 text-sm font-medium">State</label>
         <select
