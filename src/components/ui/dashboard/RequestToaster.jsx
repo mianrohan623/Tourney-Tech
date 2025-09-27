@@ -50,7 +50,7 @@ export default function RequestToaster() {
                 <strong>{req.from?.username}</strong> sent you a team up request
               </p>
               <div className="flex gap-2">
-                <Link href={`/dashboard/teamup`}>
+                <Link href={`/dashboard/received-requests`}>
                   <button
                     className="px-3 py-1 rounded bg-[var(--success-color)] text-white"
                     onClick={() => {
