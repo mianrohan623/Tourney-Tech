@@ -7,10 +7,6 @@ import { requireAdmin } from "@/utils/server/roleGuards";
 import { parseForm } from "@/utils/server/parseForm";
 import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 import { Tournament } from "@/models/Tournament";
-
-import { requireTournamentStaff } from "@/utils/server/tournamentPermissions";
-
-import { requireAuth } from "@/utils/server/auth";
 import { Team } from "@/models/Team";
 import { Registration } from "@/models/Registration";
 import { TeamUp } from "@/models/TeamUp";
@@ -94,20 +90,18 @@ export const GET = asyncHandler(async (req, context) => {
 
 // DELETE /api/tournaments/[id]
 export const DELETE = asyncHandler(async (req, context) => {
-  const authUser = await requireAuth(req);
+  await requireAdmin(req);
   const { id } = await context.params;
-
-  await requireTournamentStaff(id, authUser._id, ["owner"]);
 
   const tournament = await Tournament.findByIdAndDelete(id);
 
   if (!tournament) throw new ApiError(404, "Tournament not found");
 
-  await Team.deleteMany({ tournament: tournament._id });
-  
-  await Registration.deleteMany({ tournament: tournament._id });
+  await Team.deleteMany({ tournament: id });
 
-  await TeamUp.deleteMany({ tournament: tournament._id });
+  await Registration.deleteMany({ tournament: id });
+
+  await TeamUp.deleteMany({ tournament: id });
 
   return Response.json({ message: "Tournament deleted" });
 });
