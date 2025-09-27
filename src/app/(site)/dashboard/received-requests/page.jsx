@@ -153,9 +153,9 @@ export default function ReceivedRequests() {
 
               <div className="text-sm mb-2">
                 <strong>Games: </strong>
-                {req.games?.length > 0 ? (
+                {req.fromGames?.length > 0 ? (
                   <ul className="list-disc list-inside">
-                    {req.games.map((g) => (
+                    {req.fromGames.map((g) => (
                       <li key={g._id} className="text-[var(--info-color)]">
                         {g.name} ({g.platform})
                       </li>
