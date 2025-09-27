@@ -29,6 +29,4 @@ const TeamUpSchema = new Schema(
   { timestamps: true }
 );
 
-TeamUpSchema.index({ from: 1, to: 1 }, { unique: true });
-
 export const TeamUp = models.TeamUp || model("TeamUp", TeamUpSchema);

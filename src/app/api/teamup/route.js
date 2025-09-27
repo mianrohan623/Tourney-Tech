@@ -25,6 +25,14 @@ export const POST = asyncHandler(async (req) => {
   if (to.toString() === user._id.toString())
     throw new ApiResponse(400, null, "Cannot send team-up request to yourself");
 
+  const existRequest = await TeamUp.findOne({
+    $or: [{ from: user._id, to }, { from: to, to: user._id }],
+    status: { $in: ["pending", "accepted"] },
+    tournament: tournamentId,
+  });
+  if (existRequest)
+    throw new ApiResponse(400, null, "Team-up request already exists");
+
   const request = await TeamUp.create({
     from: user._id,
     to,
