@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/utils/axios"; // Axios instance
 import { toast } from "react-hot-toast";
 import EditTeamForm from "@/components/ui/admin/team/EditTeamForm";
+import { Trash2, Pencil } from "lucide-react";
 
 export default function AdminTeamsTable() {
   const [teams, setTeams] = useState([]);
@@ -170,15 +171,15 @@ export default function AdminTeamsTable() {
                     <td className="py-2 px-4 border-b border-[var(--border-color)] text-center space-x-2">
                       <button
                         onClick={() => setEditingTeam(team._id)}
-                        className="px-2 py-1 bg-blue-600 text-white rounded"
+                        className="text-[color:var(--accent-color)] underline"
                       >
-                        Edit
+                         <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteTeam(team._id)}
-                        className="px-2 py-1 bg-red-600 text-white rounded"
+                        className="text-red-500 underline"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>

@@ -119,7 +119,9 @@ export default function EditTeamForm({ team, onClose, onUpdated }) {
         tournament: team.tournament
           ? { value: team.tournament._id, label: team.tournament.name }
           : null,
-        game: team.game ? { value: team.game._id, label: team.game.name } : null,
+        game: team.game
+          ? { value: team.game._id, label: team.game.name }
+          : null,
         members: team.members.map((m) => m._id),
         tournamentTeamType: team.tournamentTeamType
           ? {
@@ -137,7 +139,9 @@ export default function EditTeamForm({ team, onClose, onUpdated }) {
   // Load games when tournament changes
   useEffect(() => {
     if (form.tournament) {
-      const selected = tournaments.find((t) => t.value === form.tournament.value);
+      const selected = tournaments.find(
+        (t) => t.value === form.tournament.value
+      );
       setGames(selected?.games || []);
     }
   }, [form.tournament, tournaments]);
@@ -221,7 +225,21 @@ export default function EditTeamForm({ team, onClose, onUpdated }) {
             label="Game"
             options={games}
             value={form.game}
-            onChange={(val) => setForm({ ...form, game: val })}
+            onChange={(val) => {
+              setForm({
+                ...form,
+                game: val,
+                tournamentTeamType: val
+                  ? {
+                      value: val.tournamentTeamType,
+                      label:
+                        val.tournamentTeamType === "single_player"
+                          ? "Single Player"
+                          : "Double Player",
+                    }
+                  : null,
+              });
+            }}
             placeholder="Select game"
           />
 
@@ -230,10 +248,17 @@ export default function EditTeamForm({ team, onClose, onUpdated }) {
             options={users}
             value={users.find((u) => u.value === form.members[0]) || null}
             onChange={(val) =>
-              setForm({ ...form, members: [val?.value || null, form.members[1] || null].filter(Boolean) })
+              setForm({
+                ...form,
+                members: [val?.value || null, form.members[1] || null].filter(
+                  Boolean
+                ),
+              })
             }
             placeholder="Select first member"
           />
+
+          {console.log(form.tournamentTeamType)}
 
           {form.tournamentTeamType?.value === "double_player" && (
             <SearchableSelect
@@ -241,7 +266,12 @@ export default function EditTeamForm({ team, onClose, onUpdated }) {
               options={users}
               value={users.find((u) => u.value === form.members[1]) || null}
               onChange={(val) =>
-                setForm({ ...form, members: [form.members[0] || null, val?.value || null].filter(Boolean) })
+                setForm({
+                  ...form,
+                  members: [form.members[0] || null, val?.value || null].filter(
+                    Boolean
+                  ),
+                })
               }
               placeholder="Select second member"
             />
