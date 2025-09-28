@@ -7,7 +7,7 @@ import { parseForm } from "@/utils/server/parseForm";
 // import { ApiError } from "@/utils/server/ApiError";
 import { TeamUp } from "@/models/TeamUp";
 import { Team } from "@/models/Team";
-import  "@/models/Tournament";
+import "@/models/Tournament";
 import { Registration } from "@/models/Registration";
 // import { User } from "@/models/User";
 
@@ -24,6 +24,14 @@ export const POST = asyncHandler(async (req) => {
 
   if (to.toString() === user._id.toString())
     throw new ApiResponse(400, null, "Cannot send team-up request to yourself");
+
+  const existRequest = await TeamUp.findOne({
+    $or: [{ from: user._id, to }, { from: to, to: user._id }],
+    status: { $in: ["pending", "accepted"] },
+    tournament: tournamentId,
+  });
+  if (existRequest)
+    throw new ApiResponse(400, null, "Team-up request already exists");
 
   const request = await TeamUp.create({
     from: user._id,
@@ -47,6 +55,7 @@ export const GET = asyncHandler(async () => {
   })
     .populate("from", "firstname lastname username email")
     .populate("to", "firstname lastname username email")
+    .populate("tournament")
     .lean();
 
   const userIds = [
@@ -56,25 +65,48 @@ export const GET = asyncHandler(async () => {
     ]),
   ];
 
-  // 3) Get registrations of these users
-  const registrations = await Registration.find({ user: { $in: userIds } })
+  const tournamentIds = [
+    ...new Set(
+      requests
+        .filter((r) => r.tournament) // only requests with tournament
+        .map((r) => r.tournament._id.toString())
+    ),
+  ];
+
+  // Fetch registrations of only these users
+  const registrations = await Registration.find({
+    user: { $in: userIds },
+    tournament: { $in: tournamentIds },
+  })
     .populate("tournament")
     .populate("gameRegistrationDetails.games")
     .lean();
 
-  const requestsWithTournament = requests.map((req) => {
-    const toRegs = registrations.filter(
-      (r) => r.user.toString() === req.to._id.toString()
-    );
-    const toTournamentReg = toRegs.find(
-      (r) => r.tournament && r?.gameRegistrationDetails?.games?.length > 0
+  // Merge games into requests only if BOTH from & to are registered in same tournament
+  const requestsWithGames = requests.map((req) => {
+    const fromReg = registrations.find(
+      (r) =>
+        r.user.toString() === req.from._id.toString() &&
+        r.tournament?._id.toString() === req.tournament?._id.toString()
     );
 
-    return {
-      ...req,
-      tournament: toTournamentReg?.tournament,
-      games: toTournamentReg?.gameRegistrationDetails?.games,
-    };
+    const toReg = registrations.find(
+      (r) =>
+        r.user.toString() === req.to._id.toString() &&
+        r.tournament?._id.toString() === req.tournament?._id.toString()
+    );
+
+    // Only merge if both registered
+    if (fromReg && toReg) {
+      return {
+        ...req,
+        fromGames: fromReg?.gameRegistrationDetails?.games || [],
+        toGames: toReg?.gameRegistrationDetails?.games || [],
+      };
+    }
+
+    // Otherwise return as is
+    return req;
   });
 
   const acceptedUserIds = requests
@@ -96,7 +128,7 @@ export const GET = asyncHandler(async () => {
   return Response.json(
     new ApiResponse(
       200,
-      { requests: requestsWithTournament, teams },
+      { requests: requestsWithGames, teams },
       "Fetched team-up requests & teams"
     )
   );

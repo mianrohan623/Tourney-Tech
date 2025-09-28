@@ -6,6 +6,10 @@ import { Team } from "@/models/Team";
 // import { TeamUp } from "@/models/TeamUp";
 import { User } from "@/models/User"; // agar members check karna ho
 import mongoose from "mongoose";
+import "@/models/BankDetails";
+import "@/models/Game";
+import "@/models/Tournament";
+
 
 export const POST = asyncHandler(async (req) => {
   await requireAdmin();
@@ -73,7 +77,8 @@ export const POST = asyncHandler(async (req) => {
     game,
     createdBy: memberIds[0],
     members: memberIds,
-    serialNo: newSerial.toString(), 
+    serialNo: newSerial.toString(),
+    partner: memberIds[1],
   });
 
   return Response.json(new ApiResponse(201, team, "Team created successfully"));

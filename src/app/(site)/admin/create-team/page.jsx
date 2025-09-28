@@ -114,10 +114,10 @@ export default function TeamForm() {
         return;
       }
       try {
-        const url = `/api/tournaments/${form.tournament.value}/similar-players/unassigned-users`;
+        const url = `/api/tournaments/${form.tournament.value}/similar-players/unassigned-users?gameId=${form.game?.value}`;
         const res = await api.get(url);
         setUsers(
-          res.data.data.unassignedUsers.map((u) => ({
+          res.data.data.validUsers.map((u) => ({
             value: u._id,
             label: `${u.firstname} ${u.lastname} (${u.username})`,
           }))
@@ -128,7 +128,7 @@ export default function TeamForm() {
       }
     }
     fetchMembers();
-  }, [form.tournament]);
+  }, [form.game]);
 
   // ✅ When game changes → auto set team type
   useEffect(() => {
@@ -251,7 +251,6 @@ export default function TeamForm() {
 
       <button
         type="submit"
-        
         className="w-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white py-2 px-4 rounded-lg transition"
       >
         Create Team
