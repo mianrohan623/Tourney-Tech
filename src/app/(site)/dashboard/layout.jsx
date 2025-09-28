@@ -15,7 +15,6 @@ import RequestToaster from "@/components/ui/dashboard/RequestToaster";
 const userNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/profile", label: "Profile", icon: Users },
-  { href: "/dashboard/matches-overview", label: "Matches", icon: Users },
   { href: "/dashboard/teamup", label: "Team Up", icon: Users },
    {
       label: "Notifications",
