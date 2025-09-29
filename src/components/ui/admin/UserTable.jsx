@@ -58,18 +58,19 @@ export default function UserTable() {
         header: "Phone",
         accessorKey: "phone",
       },
-      {
-        header: "City",
+       {
+        header: "Region",
         accessorKey: "city",
+      },
+      {
+        header: "State",
+        accessorKey: "stateCode",
       },
       {
         header: "Role",
         accessorKey: "role",
       },
-      {
-        header: "Status",
-        accessorKey: "status",
-      },
+     
       {
         header: "DOB",
         accessorKey: "dob",

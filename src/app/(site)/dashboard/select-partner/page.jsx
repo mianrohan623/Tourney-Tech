@@ -50,23 +50,41 @@ export default function SelectTeam() {
         );
         setRequests(myRequests);
 
-        // ✅ extract unique tournaments (with games)
-        const tournamentList = Array.from(
-          new Map(
-            myRequests
-              .filter((r) => r.tournament)
-              .map((r) => [
-                r.tournament._id,
-                {
-                  _id: r.tournament._id,
-                  name: r.tournament.name,
-                  games: r.games || [], // each request may include games
-                },
-              ])
-          ).values()
-        );
+        // ✅ extract unique tournaments
+        const tournamentMap = new Map();
+        myRequests.forEach((r) => {
+          if (!r.tournament) return;
 
-        setTournaments(tournamentList);
+          if (!tournamentMap.has(r.tournament._id)) {
+            const seenGames = new Set();
+            const games = [];
+
+            (r.tournament.games || []).forEach((g) => {
+              const gameId = g.game;
+              if (!gameId || seenGames.has(gameId)) return;
+
+              // find real game name from fromGames / toGames
+              const gameObj = (r.fromGames || [])
+                .concat(r.toGames || [])
+                .find((gg) => gg._id === gameId);
+
+              games.push({
+                _id: gameId,
+                name: gameObj?.name || "Unknown Game",
+              });
+
+              seenGames.add(gameId);
+            });
+
+            tournamentMap.set(r.tournament._id, {
+              _id: r.tournament._id,
+              name: r.tournament.name,
+              games,
+            });
+          }
+        });
+
+        setTournaments(Array.from(tournamentMap.values()));
       } catch (err) {
         console.error(err);
         toast.error("Failed to load requests");
@@ -78,47 +96,26 @@ export default function SelectTeam() {
     fetchRequests();
   }, [currentUserId]);
 
-  // ✅ Default tournament & game
-  useEffect(() => {
-    if (tournaments.length > 0 && !selectedTournamentId) {
-      const first = tournaments[0];
-      setSelectedTournamentId(first._id);
-      if (first.games?.length > 0) {
-        setSelectedGameId(first.games[0]._id);
-      }
-    }
-  }, [tournaments, selectedTournamentId]);
-
   // ✅ Reset game & request when tournament changes
   useEffect(() => {
-    const selectedTournament = tournaments.find(
-      (t) => t._id === selectedTournamentId
-    );
-    if (selectedTournament) {
-      if (selectedTournament.games?.length > 0) {
-        setSelectedGameId(selectedTournament.games[0]._id);
-      } else {
-        setSelectedGameId("");
-      }
-    }
+    setSelectedGameId("");
     setSelectedRequestId("");
-  }, [selectedTournamentId, tournaments]);
+  }, [selectedTournamentId]);
 
   // ✅ Filter requests by selected tournament & game
-  const filteredRequests = requests.filter(
-    (r) =>
-      r.tournament?._id === selectedTournamentId &&
-      (!selectedGameId || r.games?.some((g) => g._id === selectedGameId))
-  );
+  const filteredRequests = requests.filter((r) => {
+    if (r.tournament?._id !== selectedTournamentId) return false;
+    if (!selectedGameId) return true;
 
-  console.log("filteredRequests===================", filteredRequests);
+    const fromHasGame = r.fromGames?.some(
+      (g) => g._id === selectedGameId || g.game === selectedGameId
+    );
+    const toHasGame = r.toGames?.some(
+      (g) => g._id === selectedGameId || g.game === selectedGameId
+    );
 
-  // ✅ Default request when filteredRequests change
-  useEffect(() => {
-    if (filteredRequests.length > 0 && !selectedRequestId) {
-      setSelectedRequestId(filteredRequests[0]._id);
-    }
-  }, [filteredRequests, selectedRequestId]);
+    return fromHasGame && toHasGame;
+  });
 
   // ✅ Update partner when request changes
   useEffect(() => {
@@ -150,15 +147,15 @@ export default function SelectTeam() {
         selectedMembersObj?.from?._id,
         selectedMembersObj?.to?._id,
       ];
-      // ✅ backend expects: teamId + partnerId
+
       const formData = new FormData();
-      formData.append("memberIds", selectedMembers); // send requestId as teamId
+      formData.append("memberIds", selectedMembers);
       formData.append("partnerId", partnerId);
-      formData.append("tournamentId", selectedTournamentId); // send requestId as teamId
+      formData.append("tournamentId", selectedTournamentId);
       formData.append("gameId", selectedGameId);
       formData.append(
         "teamName",
-        `${selectedMembersObj?.from?.firstName}_${selectedMembersObj?.to?.firstName}`
+        `${selectedMembersObj?.from?.firstname}_${selectedMembersObj?.to?.firstname}`
       );
 
       await api.post("/api/team/select-partner", formData, {
@@ -166,6 +163,13 @@ export default function SelectTeam() {
       });
 
       toast.success("Partner selected successfully");
+
+      // ✅ Reset all selects after submit
+      setSelectedTournamentId("");
+      setSelectedGameId("");
+      setSelectedRequestId("");
+      setPartner(null);
+      setPartnerId("");
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || "Failed to select partner");
@@ -173,11 +177,6 @@ export default function SelectTeam() {
       setLoading(false);
     }
   };
-
-  console.log(
-    "selectedRequestId=========",
-    filteredRequests?.find((r) => r._id === selectedRequestId)
-  );
 
   return (
     <>
@@ -212,14 +211,12 @@ export default function SelectTeam() {
               <select
                 value={selectedTournamentId}
                 onChange={(e) => setSelectedTournamentId(e.target.value)}
-                className="w-full p-2 rounded-lg border-[var(--border-color)] bg-[var(--card-background)] text-[var(--foreground)] border focus:outline-none"
-                style={{
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
+                className="w-full p-2 rounded-lg border bg-[var(--card-background)] text-[var(--foreground)] focus:outline-none"
+                style={{ borderColor: "var(--border-color)" }}
               >
+                <option value="">-- Select Tournament --</option>
                 {tournaments.map((t) => (
-                  <option key={t._id} value={t._id}>
+                  <option key={`tournament-${t._id}`} value={t._id}>
                     {t.name}
                   </option>
                 ))}
@@ -239,16 +236,17 @@ export default function SelectTeam() {
                 <select
                   value={selectedGameId}
                   onChange={(e) => setSelectedGameId(e.target.value)}
-                  className="w-full p-2 rounded-lg border-[var(--border-color)] bg-[var(--card-background)] text-[var(--foreground)] border focus:outline-none"
-                  style={{
-                    borderColor: "var(--border-color)",
-                    color: "var(--foreground)",
-                  }}
+                  className="w-full p-2 rounded-lg border bg-[var(--card-background)] text-[var(--foreground)] focus:outline-none"
+                  style={{ borderColor: "var(--border-color)" }}
                 >
+                  <option value="">-- Select Game --</option>
                   {tournaments
                     .find((t) => t._id === selectedTournamentId)
-                    ?.games.map((g) => (
-                      <option key={g._id} value={g._id}>
+                    ?.games.map((g, index) => (
+                      <option
+                        key={`game-${selectedTournamentId}-${g._id}-${index}`}
+                        value={g._id}
+                      >
                         {g.name}
                       </option>
                     ))}
@@ -267,14 +265,12 @@ export default function SelectTeam() {
               <select
                 value={selectedRequestId}
                 onChange={(e) => setSelectedRequestId(e.target.value)}
-                className="w-full p-2 rounded-lg border-[var(--border-color)] bg-[var(--card-background)] text-[var(--foreground)] border focus:outline-none"
-                style={{
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
+                className="w-full p-2 rounded-lg border bg-[var(--card-background)] text-[var(--foreground)] focus:outline-none"
+                style={{ borderColor: "var(--border-color)" }}
               >
-                {filteredRequests.map((r) => (
-                  <option key={r._id} value={r._id}>
+                <option value="">-- Select Team Request --</option>
+                {filteredRequests.map((r, index) => (
+                  <option key={`request-${r._id}-${index}`} value={r._id}>
                     {`${r.from?.firstname || r.from?.username} & ${
                       r.to?.firstname || r.to?.username
                     }`}
@@ -284,7 +280,7 @@ export default function SelectTeam() {
             </div>
 
             {/* Partner (auto-selected, read-only) */}
-            <div>
+            {/* <div>
               <label
                 className="block text-sm mb-2"
                 style={{ color: "var(--foreground)" }}
@@ -294,10 +290,7 @@ export default function SelectTeam() {
               <input
                 type="text"
                 value={
-                  partner?.username ||
-                  partner?.firstname ||
-                  partner?.email ||
-                  ""
+                  partner?.username || partner?.firstname || partner?.email || ""
                 }
                 disabled
                 className="w-full p-2 rounded-lg bg-transparent border cursor-not-allowed"
@@ -306,7 +299,7 @@ export default function SelectTeam() {
                   color: "var(--foreground)",
                 }}
               />
-            </div>
+            </div> */}
 
             <button
               type="submit"
@@ -324,6 +317,7 @@ export default function SelectTeam() {
         )}
       </div>
 
+      {/* Partner tournaments list */}
       <PartnerTournaments />
     </>
   );
