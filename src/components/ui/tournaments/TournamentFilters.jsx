@@ -10,9 +10,9 @@ export default function TournamentFilters({
   const uniqueLocations = [...new Set(tournamentData.map((t) => t.location))].sort();
 
   // Derive unique formats (single/double elimination, round robin)
-  const uniqueFormats = [
-    ...new Set(tournamentData.flatMap((t) => t.games.map((g) => g.format))),
-  ];
+  // const uniqueFormats = [
+  //   ...new Set(tournamentData.flatMap((t) => t.games.map((g) => g.format))),
+  // ];
 
   // Derive unique team types (single_player / double_player)
   const uniqueTeamTypes = [
@@ -28,7 +28,7 @@ export default function TournamentFilters({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-10">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
       {/* Search bar */}
       <input
         type="text"
@@ -77,7 +77,7 @@ export default function TournamentFilters({
       </select>
 
       {/* Format filter */}
-      <select
+      {/* <select
         name="format"
         value={filters.format}
         onChange={onChange}
@@ -95,7 +95,7 @@ export default function TournamentFilters({
               : "Round Robin"}
           </option>
         ))}
-      </select>
+      </select> */}
 
       {/* Team Type filter */}
       <select

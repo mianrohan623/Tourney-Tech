@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
 import CitySelector from "../../signup/CitySelector";
 
-export default function CreateUserForm() {
+export default function UserForm({ user = null, onSuccess }) {
+  const isEdit = !!user;
+
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstname: "",
@@ -17,8 +19,26 @@ export default function CreateUserForm() {
     city: "",
     stateCode: "",
     dob: "",
-    role: "user",
+    role: "player",
   });
+
+  // Pre-fill form if editing
+  useEffect(() => {
+    if (isEdit && user) {
+      setForm({
+        firstname: user.firstname || "",
+        lastname: user.lastname || "",
+        email: user.email || "",
+        username: user.username || "",
+        phone: user.phone || "",
+        gender: user.gender || "",
+        city: user.city || "",
+        stateCode: user.stateCode || "",
+        dob: user.dob ? user.dob.split("T")[0] : "", // format date
+        role: user.role || "player",
+      });
+    }
+  }, [isEdit, user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,23 +50,42 @@ export default function CreateUserForm() {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/create-user", form);
-      toast.success(res.data.message || "User created successfully!");
-      setForm({
-        firstname: "",
-        lastname: "",
-        email: "",
-        username: "",
-        phone: "",
-        gender: "",
-        city: "",
-        stateCode: "",
-        dob: "",
-        role: "user",
-      });
+      let res;
+
+      if (isEdit) {
+        // ✅ Edit user
+        res = await api.patch(`/api/user/${user._id}`, form, {
+          headers: { "Content-Type": "application/json" },
+        });
+      } else {
+        // ✅ Create user
+        res = await api.post("/api/create-user", form, {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      toast.success(res.data.message || (isEdit ? "User updated!" : "User created!"));
+
+      if (!isEdit) {
+        // reset form only if creating
+        setForm({
+          firstname: "",
+          lastname: "",
+          email: "",
+          username: "",
+          phone: "",
+          gender: "",
+          city: "",
+          stateCode: "",
+          dob: "",
+          role: "player",
+        });
+      }
+
+      onSuccess?.(); // refresh parent table
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to create user");
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -59,7 +98,7 @@ export default function CreateUserForm() {
         bg-[var(--card-background)]"
       >
         <h2 className="text-2xl font-bold text-foreground mb-6">
-          Create New User
+          {isEdit ? "Edit User" : "Create New User"}
         </h2>
 
         <form
@@ -122,7 +161,7 @@ export default function CreateUserForm() {
             </select>
           </div>
 
-          {/* ✅ City & State Dropdowns (replace old inputs) */}
+          {/* City & State */}
           <div className="sm:col-span-2">
             <CitySelector
               city={form.city}
@@ -150,12 +189,12 @@ export default function CreateUserForm() {
               onChange={handleChange}
               className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
             >
-              <option value="user">User</option>
+              <option value="player">Player</option>
               <option value="admin">Admin</option>
             </select>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="sm:col-span-2">
             <button
               type="submit"
@@ -164,7 +203,13 @@ export default function CreateUserForm() {
               bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] 
               text-white transition-all duration-200 disabled:opacity-60"
             >
-              {loading ? "Creating..." : "Create User"}
+              {loading
+                ? isEdit
+                  ? "Updating..."
+                  : "Creating..."
+                : isEdit
+                ? "Update User"
+                : "Create User"}
             </button>
           </div>
         </form>
@@ -173,7 +218,7 @@ export default function CreateUserForm() {
   );
 }
 
-/* Reusable Input Component */
+/* Reusable Input */
 function InputField({ label, type = "text", name, value, onChange }) {
   return (
     <div className="flex flex-col">

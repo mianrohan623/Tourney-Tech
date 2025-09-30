@@ -43,14 +43,14 @@ export default function TournamentCard({
 
   return (
     <div
-      className="flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-lg hover:scale-[1.01] transition-transform border border-gray-700"
+      className=" flex flex-col sm:flex-row rounded-xl overflow-hidden shadow-lg hover:scale-[1.01] transition-transform border border-gray-700"
       style={{ backgroundColor: "var(--card-background)" }}
     >
       {/* Image */}
       <img
         src={bannerUrl}
         alt={name || "Tournament banner"}
-        className="w-full sm:w-1/3 h-48 sm:h-auto object-cover"
+        className="w-full sm:w-1/3 h-48 sm:h-full object-cover"
       />
 
       {/* Content */}
@@ -84,9 +84,6 @@ export default function TournamentCard({
           </p>
           <p>
             📅 <strong>End:</strong> {formatDate(endDate)}
-          </p>
-          <p>
-            ⏰ <strong>Time:</strong> {formatTime(startDate)}
           </p>
         </div>
 

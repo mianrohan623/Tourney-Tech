@@ -81,7 +81,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           entryFee: g.entryFee,
           format: g.format || "double_elimination",
           teamBased: g.teamBased || false,
-          tournamentTeamType: g.tournamentTeamType || "single_player",
+          tournamentTeamType: g.tournamentTeamType || "double_player",
           rounds: g.rounds || "", 
         }))
       );
@@ -126,7 +126,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
         entryFee: 0,
         format: "double_elimination",
         teamBased: false,
-        tournamentTeamType: "single_player",
+        tournamentTeamType: "double_player",
       },
     ]);
   };
@@ -511,7 +511,6 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 <option value="round_robin">Round Robin</option>
               </select> */}
 
-              {/* select Round */}
 
               {/* Rounds */}
               <input
@@ -555,8 +554,8 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 }
                 className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
               >
-                <option value="single_player">Single Player</option>
                 <option value="double_player">Double Player</option>
+                <option value="single_player">Single Player</option>
               </select>
 
               {field.gameConfigId && (
