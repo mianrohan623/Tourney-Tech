@@ -2,8 +2,8 @@ import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { parseForm } from "@/utils/server/parseForm";
 
-const { asyncHandler } = require("@/utils/server/asyncHandler");
-const { requireAdmin } = require("@/utils/server/roleGuards");
+import { asyncHandler } from "@/utils/server/asyncHandler";
+import { requireAdmin } from "@/utils/server/roleGuards";
 
 export const POST = asyncHandler(async (req) => {
   await requireAdmin();
