@@ -2,10 +2,10 @@ import { Tournament } from "@/models/Tournament";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import { requireAuth } from "@/utils/server/auth";
+// import { requireAuth } from "@/utils/server/auth";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
-export const GET = asyncHandler(async (req) => {
+export const GET = asyncHandler(async () => {
   await requireAdmin();
 
   const totalUsers = await User.countDocuments();
