@@ -76,17 +76,28 @@ export const POST = asyncHandler(async (req) => {
     tournament: tournamentId,
     game: gameId,
     members: { $all: memberIds },
-  }).lean();
+  });
 
   const exactTeam = possibleTeams.find(
     (t) => Array.isArray(t.members) && t.members.length === memberIds.length
   );
 
   if (exactTeam) {
-    throw new ApiResponse(
-      400,
-      null,
-      "Team already created for these members in this tournament/game"
+    exactTeam.partner = partnerId;
+    await exactTeam.save();
+
+    const updatedTeam = await Team.findById(exactTeam._id)
+      .populate("tournament")
+      .populate("members", "firstname lastname username email")
+      .populate("partner", "firstname lastname username email")
+      .populate("createdBy", "firstname lastname username email");
+
+    return Response.json(
+      new ApiResponse(
+        200,
+        { team: updatedTeam },
+        "Partner updated successfully"
+      )
     );
   }
 
