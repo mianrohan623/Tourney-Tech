@@ -53,7 +53,6 @@ export default function TournamentsTable({ tournaments, onEdit, onDelete }) {
               <th className="p-3">Location</th>
               <th className="p-3">Dates</th>
               <th className="p-3">Status</th>
-              <th className="p-3">Visibility</th>
               <th className="p-3">Games</th>
               <th className="p-3">Entry Fee</th>
               <th className="p-3">Actions</th>
@@ -89,13 +88,7 @@ export default function TournamentsTable({ tournaments, onEdit, onDelete }) {
                     {new Date(t.endDate).toLocaleDateString()}
                   </td>
                   <td className="p-3 capitalize text-yellow-300">{t.status}</td>
-                  <td className="p-3">
-                    {t.isPublic ? (
-                      <span className="text-green-400">Public</span>
-                    ) : (
-                      <span className="text-gray-400">Private</span>
-                    )}
-                  </td>
+                
                   <td className="p-3">
                     {Array.isArray(t.games) && t.games.length > 0 ? (
                       <div className="flex flex-wrap gap-1">

@@ -42,7 +42,7 @@ const UserSchema = new Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required."],
+      // required: [true, "Password is required."],
     },
 
     phone: {
@@ -93,7 +93,7 @@ const UserSchema = new Schema(
 
     role: {
       type: String,
-      enum: ["player", "admin", "manager"],
+      enum: ["player", "admin"],
       default: "player",
     },
   },

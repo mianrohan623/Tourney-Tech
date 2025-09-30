@@ -182,14 +182,7 @@ export default function GameRegistrationPage() {
                 <p>
                   <strong>Entry Fee:</strong> {game.entryFee}
                 </p>
-                <p>
-                  <strong>Format:</strong>{" "}
-                  {game.format === "single_elimination"
-                    ? "Single Elimination"
-                    : game.format === "double_elimination"
-                      ? "Double Elimination"
-                      : "Round Robin"}
-                </p>
+               
                 <p>
                   <strong>Players Required:</strong>{" "}
                   {game.tournamentTeamType === "double_player"
