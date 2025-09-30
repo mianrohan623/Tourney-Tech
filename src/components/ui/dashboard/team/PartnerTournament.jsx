@@ -151,8 +151,8 @@ export default function PartnerTournaments() {
                   Registered Games
                 </p>
                 <ul className="list-disc list-inside text-sm text-[var(--foreground)]">
-                  {t.registeredGames.map((g) => (
-                    <li key={g._id}>
+                  {t.registeredGames.map((g, idx) => (
+                    <li key={idx}>
                       {g.name} ({g.platform})
                     </li>
                   ))}

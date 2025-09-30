@@ -215,8 +215,8 @@ export default function SelectTeam() {
                 style={{ borderColor: "var(--border-color)" }}
               >
                 <option value="">-- Select Tournament --</option>
-                {tournaments.map((t) => (
-                  <option key={`tournament-${t._id}`} value={t._id}>
+                {tournaments.map((t, idx) => (
+                  <option key={`tournament-${t._id}-${idx}`} value={t._id}>
                     {t.name}
                   </option>
                 ))}
