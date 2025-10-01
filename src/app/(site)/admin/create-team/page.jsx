@@ -105,56 +105,58 @@ export default function TeamForm() {
   }, [form.game, games]);
 
   // ✅ Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!form.tournament || !form.game || !form.tournamentTeamType) {
-      toast.error("Tournament, game, and team type are required");
-      return;
-    }
+  if (!form.tournament || !form.game || !form.tournamentTeamType) {
+    toast.error("Tournament, game, and team type are required");
+    return;
+  }
 
-    if (
-      form.tournamentTeamType.value === "double_player" &&
-      form.members.length !== 2
-    ) {
-      toast.error("Exactly 2 members required for double player teams");
-      return;
-    }
+  if (
+    form.tournamentTeamType.value === "double_player" &&
+    form.members.length !== 2
+  ) {
+    toast.error("Exactly 2 members required for double player teams");
+    return;
+  }
 
-    if (
-      form.tournamentTeamType.value === "single_player" &&
-      form.members.length !== 1
-    ) {
-      toast.error("Exactly 1 member required for single player teams");
-      return;
-    }
+  if (
+    form.tournamentTeamType.value === "single_player" &&
+    form.members.length !== 1
+  ) {
+    toast.error("Exactly 1 member required for single player teams");
+    return;
+  }
 
-    try {
-      console.log("Submitting team:", {
-        tournament: form.tournament.value,
-        game: form.game.value,
-        members: form.members,
-      });
+  try {
+    console.log("Submitting team:", {
+      tournament: form.tournament.value,
+      game: form.game.value,
+      members: form.members,
+    });
 
-      await api.post("/api/team", {
-        tournament: form.tournament.value,
-        game: form.game.value,
-        members: form.members,
-      });
+    await api.post("/api/team", {
+      tournament: form.tournament.value,
+      game: form.game.value,
+      members: form.members,
+    });
 
-      toast.success("Team created successfully");
-      setForm({
-        tournament: null,
-        game: null,
-        members: [],
-        tournamentTeamType: null,
-      });
-      setUsers([]);
-      setGames([]);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create team");
-    }
-  };
+    toast.success("Team created successfully");
+
+    // ✅ only reset form, NOT users
+    setForm({
+      tournament: null,
+      game: null,
+      members: [],
+      tournamentTeamType: null,
+    });
+    setGames([]); // optional: clear games when tournament resets
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed to create team");
+  }
+};
+
 
   return (
     <form
