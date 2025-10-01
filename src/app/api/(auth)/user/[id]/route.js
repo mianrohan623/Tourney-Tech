@@ -12,13 +12,20 @@ export const PATCH = asyncHandler(async (req, context) => {
   const { id } = context.params;
   if (!id) throw new ApiError(400, "ID parameter is missing");
 
+  if (!fields?.password)
+    throw new ApiResponse(500, null, "Password is Required");
+
   const userExist = await User.findById(id);
 
   if (!userExist) {
     throw new ApiResponse(404, null, "user not exist");
   }
 
-  const response = await User.findByIdAndUpdate(id, {...fields}, { new: true });
+  const response = await User.findByIdAndUpdate(
+    id,
+    { ...fields },
+    { new: true }
+  );
 
   return Response.json(
     new ApiResponse(200, { user: response }, "User updated successfully")

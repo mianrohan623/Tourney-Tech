@@ -21,7 +21,10 @@ export const POST = asyncHandler(async (req) => {
     stateCode,
     dob,
     role,
+    password,
   } = body;
+
+  if (!password) throw new ApiResponse(500, null, "Password is Required");
 
   const user = await User.create({
     firstname,
@@ -34,6 +37,7 @@ export const POST = asyncHandler(async (req) => {
     stateCode,
     dob,
     role,
+    password,
   });
 
   return Response.json(new ApiResponse(201, user, "User created successfully"));
