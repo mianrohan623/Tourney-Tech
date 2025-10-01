@@ -37,7 +37,7 @@ export default function UserForm({ user = null, onSuccess }) {
         stateCode: user.stateCode || "",
         dob: user.dob ? user.dob.split("T")[0] : "",
         role: user.role || "player",
-        password: "", // ✅ empty by default on edit
+        password: "", // ✅ keep empty on edit
       });
     }
   }, [isEdit, user]);
@@ -47,56 +47,72 @@ export default function UserForm({ user = null, onSuccess }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      let res;
-
-      if (isEdit) {
-        // ✅ only include password if user entered it
-        const payload = { ...form };
-        if (!payload.password) delete payload.password;
-
-        res = await api.patch(`/api/user/${user._id}`, payload, {
-          headers: { "Content-Type": "application/json" },
-        });
-      } else {
-        // ✅ Create requires password
-        res = await api.post("/api/create-user", form, {
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      toast.success(
-        res.data.message || (isEdit ? "User updated!" : "User created!")
-      );
-
-      if (!isEdit) {
-        setForm({
-          firstname: "",
-          lastname: "",
-          email: "",
-          username: "",
-          phone: "",
-          gender: "",
-          city: "",
-          stateCode: "",
-          dob: "",
-          role: "player",
-          password: "",
-        });
-      }
-
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+  const buildFormData = () => {
+    const fd = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (isEdit && key === "password" && !value) return; // ✅ skip empty password on edit
+      fd.append(key, value);
+    });
+    return fd;
   };
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    let payload = { ...form };
+
+    // 🔥 Ensure all string fields are actually strings (not arrays)
+    Object.keys(payload).forEach((key) => {
+      if (Array.isArray(payload[key])) {
+        payload[key] = payload[key][0] || "";
+      }
+    });
+
+    let res;
+
+    if (isEdit) {
+      if (!payload.password) delete payload.password;
+
+      res = await api.patch(`/api/user/${user._id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+    } else {
+      res = await api.post("/api/create-user", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    toast.success(
+      res.data.message || (isEdit ? "User updated!" : "User created!")
+    );
+
+    if (!isEdit) {
+      setForm({
+        firstname: "",
+        lastname: "",
+        email: "",
+        username: "",
+        phone: "",
+        gender: "",
+        city: "",
+        stateCode: "",
+        dob: "",
+        role: "player",
+        password: "",
+      });
+    }
+
+    onSuccess?.();
+  } catch (error) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="max-w-2xl mx-auto mt-10">
