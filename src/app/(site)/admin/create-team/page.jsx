@@ -3,55 +3,10 @@
 import { useState, useEffect } from "react";
 import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
-
-// ✅ Reusable Searchable Select
-function SearchableSelect({ label, options, value, onChange, placeholder }) {
-  const [query, setQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-
-  const filtered = options.filter((opt) =>
-    opt.label.toLowerCase().includes(query.toLowerCase())
-  );
-
-  return (
-    <div className="w-full">
-      <label className="block text-sm mb-1">{label}</label>
-      <div className="relative">
-        <input
-          type="text"
-          value={query || value?.label || ""}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsOpen(true)}
-          placeholder={placeholder}
-          className="w-full px-3 py-2 rounded-lg bg-[var(--secondary-color)] border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
-        />
-        {isOpen && (
-          <ul className="absolute z-10 w-full max-h-40 overflow-y-auto bg-[var(--card-background)] border border-[var(--border-color)] rounded-lg mt-1 shadow-lg scrollbar">
-            {filtered.length > 0 ? (
-              filtered.map((opt) => (
-                <li
-                  key={opt.value}
-                  onClick={() => {
-                    onChange(opt);
-                    setQuery(opt.label);
-                    setIsOpen(false);
-                  }}
-                  className="px-3 py-2 cursor-pointer hover:bg-[var(--card-hover)]"
-                >
-                  {opt.label}
-                </li>
-              ))
-            ) : (
-              <li className="px-3 py-2 text-gray-400">No results</li>
-            )}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
-}
+import SearchableSelect from "@/components/ui/admin/team/Select";
 
 export default function TeamForm() {
+  const [openSelect, setOpenSelect] = useState(null);
   const [tournaments, setTournaments] = useState([]);
   const [games, setGames] = useState([]);
   const [users, setUsers] = useState([]);
@@ -72,7 +27,7 @@ export default function TeamForm() {
             value: t._id,
             label: t.name,
             games: t.games.map((g) => ({
-              value: g.game._id, // ✅ FIX: use actual game ID instead of tournament-game ID
+              value: g.game._id,
               label: g.game.name,
               tournamentTeamType: g.tournamentTeamType,
             })),
@@ -106,18 +61,13 @@ export default function TeamForm() {
     }));
   }, [form.tournament, tournaments]);
 
-  // ✅ Fetch members
+  // ✅ Fetch members once
   useEffect(() => {
     async function fetchMembers() {
-      if (!form.tournament) {
-        setUsers([]);
-        return;
-      }
       try {
-        const url = `/api/tournaments/${form.tournament.value}/similar-players/unassigned-users?gameId=${form.game?.value}`;
-        const res = await api.get(url);
+        const res = await api.get("/api/users");
         setUsers(
-          res.data.data.validUsers.map((u) => ({
+          res.data.data.map((u) => ({
             value: u._id,
             label: `${u.firstname} ${u.lastname} (${u.username})`,
           }))
@@ -128,7 +78,7 @@ export default function TeamForm() {
       }
     }
     fetchMembers();
-  }, [form.game]);
+  }, []);
 
   // ✅ When game changes → auto set team type
   useEffect(() => {
@@ -175,7 +125,6 @@ export default function TeamForm() {
     }
 
     try {
-      // ✅ FIX: send correct game ID and use array for members
       console.log("Submitting team:", {
         tournament: form.tournament.value,
         game: form.game.value,
@@ -184,7 +133,7 @@ export default function TeamForm() {
 
       await api.post("/api/team", {
         tournament: form.tournament.value,
-        game: form.game.value, // ✅ correct game ID
+        game: form.game.value,
         members: form.members,
       });
 
@@ -215,6 +164,9 @@ export default function TeamForm() {
         value={form.tournament}
         onChange={(val) => setForm({ ...form, tournament: val })}
         placeholder="Select tournament"
+        isOpen={openSelect === "tournament"}
+        onOpen={() => setOpenSelect("tournament")}
+        onClose={() => setOpenSelect(null)}
       />
 
       {form.tournament && (
@@ -224,6 +176,9 @@ export default function TeamForm() {
           value={form.game}
           onChange={(val) => setForm({ ...form, game: val })}
           placeholder="Select game..."
+          isOpen={openSelect === "game"}
+          onOpen={() => setOpenSelect("game")}
+          onClose={() => setOpenSelect(null)}
         />
       )}
 
@@ -232,9 +187,12 @@ export default function TeamForm() {
         options={users}
         value={users.find((u) => u.value === form.members[0]) || null}
         onChange={(val) =>
-          setForm({ ...form, members: [val.value, form.members[1] || null] })
+          setForm({ ...form, members: [val?.value || null, form.members[1] || null] })
         }
         placeholder="Select first member..."
+        isOpen={openSelect === "member1"}
+        onOpen={() => setOpenSelect("member1")}
+        onClose={() => setOpenSelect(null)}
       />
 
       {form.tournamentTeamType?.value === "double_player" && (
@@ -243,9 +201,12 @@ export default function TeamForm() {
           options={users}
           value={users.find((u) => u.value === form.members[1]) || null}
           onChange={(val) =>
-            setForm({ ...form, members: [form.members[0] || null, val.value] })
+            setForm({ ...form, members: [form.members[0] || null, val?.value || null] })
           }
           placeholder="Select second member..."
+          isOpen={openSelect === "member2"}
+          onOpen={() => setOpenSelect("member2")}
+          onClose={() => setOpenSelect(null)}
         />
       )}
 
