@@ -3,6 +3,7 @@ import { requireAdmin } from "@/utils/server/roleGuards";
 import { parseForm } from "@/utils/server/parseForm";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
+import bcrypt from "bcrypt";
 
 export const PATCH = asyncHandler(async (req, context) => {
   await requireAdmin();
@@ -11,14 +12,16 @@ export const PATCH = asyncHandler(async (req, context) => {
 
   const { id } = context.params;
   if (!id) throw new ApiError(400, "ID parameter is missing");
-
-  if (!fields?.password)
-    throw new ApiResponse(500, null, "Password is Required");
-
+  
   const userExist = await User.findById(id);
 
   if (!userExist) {
     throw new ApiResponse(404, null, "user not exist");
+  }
+
+  if (fields.password) {
+    const salt = await bcrypt.genSalt(10);
+    fields.password = await bcrypt.hash(fields.password, salt);
   }
 
   const response = await User.findByIdAndUpdate(
