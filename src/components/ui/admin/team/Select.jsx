@@ -1,37 +1,35 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 export default function SearchableSelect({
   label,
-  options,
+  options = [],
   value,
   onChange,
   placeholder,
-  isOpen,
-  onOpen,
-  onClose,
 }) {
   const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
-  // ✅ Sync query with value when value changes externally
+  // ✅ Sync query with selected value
   useEffect(() => {
     if (value) {
-      setQuery(value.label);
+      setQuery(value.label || "");
     } else {
       setQuery("");
     }
   }, [value]);
 
-  const filtered = options.filter((opt) =>
-    opt.label.toLowerCase().includes(query.toLowerCase())
+  // ✅ Guard against missing labels
+  const filtered = (options || []).filter((opt) =>
+    (opt?.label || "").toLowerCase().includes(query.toLowerCase())
   );
 
   const handleClear = () => {
-    setQuery(""); // clear input
-    onChange(null); // clear selected value in parent
-    onClose?.();
+    setQuery("");
+    onChange(null);
+    setIsOpen(false);
   };
 
   return (
@@ -41,8 +39,12 @@ export default function SearchableSelect({
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={onOpen}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true); // open while typing
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)} // close after blur
           placeholder={placeholder}
           className="w-full px-3 py-2 pr-8 rounded-lg bg-[var(--secondary-color)] border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
         />
@@ -66,8 +68,8 @@ export default function SearchableSelect({
                   key={opt.value}
                   onClick={() => {
                     onChange(opt);
-                    setQuery(opt.label); // set selected label
-                    onClose?.();
+                    setQuery(opt.label || "");
+                    setIsOpen(false);
                   }}
                   className="px-3 py-2 cursor-pointer hover:bg-[var(--card-hover)]"
                 >

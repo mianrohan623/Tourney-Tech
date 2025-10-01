@@ -127,7 +127,7 @@ export default function AdminTeamsTable() {
                   Members
                 </th>
                 <th className="py-2 px-4 text-left font-semibold border-b border-[var(--border-color)]">
-                  Created By
+                  Team Leader
                 </th>
                 <th className="py-2 px-4 text-center font-semibold border-b border-[var(--border-color)]">
                   Actions

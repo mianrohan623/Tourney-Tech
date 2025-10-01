@@ -23,6 +23,7 @@ export const POST = asyncHandler(async (req) => {
     role,
     password,
   } = body;
+  
 
   if (!password) throw new ApiResponse(500, null, "Password is Required");
 

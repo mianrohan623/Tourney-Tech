@@ -22,18 +22,23 @@ export default function TeamForm() {
     async function fetchTournaments() {
       try {
         const res = await api.get("/api/tournaments");
+        console.log("Tournament API response:", res.data);
+
+        const tournamentsData = res.data.data || res.data.tournaments || res.data;
+
         setTournaments(
-          res.data.data.map((t) => ({
+          (tournamentsData || []).map((t) => ({
             value: t._id,
-            label: t.name,
-            games: t.games.map((g) => ({
-              value: g.game._id,
-              label: g.game.name,
-              tournamentTeamType: g.tournamentTeamType,
+            label: t.name || "Unnamed Tournament",
+            games: (t.games || []).map((g) => ({
+              value: g.game?._id,
+              label: g.game?.name || "Unknown Game",
+              tournamentTeamType: g.tournamentTeamType || "single_player",
             })),
           }))
         );
       } catch (err) {
+        console.error("Tournament fetch error:", err);
         toast.error("Failed to load tournaments");
       }
     }
@@ -47,7 +52,7 @@ export default function TeamForm() {
         (t) => t.value === form.tournament.value
       );
       if (selectedTournament) {
-        setGames(selectedTournament.games);
+        setGames(selectedTournament.games || []);
       }
     } else {
       setGames([]);
@@ -67,9 +72,9 @@ export default function TeamForm() {
       try {
         const res = await api.get("/api/users");
         setUsers(
-          res.data.data.map((u) => ({
+          (res.data?.data || []).map((u) => ({
             value: u._id,
-            label: `${u.firstname} ${u.lastname} (${u.username})`,
+            label: `${u.firstname || ""} ${u.lastname || ""} (${u.username || "unknown"})`,
           }))
         );
       } catch (err) {
@@ -183,11 +188,14 @@ export default function TeamForm() {
       )}
 
       <SearchableSelect
-        label="Member 1"
+        label="Member 1 (Team Leader)"
         options={users}
         value={users.find((u) => u.value === form.members[0]) || null}
         onChange={(val) =>
-          setForm({ ...form, members: [val?.value || null, form.members[1] || null] })
+          setForm({
+            ...form,
+            members: [val?.value || null, form.members[1] || null],
+          })
         }
         placeholder="Select first member..."
         isOpen={openSelect === "member1"}
@@ -201,7 +209,10 @@ export default function TeamForm() {
           options={users}
           value={users.find((u) => u.value === form.members[1]) || null}
           onChange={(val) =>
-            setForm({ ...form, members: [form.members[0] || null, val?.value || null] })
+            setForm({
+              ...form,
+              members: [form.members[0] || null, val?.value || null],
+            })
           }
           placeholder="Select second member..."
           isOpen={openSelect === "member2"}
