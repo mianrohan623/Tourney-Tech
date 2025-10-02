@@ -10,7 +10,9 @@ import { requireAuth } from "@/utils/server/auth";
 export const GET = asyncHandler(async (req) => {
   const user = await requireAuth(req);
 
-  const teams = await Team.find({ members: user._id })
+  const teams = await Team.find({
+    $or: [{ partner: user._id }, { createdBy: user._id }],
+  })
     .populate("tournament")
     .populate("members", "firstname lastname username email")
     .populate("partner", "firstname lastname username email")
