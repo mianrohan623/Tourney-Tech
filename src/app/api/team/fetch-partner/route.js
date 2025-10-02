@@ -29,9 +29,11 @@ export const GET = asyncHandler(async (req) => {
     .lean();
 
   const tournaments = teams.map((team) => {
-    const gameConfig = team.tournament?.games.find(
-      (g) => g.game.toString() === team.game.toString()
-    );
+    // Rohan comment this because it not use any where a show error
+    
+    // const gameConfig = team.tournament?.games.find(
+    //   (g) => g.game.toString() === team.game.toString()
+    // );
 
     const registration = registrations.find(
       (r) => r.tournament?._id.toString() === team.tournament?._id.toString()
