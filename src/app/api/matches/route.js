@@ -146,13 +146,34 @@ export const GET = asyncHandler(async (req) => {
   const filter = {};
   if (tournamentId) filter.tournament = tournamentId;
 
-  const matches = await Match.find(filter)
-    .populate("tournament")
-    .populate("game")
-    .populate("bracketGroup")
-    .populate("teamA")
-    .populate("teamB")
-    .populate("admin");
+ const matches = await Match.find(filter)
+  .populate("tournament")
+  .populate("game")
+  .populate("bracketGroup")
+  .populate({
+    path: "teamA",
+    populate: {
+      path: "createdBy",
+      select: "firstname lastname username email city", // jo fields chahiye wo select karo
+    },
+  })
+  .populate({
+    path: "teamB",
+    populate: {
+      path: "createdBy",
+      select: "firstname lastname username email city",
+    },
+  })
+  .populate("admin");
+
+
+    matches?.map((match) => {
+      console.log("match", match)
+      return {
+        ...match,
+
+      }
+    })
 
   return Response.json(
     new ApiResponse(200, matches, "Matches fetched successfully")
