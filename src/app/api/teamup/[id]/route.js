@@ -35,8 +35,6 @@ export const PATCH = asyncHandler(async (req, context) => {
   request.status = status;
   await request.save();
 
-  let team = null;
-
   if (status === "accepted") {
     const fromReg = await Registration.findOne({
       user: request.from,
@@ -80,40 +78,13 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
-    team = await Team.findOne({
-      createdBy: request.from._id,
-      tournament: commonTournament,
-      game: commonGame,
-    });
-
-    if (team) {
-      if (
-        !team.members
-          .map((m) => m.toString())
-          .includes(request.to._id.toString())
-      ) {
-        team.members.push(request.to._id);
-        await team.save();
-      }
-    } else {
-      const newSerial = await getNextSequence(
-        `team-${commonTournament}-${commonGame}`
-      );
-      team = await Team.create({
-        name: `${request.from.username}-${request.to.username} Team`,
-        createdBy: request.from._id,
-        tournament: commonTournament,
-        game: commonGame,
-        serialNo: newSerial.toString(),
-        members: [request.from._id, request.to._id],
-      });
-    }
+    
   }
 
   return Response.json(
     new ApiResponse(
       200,
-      { request, team },
+      { request },
       status === "accepted"
         ? "Team-up request accepted and team updated/created"
         : "Team-up request updated"
