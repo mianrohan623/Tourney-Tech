@@ -20,9 +20,10 @@ export default function UserForm({ user = null, onSuccess }) {
     stateCode: "",
     dob: "",
     role: "player",
+    password: "", // ✅ add password
   });
 
-  // Pre-fill form if editing
+  // Prefill form if editing
   useEffect(() => {
     if (isEdit && user) {
       setForm({
@@ -34,8 +35,9 @@ export default function UserForm({ user = null, onSuccess }) {
         gender: user.gender || "",
         city: user.city || "",
         stateCode: user.stateCode || "",
-        dob: user.dob ? user.dob.split("T")[0] : "", // format date
+        dob: user.dob ? user.dob.split("T")[0] : "",
         role: user.role || "player",
+        password: "", // ✅ keep empty on edit
       });
     }
   }, [isEdit, user]);
@@ -45,58 +47,76 @@ export default function UserForm({ user = null, onSuccess }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      let res;
-
-      if (isEdit) {
-        // ✅ Edit user
-        res = await api.patch(`/api/user/${user._id}`, form, {
-          headers: { "Content-Type": "application/json" },
-        });
-      } else {
-        // ✅ Create user
-        res = await api.post("/api/create-user", form, {
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      toast.success(res.data.message || (isEdit ? "User updated!" : "User created!"));
-
-      if (!isEdit) {
-        // reset form only if creating
-        setForm({
-          firstname: "",
-          lastname: "",
-          email: "",
-          username: "",
-          phone: "",
-          gender: "",
-          city: "",
-          stateCode: "",
-          dob: "",
-          role: "player",
-        });
-      }
-
-      onSuccess?.(); // refresh parent table
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
+  const buildFormData = () => {
+    const fd = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (isEdit && key === "password" && !value) return; // ✅ skip empty password on edit
+      fd.append(key, value);
+    });
+    return fd;
   };
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    let payload = { ...form };
+
+    // 🔥 Ensure all string fields are actually strings (not arrays)
+    Object.keys(payload).forEach((key) => {
+      if (Array.isArray(payload[key])) {
+        payload[key] = payload[key][0] || "";
+      }
+    });
+
+    let res;
+
+    if (isEdit) {
+      if (!payload.password) delete payload.password;
+
+      res = await api.patch(`/api/user/${user._id}`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+    } else {
+      res = await api.post("/api/create-user", payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    toast.success(
+      res.data.message || (isEdit ? "User updated!" : "User created!")
+    );
+
+    if (!isEdit) {
+      setForm({
+        firstname: "",
+        lastname: "",
+        email: "",
+        username: "",
+        phone: "",
+        gender: "",
+        city: "",
+        stateCode: "",
+        dob: "",
+        role: "player",
+        password: "",
+      });
+    }
+
+    onSuccess?.();
+  } catch (error) {
+    console.error(error);
+    toast.error(error.response?.data?.message || "Something went wrong");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="max-w-2xl mx-auto mt-10">
-      <div
-        className="rounded-2xl p-8 shadow-lg border border-[var(--border-color)] 
-        bg-[var(--card-background)]"
-      >
+      <div className="rounded-2xl p-8 shadow-lg border border-[var(--border-color)] bg-[var(--card-background)]">
         <h2 className="text-2xl font-bold text-foreground mb-6">
           {isEdit ? "Edit User" : "Create New User"}
         </h2>
@@ -165,9 +185,13 @@ export default function UserForm({ user = null, onSuccess }) {
           <div className="sm:col-span-2">
             <CitySelector
               city={form.city}
-              setCity={(val) => setForm((prev) => ({ ...prev, city: val }))}
+              setCity={(val) =>
+                setForm((prev) => ({ ...prev, city: val }))
+              }
               stateCode={form.stateCode}
-              setStateCode={(val) => setForm((prev) => ({ ...prev, stateCode: val }))}
+              setStateCode={(val) =>
+                setForm((prev) => ({ ...prev, stateCode: val }))
+              }
             />
           </div>
 
@@ -194,14 +218,21 @@ export default function UserForm({ user = null, onSuccess }) {
             </select>
           </div>
 
+          {/* ✅ Password Field */}
+          <InputField
+            label="Password"
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+          />
+
           {/* Submit */}
           <div className="sm:col-span-2">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg font-semibold 
-              bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] 
-              text-white transition-all duration-200 disabled:opacity-60"
+              className="w-full py-3 rounded-lg font-semibold bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white transition-all duration-200 disabled:opacity-60"
             >
               {loading
                 ? isEdit
@@ -228,10 +259,8 @@ function InputField({ label, type = "text", name, value, onChange }) {
         name={name}
         value={value}
         onChange={onChange}
-        required
-        className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground 
-        border border-[var(--border-color)] focus:outline-none focus:ring-2 
-        focus:ring-[var(--accent-color)]"
+        required={name !== "password"} // ✅ password optional on edit
+        className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
       />
     </div>
   );

@@ -72,18 +72,20 @@ export const POST = asyncHandler(async (req) => {
     );
   }
 
+
   const possibleTeams = await Team.find({
     tournament: tournamentId,
     game: gameId,
-    members: { $all: memberIds },
+    createdBy: user?._id,
   });
 
   const exactTeam = possibleTeams.find(
     (t) => Array.isArray(t.members) && t.members.length === memberIds.length
   );
 
+
   if (exactTeam) {
-    exactTeam.partner = partnerId;
+    exactTeam.partner = partnerIdRaw;
     await exactTeam.save();
 
     const updatedTeam = await Team.findById(exactTeam._id)

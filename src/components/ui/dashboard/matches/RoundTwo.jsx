@@ -16,7 +16,7 @@ function MatchCard({ match, onClick, canEdit }) {
           match.winner === match.teamA?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
-        <span className="truncate">{match.teamA?.name || "TBD"}</span>
+        <span className="truncate"> {match.teamA?.serialNo} {match.teamA?.name || "TBD"}</span>
         <span>{match.teamAScore ?? 0}</span>
       </div>
 
@@ -25,7 +25,7 @@ function MatchCard({ match, onClick, canEdit }) {
           match.winner === match.teamB?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
-        <span className="truncate">{match.teamB?.name || "TBD"}</span>
+        <span className="truncate">{match.teamB?.serialNo} {match.teamB?.name || "TBD"}</span>
         <span>{match.teamBScore ?? 0}</span>
       </div>
     </div>

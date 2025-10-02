@@ -13,7 +13,7 @@ import {
 import { Pencil, Trash2 } from "lucide-react";
 import api from "@/utils/axios";
 
-export default function UserTable({ onEditUser }) {
+export default function UserTable({ onEditUser, refreshKey }) {
   const [data, setData] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -28,7 +28,7 @@ export default function UserTable({ onEditUser }) {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [refreshKey]); // ✅ refetch whenever refreshKey changes
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this user?")) return;

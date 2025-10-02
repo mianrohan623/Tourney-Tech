@@ -10,12 +10,14 @@ import { requireAuth } from "@/utils/server/auth";
 export const GET = asyncHandler(async (req) => {
   const user = await requireAuth(req);
 
-  const teams = await Team.find({ members: user._id })
+  const teams = await Team.find({
+    $or: [{ partner: user._id }, { createdBy: user._id }],
+  })
     .populate("tournament")
     .populate("members", "firstname lastname username email")
+    .populate("partner", "firstname lastname username email")
     .lean();
 
-    console.log("teams::=======", teams);
   const tournamentIds = teams.map((t) => t.tournament?._id);
 
   const registrations = await Registration.find({
@@ -35,19 +37,14 @@ export const GET = asyncHandler(async (req) => {
       (r) => r.tournament?._id.toString() === team.tournament?._id.toString()
     );
 
-    const partner =
-      gameConfig?.tournamentTeamType === "double_player"
-        ? team.members.find((m) => m._id.toString() !== user._id.toString())
-        : null;
-
     return {
-      _id: team.tournament?._id,
+      _id: team?._id,
       name: team.tournament?.name,
       startDate: team.tournament?.startDate,
       endDate: team.tournament?.endDate,
       location: team.tournament?.location,
       status: team.tournament?.status,
-      partner,
+      partner: team.partner,
       registeredGames: registration?.gameRegistrationDetails?.games || [],
       tournament: team.tournament,
     };

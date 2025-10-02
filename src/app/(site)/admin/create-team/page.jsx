@@ -22,18 +22,23 @@ export default function TeamForm() {
     async function fetchTournaments() {
       try {
         const res = await api.get("/api/tournaments");
+        console.log("Tournament API response:", res.data);
+
+        const tournamentsData = res.data.data || res.data.tournaments || res.data;
+
         setTournaments(
-          res.data.data.map((t) => ({
+          (tournamentsData || []).map((t) => ({
             value: t._id,
-            label: t.name,
-            games: t.games.map((g) => ({
-              value: g.game._id,
-              label: g.game.name,
-              tournamentTeamType: g.tournamentTeamType,
+            label: t.name || "Unnamed Tournament",
+            games: (t.games || []).map((g) => ({
+              value: g.game?._id,
+              label: g.game?.name || "Unknown Game",
+              tournamentTeamType: g.tournamentTeamType || "single_player",
             })),
           }))
         );
       } catch (err) {
+        console.error("Tournament fetch error:", err);
         toast.error("Failed to load tournaments");
       }
     }
@@ -47,7 +52,7 @@ export default function TeamForm() {
         (t) => t.value === form.tournament.value
       );
       if (selectedTournament) {
-        setGames(selectedTournament.games);
+        setGames(selectedTournament.games || []);
       }
     } else {
       setGames([]);
@@ -67,9 +72,9 @@ export default function TeamForm() {
       try {
         const res = await api.get("/api/users");
         setUsers(
-          res.data.data.map((u) => ({
+          (res.data?.data || []).map((u) => ({
             value: u._id,
-            label: `${u.firstname} ${u.lastname} (${u.username})`,
+            label: `${u.firstname || ""} ${u.lastname || ""} (${u.username || "unknown"})`,
           }))
         );
       } catch (err) {
@@ -100,56 +105,58 @@ export default function TeamForm() {
   }, [form.game, games]);
 
   // ✅ Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!form.tournament || !form.game || !form.tournamentTeamType) {
-      toast.error("Tournament, game, and team type are required");
-      return;
-    }
+  if (!form.tournament || !form.game || !form.tournamentTeamType) {
+    toast.error("Tournament, game, and team type are required");
+    return;
+  }
 
-    if (
-      form.tournamentTeamType.value === "double_player" &&
-      form.members.length !== 2
-    ) {
-      toast.error("Exactly 2 members required for double player teams");
-      return;
-    }
+  if (
+    form.tournamentTeamType.value === "double_player" &&
+    form.members.length !== 2
+  ) {
+    toast.error("Exactly 2 members required for double player teams");
+    return;
+  }
 
-    if (
-      form.tournamentTeamType.value === "single_player" &&
-      form.members.length !== 1
-    ) {
-      toast.error("Exactly 1 member required for single player teams");
-      return;
-    }
+  if (
+    form.tournamentTeamType.value === "single_player" &&
+    form.members.length !== 1
+  ) {
+    toast.error("Exactly 1 member required for single player teams");
+    return;
+  }
 
-    try {
-      console.log("Submitting team:", {
-        tournament: form.tournament.value,
-        game: form.game.value,
-        members: form.members,
-      });
+  try {
+    console.log("Submitting team:", {
+      tournament: form.tournament.value,
+      game: form.game.value,
+      members: form.members,
+    });
 
-      await api.post("/api/team", {
-        tournament: form.tournament.value,
-        game: form.game.value,
-        members: form.members,
-      });
+    await api.post("/api/team", {
+      tournament: form.tournament.value,
+      game: form.game.value,
+      members: form.members,
+    });
 
-      toast.success("Team created successfully");
-      setForm({
-        tournament: null,
-        game: null,
-        members: [],
-        tournamentTeamType: null,
-      });
-      setUsers([]);
-      setGames([]);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create team");
-    }
-  };
+    toast.success("Team created successfully");
+
+    // ✅ only reset form, NOT users
+    setForm({
+      tournament: null,
+      game: null,
+      members: [],
+      tournamentTeamType: null,
+    });
+    setGames([]); // optional: clear games when tournament resets
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed to create team");
+  }
+};
+
 
   return (
     <form
@@ -183,11 +190,14 @@ export default function TeamForm() {
       )}
 
       <SearchableSelect
-        label="Member 1"
+        label="Member 1 (Team Leader)"
         options={users}
         value={users.find((u) => u.value === form.members[0]) || null}
         onChange={(val) =>
-          setForm({ ...form, members: [val?.value || null, form.members[1] || null] })
+          setForm({
+            ...form,
+            members: [val?.value || null, form.members[1] || null],
+          })
         }
         placeholder="Select first member..."
         isOpen={openSelect === "member1"}
@@ -201,7 +211,10 @@ export default function TeamForm() {
           options={users}
           value={users.find((u) => u.value === form.members[1]) || null}
           onChange={(val) =>
-            setForm({ ...form, members: [form.members[0] || null, val?.value || null] })
+            setForm({
+              ...form,
+              members: [form.members[0] || null, val?.value || null],
+            })
           }
           placeholder="Select second member..."
           isOpen={openSelect === "member2"}

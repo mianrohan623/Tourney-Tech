@@ -104,18 +104,24 @@ export default function SelectTeam() {
 
   // ✅ Filter requests by selected tournament & game
   const filteredRequests = requests.filter((r) => {
-    if (r.tournament?._id !== selectedTournamentId) return false;
-    if (!selectedGameId) return true;
+  if (r.tournament?._id !== selectedTournamentId) return false;
+  if (!selectedGameId) return false;
 
-    const fromHasGame = r.fromGames?.some(
-      (g) => g._id === selectedGameId || g.game === selectedGameId
-    );
-    const toHasGame = r.toGames?.some(
-      (g) => g._id === selectedGameId || g.game === selectedGameId
-    );
+  const fromHasGame = r.fromGames?.some(
+    (g) => g._id === selectedGameId || g.game === selectedGameId
+  );
+  const toHasGame = r.toGames?.some(
+    (g) => g._id === selectedGameId || g.game === selectedGameId
+  );
 
-    return fromHasGame && toHasGame;
-  });
+  if (!(fromHasGame && toHasGame)) return false;
+
+  // ✅ Only show requests where I am "from"
+  if (r.from?._id !== currentUserId) return false;
+
+  return true;
+});
+
 
   // ✅ Update partner when request changes
   useEffect(() => {
@@ -147,6 +153,7 @@ export default function SelectTeam() {
         selectedMembersObj?.from?._id,
         selectedMembersObj?.to?._id,
       ];
+
 
       const formData = new FormData();
       formData.append("memberIds", selectedMembers);
@@ -271,8 +278,8 @@ export default function SelectTeam() {
                 <option value="">-- Select Team Request --</option>
                 {filteredRequests.map((r, index) => (
                   <option key={`request-${r._id}-${index}`} value={r._id}>
-                    {`${r.from?.firstname || r.from?.username} & ${
-                      r.to?.firstname || r.to?.username
+                    {`${r.from?.username || r.from?.firstname} & ${
+                      r.from?.username || r.from?.firstname
                     }`}
                   </option>
                 ))}

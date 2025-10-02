@@ -1,18 +1,44 @@
-// ManageUsers.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UserTable from "@/components/ui/admin/UserTable";
 import CreateUserForm from "@/components/ui/admin/User/CreateUserForm";
+import api from "@/utils/axios";
+import { toast } from "react-hot-toast";
 
 export default function ManageUsers() {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Called after create or edit to close form
+  // ✅ Centralized fetch
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/api/users");
+      setUsers(res.data.data);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // ✅ Called after create/edit
   const handleFormSuccess = () => {
     setShowForm(false);
     setEditingUser(null);
+    fetchUsers();
+  };
+
+  // ✅ Called after delete
+  const handleDeleteSuccess = () => {
+    fetchUsers();
   };
 
   return (
@@ -21,7 +47,7 @@ export default function ManageUsers() {
         <h1 className="text-2xl font-bold text-foreground">All Users</h1>
         <button
           onClick={() => {
-            setEditingUser(null); // Reset edit user
+            setEditingUser(null);
             setShowForm((prev) => !prev);
           }}
           className="px-4 py-2 rounded-lg font-semibold 
@@ -36,18 +62,21 @@ export default function ManageUsers() {
       {showForm && (
         <div className="mb-8">
           <CreateUserForm
-            user={editingUser} // null for create, user object for edit
-            onSuccess={handleFormSuccess}
+            user={editingUser}
+            onSuccess={handleFormSuccess} // ✅ refresh after create/edit
           />
         </div>
       )}
 
       {/* User Table */}
       <UserTable
+        data={users}
+        loading={loading}
         onEditUser={(user) => {
           setEditingUser(user);
           setShowForm(true);
         }}
+        onDeleteSuccess={handleDeleteSuccess} // ✅ refresh after delete
       />
     </div>
   );

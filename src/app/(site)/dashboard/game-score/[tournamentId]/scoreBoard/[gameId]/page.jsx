@@ -147,8 +147,10 @@ function TableSection({
             <tr>
               <th className="p-3 text-left">Match #</th>
               <th className="p-3 text-left">Team A</th>
+              <th className="p-3 text-left">Team A Region</th>
               <th className="p-3 text-left">Score</th>
               <th className="p-3 text-left">Team B</th>
+              <th className="p-3 text-left">Team B Region</th>
               <th className="p-3 text-left">Score</th>
               <th className="p-3 text-left">Winner</th>
               <th className="p-3 text-left">Status</th>
@@ -169,6 +171,7 @@ function TableSection({
                   >
                     {match.teamA || "TBD"}
                   </td>
+                  <td className="p-3">{match.teamACity || "N/A"}</td>
                   <td className="p-3">{match.teamAScore ?? "-"}</td>
                   <td
                     className={`p-3 ${
@@ -177,6 +180,7 @@ function TableSection({
                   >
                     {match.teamB || "TBD"}
                   </td>
+                  <td className="p-3">{match.teamBCity || "N/A"}</td>
                   <td className="p-3">{match.teamBScore ?? "-"}</td>
                   <td className="p-3 text-yellow-400 font-semibold">
                     {match.winner || "TBD"}

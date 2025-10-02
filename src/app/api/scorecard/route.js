@@ -2,7 +2,7 @@
 import { Match } from "@/models/Match";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import "@/models/Team"
+import "@/models/Team";
 
 export const GET = asyncHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -15,14 +15,30 @@ export const GET = asyncHandler(async (req) => {
 
   // ✅ Matches fetch
   const matches = await Match.find({ tournament: tournamentId, game: gameId })
-    .populate("teamA teamB winner loser")
+    .populate([
+      {
+        path: "teamA",
+        populate: {
+          path: "createdBy",
+          select: "firstname lastname username email city",
+        },
+      },
+      {
+        path: "teamB",
+        populate: {
+          path: "createdBy",
+          select: "firstname lastname username email city",
+        },
+      },
+      { path: "winner" },
+      { path: "loser" },
+    ])
     .sort({ round: 1, matchNumber: 1 });
 
   if (!matches.length) {
     return Response.json(new ApiResponse(200, [], "No matches found"));
   }
 
-  
   // ✅ Group by rounds
   const scoreboard = {};
   for (let match of matches) {
@@ -33,6 +49,8 @@ export const GET = asyncHandler(async (req) => {
       };
     }
 
+    console.log("match=================:", match)
+
     scoreboard[match.round].matches.push({
       matchNumber: match.matchNumber,
       teamA: match.teamA?.name || "TBD",
@@ -41,6 +59,8 @@ export const GET = asyncHandler(async (req) => {
       teamBScore: match.teamBScore ?? null,
       winner: match.winner ? match.winner.name : null,
       status: match.status,
+      teamACity: match.teamA?.createdBy?.city || null,
+      teamBCity: match.teamB?.createdBy?.city || null,
     });
   }
 
