@@ -278,8 +278,8 @@ export default function SelectTeam() {
                 <option value="">-- Select Team Request --</option>
                 {filteredRequests.map((r, index) => (
                   <option key={`request-${r._id}-${index}`} value={r._id}>
-                    {`${r.from?.firstname || r.from?.username} & ${
-                      r.to?.firstname || r.to?.username
+                    {`${r.from?.username || r.from?.firstname} & ${
+                      r.from?.username || r.from?.firstname
                     }`}
                   </option>
                 ))}

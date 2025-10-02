@@ -6,6 +6,8 @@ import api from "@/utils/axios";
 import RoundOneMatches from "@/components/ui/dashboard/matches/RoundOne";
 import RoundTwoBracket from "@/components/ui/dashboard/matches/RoundTwo";
 
+import Link from "next/link";
+
 export default function TournamentPage() {
   const { tournamentId, gameId } = useParams();
 
@@ -118,9 +120,25 @@ export default function TournamentPage() {
       {/* ROUND 2+ */}
       {isRound1Complete && round2PlusMatches.length > 0 && (
         <section className="pb-5">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Round 2
-          </h2>
+          <div className="flex items-center justify-between gap-5 flex-col sm:flex-row mb-4">
+            <h2 className="text-2xl font-bold text-white ">Round 2</h2>
+            <div className="mt-5 sm:mt-0">
+              <Link
+                href={`/dashboard/game-score/${tournamentId}/scoreBoard/${gameId}`}
+              >
+                <button
+                  className="w-full p-2.5 rounded-lg font-semibold transition hover:scale-[1.03] shadow-lg"
+                  style={{
+                    backgroundColor: "var(--success-color)",
+                    color: "white",
+                  }}
+                >
+                  View Game ScoreBoard
+                </button>
+              </Link>
+            </div>
+          </div>
+
           <RoundTwoBracket matches={round2PlusMatches} />
         </section>
       )}
