@@ -12,7 +12,7 @@ function MatchCard({ match, onClick, canEdit }) {
       onClick={() => canEdit && onClick(match)}
     >
       <div
-        className={`flex justify-between gap-3 items-center px-2 py-1 rounded-md mb-1 ${
+        className={`flex justify-between gap-2 items-center px-2 py-1 rounded-md mb-1 ${
           match.winner === match.teamA?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
@@ -24,7 +24,7 @@ function MatchCard({ match, onClick, canEdit }) {
       </div>
 
       <div
-        className={`flex justify-between gap-3 items-center px-2 py-1 rounded-md ${
+        className={`flex justify-between gap-2 items-center px-2 py-1 rounded-md ${
           match.winner === match.teamB?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
@@ -121,9 +121,19 @@ export default function RoundTwoBracket({ matches = [], teams = [] }) {
                       {idx !== rounds[round].length - 1 && (
                         <div className="absolute left-1/2 top-full w-0.5 h-8 bg-gray-600"></div>
                       )}
-                      <MatchCard
+                      {/* <MatchCard
                         match={match}
                         onClick={setEditingMatch}
+                        canEdit={canEdit}
+                      /> */}
+                      <MatchCard
+                        match={match}
+                        onClick={() => {
+                          // Only open if both teams exist
+                          if (match.teamA?._id && match.teamB?._id) {
+                            setEditingMatch(match);
+                          }
+                        }}
                         canEdit={canEdit}
                       />
                     </div>

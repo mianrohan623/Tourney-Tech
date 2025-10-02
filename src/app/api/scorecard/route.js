@@ -48,9 +48,7 @@ export const GET = asyncHandler(async (req) => {
         matches: [],
       };
     }
-
-    console.log("match=================:", match)
-
+    
     scoreboard[match.round].matches.push({
       matchNumber: match.matchNumber,
       teamA: match.teamA?.name || "TBD",

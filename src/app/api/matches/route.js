@@ -167,14 +167,6 @@ export const GET = asyncHandler(async (req) => {
   .populate("admin");
 
 
-    matches?.map((match) => {
-      console.log("match", match)
-      return {
-        ...match,
-
-      }
-    })
-
   return Response.json(
     new ApiResponse(200, matches, "Matches fetched successfully")
   );
