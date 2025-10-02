@@ -125,6 +125,8 @@ export default function TournamentPage() {
             <div className="mt-5 sm:mt-0">
               <Link
                 href={`/dashboard/game-score/${tournamentId}/scoreBoard/${gameId}`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <button
                   className="w-full p-2.5 rounded-lg font-semibold transition hover:scale-[1.03] shadow-lg"
