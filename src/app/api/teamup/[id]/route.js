@@ -1,9 +1,9 @@
 // /api/teamup/[id]
 
-import { getNextSequence } from "@/lib/utils";
+// import { getNextSequence } from "@/lib/utils";
 import { Registration } from "@/models/Registration";
 
-import { Team } from "@/models/Team";
+// import { Team } from "@/models/Team";
 import { TeamUp } from "@/models/TeamUp";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
@@ -61,7 +61,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
-    const commonTournament = fromReg.tournament;
+    // const commonTournament = fromReg.tournament;
 
     const fromGames = fromReg.gameRegistrationDetails?.games?.flatMap((d) => d);
     const toGames = toReg.gameRegistrationDetails?.games?.flatMap((d) => d);
