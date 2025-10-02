@@ -14,49 +14,54 @@ function shuffleArray(array) {
     .map(({ value }) => value);
 }
 
-function generateRoundRobinSchedule(teams, numRounds) {
-  const n = teams.length;
-  const allTeams = shuffleArray([...teams]); 
+function generateLimitedMatches(teams, totalRounds) {
   const schedule = [];
+  const matches = [];
+  const teamMatchesCount = new Map();
+
+  // initialize counter
+  teams.forEach((t) => teamMatchesCount.set(t._id.toString(), 0));
+
   const allPairs = [];
 
-  const cities = [...new Set(teams.map((t) => t.owner?.city))];
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      const teamA = teams[i];
+      const teamB = teams[j];
 
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      const teamA = allTeams[i];
-      const teamB = allTeams[j];
-      const cityA = teamA.owner?.city;
-      const cityB = teamB.owner?.city;
-
-      if (cities.length > 1 && cityA === cityB) {
-        continue; 
+      // sirf alag region wali teams
+      if (teamA.owner?.city && teamB.owner?.city && teamA.owner.city === teamB.owner.city) {
+        continue;
       }
 
       allPairs.push([teamA, teamB]);
     }
   }
 
-  if (allPairs.length === 0) {
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        allPairs.push([allTeams[i], allTeams[j]]);
-      }
+  const shuffledPairs = shuffleArray(allPairs);
+
+  for (const [teamA, teamB] of shuffledPairs) {
+    const countA = teamMatchesCount.get(teamA._id.toString()) || 0;
+    const countB = teamMatchesCount.get(teamB._id.toString()) || 0;
+
+    if (countA < totalRounds && countB < totalRounds) {
+      matches.push([teamA, teamB]);
+      teamMatchesCount.set(teamA._id.toString(), countA + 1);
+      teamMatchesCount.set(teamB._id.toString(), countB + 1);
     }
   }
 
-  const shuffledPairs = shuffleArray([...allPairs]);
-
-  const matchesPerRound = Math.ceil(shuffledPairs.length / numRounds);
-  for (let r = 0; r < numRounds; r++) {
+  // ab matches ko rounds me distribute kar dete hain
+  const matchesPerRound = Math.ceil(matches.length / totalRounds);
+  for (let r = 0; r < totalRounds; r++) {
     const start = r * matchesPerRound;
-    const end = Math.min(start + matchesPerRound, shuffledPairs.length);
-    const roundFixtures = shuffledPairs.slice(start, end);
-    schedule.push(roundFixtures);
+    const end = Math.min(start + matchesPerRound, matches.length);
+    schedule.push(matches.slice(start, end));
   }
 
   return schedule;
 }
+
 
 export const POST = asyncHandler(async (req) => {
   const user = await requireAuth(req);
@@ -91,7 +96,7 @@ export const POST = asyncHandler(async (req) => {
 
   const matches = [];
 
-  const schedule = generateRoundRobinSchedule(teams, totalRounds);
+  const schedule = generateLimitedMatches(teams, totalRounds);
 
   for (let roundNum = 1; roundNum <= totalRounds; roundNum++) {
     const roundFixtures = schedule[roundNum - 1] || []; 
