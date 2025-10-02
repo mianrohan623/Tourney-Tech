@@ -7,12 +7,11 @@ import { parseForm } from "@/utils/server/parseForm";
 import { requireAuth } from "@/utils/server/auth";
 import "@/models/Game";
 
-function getStageName(round, totalRounds) {
-  if (round < totalRounds - 2) return "group";
-  if (round === totalRounds - 2) return "qualifier";
-  if (round === totalRounds - 1) return "semi_final";
-  if (round === totalRounds) return "final";
-  return "group";
+function getStageName(numTeams, round) {
+  if (numTeams === 2) return "final";
+  if (numTeams === 4) return "semi_final";
+  if (numTeams >= 6) return `stage_${round - 1}`;
+  return "semi_final"; // fallback
 }
 
 export const PATCH = asyncHandler(async (req, context) => {
@@ -182,26 +181,11 @@ export const PATCH = asyncHandler(async (req, context) => {
       // ✅ Sort descending by score
       teamScores.sort((a, b) => b.score - a.score);
 
-      // ✅ Select top teams
-      const maxTeams =
-        allTeams.length % 2 === 1 ? allTeams.length - 1 : allTeams.length;
-      const topTeams = teamScores
-        .slice(0, Math.min(50, maxTeams))
-        .map((t) => t.teamId);
+       const halfCount = Math.floor(teamScores.length / 2);
+      const topTeams = teamScores.slice(0, halfCount).map((t) => t.teamId);
+ let nextRound = match.round + 1;
+      let nextStage = getStageName(topTeams.length, nextRound);
 
-      // ✅ Stage decide
-      let nextStage;
-      if (topTeams.length === 2) {
-        nextStage = "final";
-      } else if (topTeams.length === 3 || topTeams.length === 4) {
-        nextStage = "semi_final";
-      } else if (topTeams.length >= 6) {
-        nextStage = "qualifier";
-      } else {
-        nextStage = "semi_final";
-      }
-
-      let nextRound = match.round + 1;
 
       // ✅ Create matches for next round
       let matchNumber =
@@ -252,7 +236,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       const nextRound = match.round + 1;
 
       if (nextRound <= totalRounds) {
-        const nextStage = getStageName(nextRound, totalRounds);
+        const nextStage = getStageName(winners.length, nextRound );
 
         if (winners.length % 2 !== 0) {
           const byeTeam = winners.pop();
