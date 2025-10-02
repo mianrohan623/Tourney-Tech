@@ -82,7 +82,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
           format: g.format || "double_elimination",
           teamBased: g.teamBased || false,
           tournamentTeamType: g.tournamentTeamType || "double_player",
-          rounds: g.rounds || "", 
+          rounds: g.rounds || "",
         }))
       );
 
@@ -198,8 +198,8 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
       if (image && initialData?._id) {
         const imageForm = new FormData();
         imageForm.append("banner", image);
-        const uploadRes = await api.post(
-          `/api/tournaments/${initialData._id}/upload-banner`,
+        const uploadRes = await api.patch(
+          `/api/tournaments/${initialData._id}`,
           imageForm,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -510,7 +510,6 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 <option value="double_elimination">Double Elimination</option>
                 <option value="round_robin">Round Robin</option>
               </select> */}
-
 
               {/* Rounds */}
               <input
