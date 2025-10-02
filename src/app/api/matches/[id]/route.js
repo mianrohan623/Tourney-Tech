@@ -27,78 +27,80 @@ export const PATCH = asyncHandler(async (req, context) => {
 
   // ✅ Role-based access
   if (user.role !== "admin") {
-  // Normal user → check if user belongs to teamA or teamB
-  const userTeam = await Team.findOne({ createdBy: user._id });
+    // Normal user → check if user belongs to teamA or teamB
+    const userTeam = await Team.findOne({
+      createdBy: user._id,
+      tournament: match?.tournament?._id,
+    });
 
-  if (!userTeam) {
-    throw new ApiResponse(403, null, "You are not the owner of any team");
-  }
+    if (!userTeam) {
+      throw new ApiResponse(403, null, "You are not the owner of any team");
+    }
 
-  // ✅ Check if this userTeam is playing in this match
-  const isTeamA = match.teamA._id.toString() === userTeam._id.toString();
-  const isTeamB = match.teamB._id.toString() === userTeam._id.toString();
+    // ✅ Check if this userTeam is playing in this match
+    const isTeamA = match.teamA._id.toString() === userTeam._id.toString();
+    const isTeamB = match.teamB._id.toString() === userTeam._id.toString();
 
-  if (!isTeamA && !isTeamB) {
-    throw new ApiResponse(
-      403,
-      null,
-      "You are not the owner of this team or this match does not belong to your team"
-    );
-  }
 
-  // ✅ Strict check: User cannot update the other team's score
-  if (isTeamA) {
-    if (teamBScore || teamBtotalWon) {
+    if (!isTeamA && !isTeamB) {
       throw new ApiResponse(
         403,
         null,
-        "You cannot update opponent's score (Team B)"
+        "You are not the owner of this team or this match does not belong to your team"
       );
     }
-    match.teamAScore = teamAScore;
-    match.teamAtotalWon = teamAtotalWon;
-  } else if (isTeamB) {
-    if (teamAScore || teamAtotalWon) {
-      throw new ApiResponse(
-        403,
-        null,
-        "You cannot update opponent's score (Team A)"
-      );
-    }
-    match.teamBScore = teamBScore;
-    match.teamBtotalWon = teamBtotalWon;
-  }
 
-  // ✅ Check if both teams have submitted scores
-  if (
-    match.teamAScore !== undefined &&
-    match.teamBScore !== undefined &&
-    match.teamAScore !== null &&
-    match.teamBScore !== null &&
-    match.teamAScore > 0 &&
-    match.teamBScore > 0
-  ) {
-    if (match.teamAScore > match.teamBScore) {
-      match.winner = match.teamA._id;
-      match.loser = match.teamB._id;
-      match.status = "completed";
-      match.completedAt = new Date();
-    } else if (match.teamBScore > match.teamAScore) {
-      match.winner = match.teamB._id;
-      match.loser = match.teamA._id;
-      match.status = "completed";
-      match.completedAt = new Date();
-    } else {
-      throw new ApiResponse(
-        400,
-        null,
-        "Draw not supported in knockout format"
-      );
+    // ✅ Strict check: User cannot update the other team's score
+    if (isTeamA) {
+      if (teamBScore || teamBtotalWon) {
+        throw new ApiResponse(
+          403,
+          null,
+          "You cannot update opponent's score (Team B)"
+        );
+      }
+      match.teamAScore = teamAScore;
+      match.teamAtotalWon = teamAtotalWon;
+    } else if (isTeamB) {
+      if (teamAScore || teamAtotalWon) {
+        throw new ApiResponse(
+          403,
+          null,
+          "You cannot update opponent's score (Team A)"
+        );
+      }
+      match.teamBScore = teamBScore;
+      match.teamBtotalWon = teamBtotalWon;
     }
-  }
-}
 
- else {
+    // ✅ Check if both teams have submitted scores
+    if (
+      match.teamAScore !== undefined &&
+      match.teamBScore !== undefined &&
+      match.teamAScore !== null &&
+      match.teamBScore !== null &&
+      match.teamAScore > 0 &&
+      match.teamBScore > 0
+    ) {
+      if (match.teamAScore > match.teamBScore) {
+        match.winner = match.teamA._id;
+        match.loser = match.teamB._id;
+        match.status = "completed";
+        match.completedAt = new Date();
+      } else if (match.teamBScore > match.teamAScore) {
+        match.winner = match.teamB._id;
+        match.loser = match.teamA._id;
+        match.status = "completed";
+        match.completedAt = new Date();
+      } else {
+        throw new ApiResponse(
+          400,
+          null,
+          "Draw not supported in knockout format"
+        );
+      }
+    }
+  } else {
     // ✅ Admin can update both teams’ scores
     console.log("running Admin");
     match.teamAScore = teamAScore;
@@ -181,11 +183,10 @@ export const PATCH = asyncHandler(async (req, context) => {
       // ✅ Sort descending by score
       teamScores.sort((a, b) => b.score - a.score);
 
-       const halfCount = Math.floor(teamScores.length / 2);
+      const halfCount = Math.floor(teamScores.length / 2);
       const topTeams = teamScores.slice(0, halfCount).map((t) => t.teamId);
- let nextRound = match.round + 1;
+      let nextRound = match.round + 1;
       let nextStage = getStageName(topTeams.length, nextRound);
-
 
       // ✅ Create matches for next round
       let matchNumber =
@@ -236,7 +237,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       const nextRound = match.round + 1;
 
       if (nextRound <= totalRounds) {
-        const nextStage = getStageName(winners.length, nextRound );
+        const nextStage = getStageName(winners.length, nextRound);
 
         if (winners.length % 2 !== 0) {
           const byeTeam = winners.pop();
