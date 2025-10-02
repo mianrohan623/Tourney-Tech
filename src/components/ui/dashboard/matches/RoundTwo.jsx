@@ -12,20 +12,25 @@ function MatchCard({ match, onClick, canEdit }) {
       onClick={() => canEdit && onClick(match)}
     >
       <div
-        className={`flex justify-between items-center px-2 py-1 rounded-md mb-1 ${
+        className={`flex justify-between gap-3 items-center px-2 py-1 rounded-md mb-1 ${
           match.winner === match.teamA?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
-        <span className="truncate"> {match.teamA?.serialNo} {match.teamA?.name || "TBD"}</span>
+        <span className="truncate">
+          {" "}
+          {match.teamA?.serialNo} {match.teamA?.name || "TBD"}
+        </span>
         <span>{match.teamAScore ?? 0}</span>
       </div>
 
       <div
-        className={`flex justify-between items-center px-2 py-1 rounded-md ${
+        className={`flex justify-between gap-3 items-center px-2 py-1 rounded-md ${
           match.winner === match.teamB?._id ? "bg-green-600" : "bg-gray-700"
         }`}
       >
-        <span className="truncate">{match.teamB?.serialNo} {match.teamB?.name || "TBD"}</span>
+        <span className="truncate">
+          {match.teamB?.serialNo} {match.teamB?.name || "TBD"}
+        </span>
         <span>{match.teamBScore ?? 0}</span>
       </div>
     </div>
@@ -81,11 +86,11 @@ export default function RoundTwoBracket({ matches = [], teams = [] }) {
 
     // User can edit if they are in teamA or teamB
     const userId = currentUser._id;
-    const inTeamA = (match.teamA.members || []).some(
-      (m) => (typeof m === "string" ? m === userId : m._id === userId)
+    const inTeamA = (match.teamA.members || []).some((m) =>
+      typeof m === "string" ? m === userId : m._id === userId
     );
-    const inTeamB = (match.teamB.members || []).some(
-      (m) => (typeof m === "string" ? m === userId : m._id === userId)
+    const inTeamB = (match.teamB.members || []).some((m) =>
+      typeof m === "string" ? m === userId : m._id === userId
     );
 
     return inTeamA || inTeamB;
@@ -94,7 +99,10 @@ export default function RoundTwoBracket({ matches = [], teams = [] }) {
   return (
     <div className="w-full overflow-x-auto relative bg-gray-900 p-6">
       {Object.keys(rounds).length ? (
-        <div className="flex gap-12 min-w-max" style={{ scrollSnapType: "x mandatory" }}>
+        <div
+          className="flex gap-12 min-w-max"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
           {Object.keys(rounds)
             .map((r) => Number(r))
             .sort((a, b) => a - b)
