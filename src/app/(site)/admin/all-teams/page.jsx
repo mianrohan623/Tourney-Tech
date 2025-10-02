@@ -151,7 +151,7 @@ export default function AdminTeamsTable() {
                     className="hover:bg-[var(--secondary-hover)] transition-colors"
                   >
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">
-                      {indexOfFirstRow + index + 1}
+                      {team.serialNo}
                     </td>
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">{team.name}</td>
                     <td className="py-2 px-4 border-b border-[var(--border-color)]">
