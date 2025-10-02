@@ -49,6 +49,8 @@ export const GET = asyncHandler(async (req) => {
       };
     }
 
+    console.log("match=================:", match)
+
     scoreboard[match.round].matches.push({
       matchNumber: match.matchNumber,
       teamA: match.teamA?.name || "TBD",
@@ -57,6 +59,8 @@ export const GET = asyncHandler(async (req) => {
       teamBScore: match.teamBScore ?? null,
       winner: match.winner ? match.winner.name : null,
       status: match.status,
+      teamACity: match.teamA?.createdBy?.city || null,
+      teamBCity: match.teamB?.createdBy?.city || null,
     });
   }
 
