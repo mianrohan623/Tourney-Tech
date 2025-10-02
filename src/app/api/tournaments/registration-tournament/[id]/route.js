@@ -1,4 +1,4 @@
-import { Registration } from "@/models/Registration";
+// import { Registration } from "@/models/Registration";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
 import "@/models/Game";
