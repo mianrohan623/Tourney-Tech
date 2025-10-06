@@ -64,7 +64,21 @@ const handleAddOrUpdate = async (data) => {
     console.error("Delete error:", err);
     toast.error(err.response?.data?.message || "Something went wrong.");
   }
+
+
+
 };
+
+ const handleDuplicate = async (id) => {
+    try {
+      const res = await api.post(`/api/games/${id}`);
+      toast.success("Game duplicated successfully");
+      await fetchGames();
+    } catch (err) {
+      console.error("Duplicate error:", err);
+      toast.error(err.response?.data?.message || "Failed to duplicate game.");
+    }
+  };
 
 
 
@@ -93,7 +107,8 @@ const handleAddOrUpdate = async (data) => {
           <GamesTable games={games} onEdit={(game) => {
             setEditGame(game);
             setShowForm(true);
-          }} onDelete={handleDelete} />
+          }} onDelete={handleDelete} 
+          onDuplicate={handleDuplicate}/>
         </div>
       </div>
     </div>

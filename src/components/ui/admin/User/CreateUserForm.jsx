@@ -152,7 +152,7 @@ export default function UserForm({ user = null, onSuccess }) {
 
           {/* Username */}
           <InputField
-            label="Username"
+            label="Nick name"
             name="username"
             value={form.username}
             onChange={handleChange}

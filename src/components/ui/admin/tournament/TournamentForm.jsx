@@ -120,7 +120,6 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
 
   const handleAddGameFields = () => {
     setGameFields((prev) => [
-      ...prev,
       {
         game: "",
         entryFee: 0,
@@ -128,6 +127,7 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
         teamBased: false,
         tournamentTeamType: "double_player",
       },
+       ...prev,
     ]);
   };
 
@@ -518,14 +518,14 @@ export default function TournamentForm({ initialData, onClose, onSuccess }) {
                 value={field.rounds || ""}
                 onChange={(e) => {
                   const val = Number(e.target.value);
-                  if (val >= 1 && val <= 6) {
+                  if (val >= 1 && val <= 99) {
                     handleGameFieldChange(index, "rounds", val);
                   } else if (e.target.value === "") {
                     handleGameFieldChange(index, "rounds", "");
                   }
                 }}
                 min={1}
-                max={6}
+                max={99}
                 className="w-full p-2 rounded bg-[var(--background)] text-white focus:outline-none"
               />
 

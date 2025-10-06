@@ -50,7 +50,7 @@ export default function UserTable({ onEditUser, refreshKey }) {
       { header: "Email", accessorKey: "email" },
       { header: "Gender", accessorKey: "gender" },
       { header: "Phone", accessorKey: "phone" },
-      { header: "City", accessorKey: "city" },
+      { header: "Region", accessorKey: "city" },
       { header: "State", accessorKey: "stateCode" },
       { header: "Role", accessorKey: "role" },
       {

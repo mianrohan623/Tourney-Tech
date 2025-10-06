@@ -1,9 +1,9 @@
 "use client";
 import { useState, useMemo } from "react";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, Repeat } from "lucide-react";
 
 import Image from "next/image";
-export default function GamesTable({ games, onEdit, onDelete }) {
+export default function GamesTable({ games, onEdit, onDelete , onDuplicate}) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -43,7 +43,7 @@ export default function GamesTable({ games, onEdit, onDelete }) {
               <th className="p-3 border-b border-[var(--border-color)]">Game Logo</th>
               <th className="p-3 border-b border-[var(--border-color)]">Game Banner</th>
               <th className="p-3 border-b border-[var(--border-color)]">Name</th>
-              <th className="p-3 border-b border-[var(--border-color)]">Genre</th>
+              <th className="p-3 border-b border-[var(--border-color)]">Host</th>
               <th className="p-3 border-b border-[var(--border-color)]">Platform</th>
               <th className="p-3 border-b border-[var(--border-color)] text-center">Actions</th>
             </tr>
@@ -64,7 +64,7 @@ export default function GamesTable({ games, onEdit, onDelete }) {
                   <td className="p-3 text-sm">{game.name}</td>
                   <td className="p-3 text-sm">{game.genre || "N/A"}</td>
                   <td className="p-3 text-sm">{game.platform}</td>
-                  <td className="p-3 text-sm text-center space-x-3">
+                  <td className="p-2 text-sm text-center space-x-2">
                     <button
                       onClick={() => onEdit(game)}
                       className="text-[color:var(--accent-color)] underline"
@@ -76,6 +76,13 @@ export default function GamesTable({ games, onEdit, onDelete }) {
                       className="text-red-500 underline"
                     >
                      <Trash2 size={16} />
+                    </button>
+
+                      <button
+                      onClick={() => onDuplicate(game._id)}
+                      className="text-green-500 underline"
+                    >
+                     <Repeat size={16} />
                     </button>
                   </td>
                 </tr>
