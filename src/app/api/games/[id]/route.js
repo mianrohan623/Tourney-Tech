@@ -73,3 +73,27 @@ export const DELETE = asyncHandler(async (_req, context) => {
 
   return Response.json(new ApiResponse(200, null, "Game deleted successfully"));
 });
+
+export const POST = asyncHandler(async (_, context) => {
+  await requireAdmin();
+
+  const { id } = context.params;
+
+  const game = await Game.findById(id);
+  if (!game) throw new ApiError(404, "Game not found");
+  console.log("game===============------------:", game);
+
+  const duplicateGame = await Game.create({
+    name: game.name,
+    genre: game.genre,
+    platform: game.platform,
+    description: game.description,
+    rulesUrl: game.rulesUrl,
+    icon: game.icon,
+    coverImage: game.coverImage,
+  });
+
+  return Response.json(
+    new ApiResponse(200, duplicateGame, "Game duplicated successfully")
+  );
+});
