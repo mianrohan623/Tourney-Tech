@@ -81,7 +81,6 @@ export const POST = asyncHandler(async (_, context) => {
 
   const game = await Game.findById(id);
   if (!game) throw new ApiError(404, "Game not found");
-  console.log("game===============------------:", game);
 
   const duplicateGame = await Game.create({
     name: game.name,
