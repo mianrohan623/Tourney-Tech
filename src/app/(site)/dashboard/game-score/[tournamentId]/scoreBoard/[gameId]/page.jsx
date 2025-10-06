@@ -25,7 +25,7 @@ export default function Scoreboard() {
       try {
         const query = new URLSearchParams({ tournamentId, gameId });
         const res = await api.get(`/api/scorecard?${query.toString()}`);
-        setScoreboard(res.data?.data || {});
+        setScoreboard(res.data?.data?.rounds || {});
       } catch (err) {
         console.error("Error fetching scoreboard:", err);
       } finally {
