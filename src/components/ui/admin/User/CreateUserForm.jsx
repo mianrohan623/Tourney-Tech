@@ -56,63 +56,62 @@ export default function UserForm({ user = null, onSuccess }) {
     return fd;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    let payload = { ...form };
+    try {
+      let payload = { ...form };
 
-    // 🔥 Ensure all string fields are actually strings (not arrays)
-    Object.keys(payload).forEach((key) => {
-      if (Array.isArray(payload[key])) {
-        payload[key] = payload[key][0] || "";
+      // 🔥 Ensure all string fields are actually strings (not arrays)
+      Object.keys(payload).forEach((key) => {
+        if (Array.isArray(payload[key])) {
+          payload[key] = payload[key][0] || "";
+        }
+      });
+
+      let res;
+
+      if (isEdit) {
+        if (!payload.password) delete payload.password;
+
+        res = await api.patch(`/api/user/${user._id}`, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
+      } else {
+        res = await api.post("/api/create-user", payload, {
+          headers: { "Content-Type": "application/json" },
+        });
       }
-    });
 
-    let res;
+      toast.success(
+        res.data.message || (isEdit ? "User updated!" : "User created!")
+      );
 
-    if (isEdit) {
-      if (!payload.password) delete payload.password;
+      if (!isEdit) {
+        setForm({
+          firstname: "",
+          lastname: "",
+          email: "",
+          username: "",
+          phone: "",
+          gender: "",
+          city: "",
+          stateCode: "",
+          dob: "",
+          role: "player",
+          password: "",
+        });
+      }
 
-      res = await api.patch(`/api/user/${user._id}`, payload, {
-        headers: { "Content-Type": "application/json" },
-      });
-    } else {
-      res = await api.post("/api/create-user", payload, {
-        headers: { "Content-Type": "application/json" },
-      });
+      onSuccess?.();
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-    toast.success(
-      res.data.message || (isEdit ? "User updated!" : "User created!")
-    );
-
-    if (!isEdit) {
-      setForm({
-        firstname: "",
-        lastname: "",
-        email: "",
-        username: "",
-        phone: "",
-        gender: "",
-        city: "",
-        stateCode: "",
-        dob: "",
-        role: "player",
-        password: "",
-      });
-    }
-
-    onSuccess?.();
-  } catch (error) {
-    console.error(error);
-    toast.error(error.response?.data?.message || "Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-10">
@@ -148,6 +147,8 @@ export default function UserForm({ user = null, onSuccess }) {
             name="email"
             value={form.email}
             onChange={handleChange}
+            pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+            title="Please enter a valid email address"
           />
 
           {/* Username */}
@@ -164,6 +165,9 @@ export default function UserForm({ user = null, onSuccess }) {
             name="phone"
             value={form.phone}
             onChange={handleChange}
+            pattern="\d{10}"
+            maxLength="10"
+            title="Phone number must be exactly 10 digits"
           />
 
           {/* Gender */}
@@ -185,9 +189,7 @@ export default function UserForm({ user = null, onSuccess }) {
           <div className="sm:col-span-2">
             <CitySelector
               city={form.city}
-              setCity={(val) =>
-                setForm((prev) => ({ ...prev, city: val }))
-              }
+              setCity={(val) => setForm((prev) => ({ ...prev, city: val }))}
               stateCode={form.stateCode}
               setStateCode={(val) =>
                 setForm((prev) => ({ ...prev, stateCode: val }))
@@ -239,8 +241,8 @@ export default function UserForm({ user = null, onSuccess }) {
                   ? "Updating..."
                   : "Creating..."
                 : isEdit
-                ? "Update User"
-                : "Create User"}
+                  ? "Update User"
+                  : "Create User"}
             </button>
           </div>
         </form>
@@ -250,7 +252,7 @@ export default function UserForm({ user = null, onSuccess }) {
 }
 
 /* Reusable Input */
-function InputField({ label, type = "text", name, value, onChange }) {
+function InputField({ label, type = "text", name, value, onChange, ...rest }) {
   return (
     <div className="flex flex-col">
       <label className="text-sm text-muted-foreground mb-1">{label}</label>
@@ -261,6 +263,7 @@ function InputField({ label, type = "text", name, value, onChange }) {
         onChange={onChange}
         required={name !== "password"} // ✅ password optional on edit
         className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+        {...rest} // ✅ allows custom validation props
       />
     </div>
   );

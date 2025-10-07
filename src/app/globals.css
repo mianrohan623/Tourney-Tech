@@ -73,10 +73,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* 
-{
-  
-} */
 
 .scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -119,7 +115,7 @@ body {
 
 /* Handle */
 .scrollbar-x::-webkit-scrollbar-thumb {
-  background: var(--card-background);
+  background: var(--border-color);
    border-radius: 10px;
 }
 
