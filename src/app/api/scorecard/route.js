@@ -63,6 +63,8 @@ export const GET = asyncHandler(async (req) => {
       status: match.status,
       teamACity: match.teamA?.createdBy?.city || null,
       teamBCity: match.teamB?.createdBy?.city || null,
+      teamABoston: match.teamAboston,
+      teamBBoston: match.teamBboston
     };
 
     // Push match data into round

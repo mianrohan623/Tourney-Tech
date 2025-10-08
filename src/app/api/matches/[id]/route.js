@@ -18,7 +18,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth(req);
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
-  const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon } = fields;
+  const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon, teamAboston, teamBboston } = fields;
 
   const match = await Match.findById(matchId).populate(
     "teamA teamB tournament game"
@@ -61,6 +61,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       }
       match.teamAScore = teamAScore;
       match.teamAtotalWon = teamAtotalWon;
+      match.teamAboston = teamAboston;
     } else if (isTeamB) {
       if (teamAScore || teamAtotalWon) {
         throw new ApiResponse(
@@ -71,6 +72,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       }
       match.teamBScore = teamBScore;
       match.teamBtotalWon = teamBtotalWon;
+      match.teamBboston = teamBboston;
     }
 
     // ✅ Check if both teams have submitted scores
@@ -80,7 +82,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       match.teamAScore !== null &&
       match.teamBScore !== null &&
       match.teamAScore > 0 &&
-      match.teamBScore > 0
+      match.teamBScore > 0 
     ) {
       if (match.teamAScore > match.teamBScore) {
         match.winner = match.teamA._id;
@@ -107,6 +109,8 @@ export const PATCH = asyncHandler(async (req, context) => {
     match.teamBScore = teamBScore;
     match.teamAtotalWon = teamAtotalWon;
     match.teamBtotalWon = teamBtotalWon;
+    match.teamAboston = teamAboston;
+    match.teamBboston = teamBboston;
     match.completedAt = new Date();
     match.status = "completed";
 

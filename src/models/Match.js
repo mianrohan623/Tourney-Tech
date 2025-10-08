@@ -36,6 +36,8 @@ const MatchSchema = new Schema(
     admin: { type: Schema.Types.ObjectId, ref: "User" },
     teamAtotalWon: { type: Number, default: 0 },
     teamBtotalWon: { type: Number, default: 0 },
+    teamAboston: { type: Number, default: 0 },
+    teamBboston: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
