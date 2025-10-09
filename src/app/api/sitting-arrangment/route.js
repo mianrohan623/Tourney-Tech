@@ -42,7 +42,6 @@ export const POST = asyncHandler(async (req) => {
     );
   }
 
-
   const sittingCreate = await SittingArrangment.create({
     tournament: tournament._id,
     game: game._id, // ✅ always store a valid Game ObjectId

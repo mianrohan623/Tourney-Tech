@@ -15,6 +15,8 @@ const SittingArrangmentSchema = new Schema(
     gallery: {
       type: String,
       ref: "ImageGallery",
+      required: false,
+      default: null,
     },
     user: {
       type: Schema.Types.ObjectId,
