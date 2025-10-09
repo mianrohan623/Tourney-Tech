@@ -44,8 +44,6 @@ export const POST = asyncHandler(async (req) => {
     club
   });
 
-  console.log("user=============:", user)
-
   await user.save();
 
   return Response.json(new ApiResponse(201, user, "User created successfully"));
