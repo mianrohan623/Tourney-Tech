@@ -51,7 +51,7 @@ export default function SittingArrangementsPage() {
           🎭 Sitting Arrangements
         </h1>
         <button
-          className="flex items-center px-4 py-2 rounded-lg text-white transition"
+          className="bg-[var(--accent-color)] text-[var(--background)] flex items-center gap-2  px-4 py-2 rounded-lg  transition"
           style={{ background: "var(--accent-color)" }}
           onClick={() => {
             setEditing(null); // ✅ reset for add

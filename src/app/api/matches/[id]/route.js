@@ -50,6 +50,8 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
+
+    
     // ✅ Strict check: User cannot update the other team's score
     if (isTeamA) {
       if (teamBScore || teamBtotalWon) {

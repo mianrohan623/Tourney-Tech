@@ -3,8 +3,13 @@ import { ApiResponse } from "@/utils/server/ApiResponse";
 import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 import { requireAdmin } from "@/utils/server/roleGuards";
 
-const { asyncHandler } = require("@/utils/server/asyncHandler");
-const { parseForm } = require("@/utils/server/parseForm");
+// const { asyncHandler } = require("@/utils/server/asyncHandler");
+// const { parseForm } = require("@/utils/server/parseForm");
+
+import { asyncHandler } from "@/utils/server/asyncHandler";
+import { parseForm } from "@/utils/server/parseForm";
+
+
 
 export const POST = asyncHandler(async (req) => {
   await requireAdmin();
