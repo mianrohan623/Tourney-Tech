@@ -17,13 +17,10 @@ export const POST = asyncHandler(async (req) => {
 
     const name = fields.name?.toString();
 
-    console.log("name----------", name, "fields----------------", fields)
 
   const iconPath = Array.isArray(files.iconImage)
     ? files.iconImage[0]?.filepath
     : files.iconImage?.filepath;
-
-    console.log("files0----------", files, "iconPath ---------------", iconPath)
 
     if (!name || !iconPath) {
     throw new ApiResponse(400, null, "Image name is required");

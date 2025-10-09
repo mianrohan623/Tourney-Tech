@@ -94,9 +94,9 @@ export default function SittingArrangementsPage() {
                   <td className="p-3">{item.tournament?.name}</td>
                   <td className="p-3">{item.game?.name}</td>
                   <td className="p-3">
-                    {item.image ? (
+                    {item.image || item?.gallery?.image ? (
                       <img
-                        src={item.image}
+                        src={item.image || item?.gallery?.image}
                         alt="Sitting"
                         className="w-10 h-10 rounded-md object-cover border"
                         style={{ borderColor: "var(--border-color)" }}

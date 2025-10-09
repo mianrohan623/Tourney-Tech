@@ -7,7 +7,7 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
   const [form, setForm] = useState({
     tournamentId: editing?.tournament?._id || "",
     gameId: editing?.game?._id || "",
-    image: editing?.image?._id || "", // ✅ store image ID instead of file
+    galleryId: editing?.gallery?._id || "", // ✅ store image ID instead of file
   });
 
   const [loading, setLoading] = useState(false);
@@ -66,7 +66,7 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
       const payload = {
         tournamentId: form.tournamentId,
         gameId: form.gameId,
-        image: form.image, // ✅ send only the image ID
+        galleryId: form.galleryId,
       };
 
       if (editing) {
@@ -153,10 +153,12 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
 
           {/* Image Select (instead of upload) */}
           <div>
-            <label className="block text-sm font-medium mb-1">Select Image</label>
+            <label className="block text-sm font-medium mb-1">
+              Select Image
+            </label>
             <select
-              name="image"
-              value={form.image}
+              name="galleryId"
+              value={form.galleryId}
               onChange={handleChange}
               className="w-full rounded-lg p-2 outline-none"
               style={{
