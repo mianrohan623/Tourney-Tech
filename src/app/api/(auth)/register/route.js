@@ -51,7 +51,7 @@ export const POST = asyncHandler(async (req) => {
     phone,
     gender,
     avatar,
-    clubs,
+    club,
     subCity,
   } = body;
 
@@ -68,7 +68,7 @@ export const POST = asyncHandler(async (req) => {
     phone: sanitize(phone),
     gender: sanitize(gender),
     avatar: sanitize(avatar),
-    clubs: sanitize(clubs),
+    club: sanitize(club),
     subCity: sanitize(subCity),
   };
 
@@ -115,7 +115,7 @@ export const POST = asyncHandler(async (req) => {
     phone: clean.phone,
     gender: clean.gender,
     avatar: clean.avatar || undefined,
-    clubs: clean.clubs,
+    club: clean.club,
     subCity: clean.subCity,
     verificationToken,
   });

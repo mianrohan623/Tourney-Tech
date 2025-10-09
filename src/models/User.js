@@ -99,7 +99,7 @@ const UserSchema = new Schema(
     subCity: {
       type: String,
     },
-    clubs: {
+    club: {
       type: String,
     },
     isVerified: { type: Boolean, default: false },

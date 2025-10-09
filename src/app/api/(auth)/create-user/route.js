@@ -22,7 +22,7 @@ export const POST = asyncHandler(async (req) => {
     dob,
     role,
     password,
-    clubs,
+    club,
     subCity
   } = body;
 
@@ -41,7 +41,7 @@ export const POST = asyncHandler(async (req) => {
     role,
     password,
     subCity,
-    clubs
+    club
   });
 
   console.log("user=============:", user)
