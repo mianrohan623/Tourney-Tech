@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 export default function ImageGallery({ refreshTrigger }) {
   const [images, setImages] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(12); // 👈 show first 4
+  const [visibleCount, setVisibleCount] = useState(20); // 👈 show first images
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function ImageGallery({ refreshTrigger }) {
   };
 
   const handleViewMore = () => {
-    setVisibleCount((prev) => prev + 12); // 👈 show next  images
+    setVisibleCount((prev) => prev + 20); // 👈 show next  images
   };
 
   if (loading) {
