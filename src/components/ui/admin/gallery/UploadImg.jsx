@@ -1,18 +1,40 @@
 "use client";
 
+import api from "@/utils/axios";
 import React, { useState } from "react";
 
 const UploadImg = () => {
   const [fileName, setFileName] = useState("No file chosen");
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading]= useState(false);
+  const [iconImage, setIconImage] = useState(null)
+  const [name, setName] = useState('')
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name);
+      setIconImage(file);
       setPreview(URL.createObjectURL(file));
     }
   };
+
+  const handleUpload= async () => {
+    setLoading(true)
+    try {
+      const formData = new FormData();
+      formData.append('iconImage', iconImage);
+      formData.append('name', name);
+      const response = await api.post('/api/image-gallery', formData,{
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+    } catch (error) {
+      console.log("Error:" , error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
@@ -27,6 +49,8 @@ const UploadImg = () => {
             Name
           </label>
           <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             type="text"
             placeholder="Enter image name..."
             className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--secondary-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] transition"
@@ -62,9 +86,12 @@ const UploadImg = () => {
 
         {/* Submit Button */}
         <button
+          onClick={handleUpload}
           className="w-full mt-6 py-2.5 rounded-lg bg-[var(--accent-color)] text-[var(--background)] font-semibold hover:bg-[var(--accent-hover)] transition"
         >
-          Upload
+          {
+            loading ? "Loading..." : "Upload"
+          }
         </button>
       </div>
     </div>
