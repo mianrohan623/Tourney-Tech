@@ -10,6 +10,8 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     teamBScore: "",
     teamAtotalWon: 0,
     teamBtotalWon: 0,
+    teamAboston: 0,
+    teamBboston: 0,
   });
   const [saving, setSaving] = useState(false);
 
@@ -20,6 +22,8 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
         teamBScore: match.teamBScore ?? 0,
         teamAtotalWon: match.teamAtotalWon ?? 0,
         teamBtotalWon: match.teamBtotalWon ?? 0,
+        teamAboston: match.teamAboston ?? 0,
+        teamBboston: match.teamBboston ?? 0,
       });
     }
   }, [match]);
@@ -34,14 +38,15 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
     setSaving(true);
     try {
       const payload = {
-        matchNumber: match.matchNumber, // required by backend
+        matchNumber: match.matchNumber,
         teamAScore: Number(form.teamAScore),
         teamBScore: Number(form.teamBScore),
         teamAtotalWon: Number(form.teamAtotalWon),
         teamBtotalWon: Number(form.teamBtotalWon),
+        teamAboston: Number(form.teamAboston),
+        teamBboston: Number(form.teamBboston),
       };
 
-      
       const res = await api.patch(`/api/matches/${match._id}`, payload);
       toast.success(res.data.message || "Match updated successfully");
 
@@ -71,7 +76,11 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
         <div className="space-y-6">
           {/* TEAM A */}
           <div>
-            <h3 className="font-semibold mb-2">{match.teamA.serialNo} {match.teamA.name}</h3>
+            <h3 className="font-semibold mb-2">
+              {match.teamA.serialNo} {match.teamA.name}
+            </h3>
+
+            {/* Score */}
             <input
               type="number"
               placeholder="Score"
@@ -83,18 +92,37 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
                 color: "var(--foreground)",
               }}
             />
+
+            {/* Total Hands Won (0–10) */}
             <select
               value={form.teamAtotalWon}
               onChange={(e) => handleChange("teamAtotalWon", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)] mb-2"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            >
+              {[...Array(11).keys()].map((n) => (
+                <option key={n} value={n}>
+                  Hands Won: {n}
+                </option>
+              ))}
+            </select>
+
+            {/* Boston (0–10) */}
+            <select
+              value={form.teamAboston}
+              onChange={(e) => handleChange("teamAboston", e.target.value)}
               className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)]"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--foreground)",
               }}
             >
-              {[0, 1, 2, 3, 4].map((n) => (
+              {[...Array(11).keys()].map((n) => (
                 <option key={n} value={n}>
-                  Hands Won: {n}
+                  Boston: {n}
                 </option>
               ))}
             </select>
@@ -102,7 +130,11 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
 
           {/* TEAM B */}
           <div>
-            <h3 className="font-semibold mb-2">{match.teamB.serialNo} {match.teamB.name}</h3>
+            <h3 className="font-semibold mb-2">
+              {match.teamB.serialNo} {match.teamB.name}
+            </h3>
+
+            {/* Score */}
             <input
               type="number"
               placeholder="Score"
@@ -114,25 +146,44 @@ export default function EditMatchModal({ isOpen, onClose, match, onSave }) {
                 color: "var(--foreground)",
               }}
             />
+
+            {/* Total Hands Won (0–10) */}
             <select
               value={form.teamBtotalWon}
               onChange={(e) => handleChange("teamBtotalWon", e.target.value)}
+              className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)] mb-2"
+              style={{
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+            >
+              {[...Array(11).keys()].map((n) => (
+                <option key={n} value={n}>
+                  Hands Won: {n}
+                </option>
+              ))}
+            </select>
+
+            {/* Boston (0–10) */}
+            <select
+              value={form.teamBboston}
+              onChange={(e) => handleChange("teamBboston", e.target.value)}
               className="w-full rounded-lg px-3 py-2 border bg-[var(--card-background)]"
               style={{
                 borderColor: "var(--border-color)",
                 color: "var(--foreground)",
               }}
             >
-              {[0, 1, 2, 3, 4].map((n) => (
+              {[...Array(11).keys()].map((n) => (
                 <option key={n} value={n}>
-                  Hands Won: {n}
+                  Boston: {n}
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* ACTIONS */}
+        {/* ACTION BUTTONS */}
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}

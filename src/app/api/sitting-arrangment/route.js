@@ -12,7 +12,8 @@ import { asyncHandler } from "@/utils/server/asyncHandler";
 import "@/models/User";
 
 export const POST = asyncHandler(async (req) => {
-  const user = await requireAuth();
+  // Rohan Comment
+  // const user = await requireAuth();
   const { fields, files } = await parseForm(req);
 
   const tournamentId = fields.tournamentId?.toString();
@@ -48,7 +49,7 @@ export const POST = asyncHandler(async (req) => {
     tournament: tournament._id,
     game: game._id, // ✅ always store a valid Game ObjectId
     image: imageUpload?.secure_url,
-    user: user._id,
+    // user: user._id,
   });
 
   // ✅ populate right away so you return full data

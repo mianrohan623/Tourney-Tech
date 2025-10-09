@@ -6,13 +6,14 @@ import api from "@/utils/axios";
 export default function SittingForm({ onClose, onSuccess, editing }) {
   const [form, setForm] = useState({
     tournamentId: editing?.tournament?._id || "",
-    gameId: editing?.game?._id || "", // ✅ real gameId
-    image: editing?.image || null,
+    gameId: editing?.game?._id || "",
+    image: editing?.image?._id || "", // ✅ store image ID instead of file
   });
-  const [loading, setLoading] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   const [tournaments, setTournaments] = useState([]);
   const [games, setGames] = useState([]);
+  const [images, setImages] = useState([]); // ✅ image gallery list
 
   // Fetch all tournaments
   useEffect(() => {
@@ -27,6 +28,19 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
     fetchTournaments();
   }, []);
 
+  // Fetch all gallery images
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await api.get("/api/image-gallery");
+        setImages(res?.data?.data || []);
+      } catch (err) {
+        console.error("Error fetching images:", err);
+      }
+    };
+    fetchImages();
+  }, []);
+
   // Update games when tournament changes
   useEffect(() => {
     if (form.tournamentId) {
@@ -34,7 +48,6 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
       const gameList = selected?.games || [];
       setGames(gameList);
 
-      // ✅ Check if current gameId exists in this tournament's games
       if (!gameList.find((g) => g.game?._id === form.gameId)) {
         setForm((prev) => ({ ...prev, gameId: "" }));
       }
@@ -42,34 +55,24 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
   }, [form.tournamentId, tournaments]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "image") {
-      setForm((prev) => ({ ...prev, image: files?.[0] || null }));
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("tournamentId", form.tournamentId);
-      formData.append("gameId", form.gameId);
-
-      if (form.image instanceof File) {
-        formData.append("image", form.image);
-      }
+      const payload = {
+        tournamentId: form.tournamentId,
+        gameId: form.gameId,
+        image: form.image, // ✅ send only the image ID
+      };
 
       if (editing) {
-        await api.patch(`/api/sitting-arrangment/${editing._id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.patch(`/api/sitting-arrangment/${editing._id}`, payload);
       } else {
-        await api.post("/api/sitting-arrangment", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post("/api/sitting-arrangment", payload);
       }
 
       onSuccess();
@@ -80,11 +83,16 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
     }
   };
 
+  const selectedImage = images.find((img) => img._id === form.image);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
       <div
         className="w-full max-w-md rounded-xl shadow-lg p-6"
-        style={{ backgroundColor: "var(--card-background)", color: "var(--foreground)" }}
+        style={{
+          backgroundColor: "var(--card-background)",
+          color: "var(--foreground)",
+        }}
       >
         <h2
           className="text-xl font-bold mb-4"
@@ -143,38 +151,37 @@ export default function SittingForm({ onClose, onSuccess, editing }) {
             </select>
           </div>
 
-          {/* Image Upload */}
+          {/* Image Select (instead of upload) */}
           <div>
-            <label className="block text-sm font-medium mb-1">Image</label>
-            <input
-              type="file"
+            <label className="block text-sm font-medium mb-1">Select Image</label>
+            <select
               name="image"
-              accept="image/*"
+              value={form.image}
               onChange={handleChange}
-              className="w-full rounded-lg p-2"
+              className="w-full rounded-lg p-2 outline-none"
               style={{
                 backgroundColor: "var(--secondary-color)",
                 border: "1px solid var(--border-color)",
                 color: "var(--foreground)",
               }}
-            />
+              required
+            >
+              <option value="">-- Select Image --</option>
+              {images.map((img) => (
+                <option key={img._id} value={img._id}>
+                  {img.name}
+                </option>
+              ))}
+            </select>
 
-            {form.image instanceof File ? (
+            {/* Show preview of selected image */}
+            {selectedImage && (
               <img
-                src={URL.createObjectURL(form.image)}
-                alt="Preview"
-                className="mt-2 w-24 h-24 rounded object-cover"
+                src={selectedImage.image}
+                alt={selectedImage.name}
+                className="mt-3 w-24 h-24 rounded object-cover"
                 style={{ border: "1px solid var(--border-color)" }}
               />
-            ) : (
-              form.image && (
-                <img
-                  src={form.image}
-                  alt="Current"
-                  className="mt-2 w-24 h-24 rounded object-cover"
-                  style={{ border: "1px solid var(--border-color)" }}
-                />
-              )
             )}
           </div>
 
