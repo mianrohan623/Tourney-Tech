@@ -54,7 +54,9 @@ export default function UserTable({ onEditUser, refreshKey }) {
       { header: "Gender", accessorKey: "gender" },
       { header: "Phone", accessorKey: "phone" },
       { header: "Region", accessorKey: "city" },
+      { header: "City", accessorKey: "subCity" },
       { header: "State", accessorKey: "stateCode" },
+      // { header: "Club", accessorKey: "club" },
       { header: "Role", accessorKey: "role" },
       {
         header: "DOB",

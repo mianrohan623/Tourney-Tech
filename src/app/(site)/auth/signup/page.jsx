@@ -17,6 +17,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [dob, setDob] = useState("");
   const [city, setCity] = useState("");
+  const [subCity, setSubCity] = useState("");
+  const [club, setClub] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
@@ -34,7 +36,9 @@ export default function SignUpPage() {
       !username ||
       !password ||
       !city ||
+      !subCity ||
       !stateCode ||
+      !club ||
       !dob
     ) {
       toast.error("Please fill in all required fields.");
@@ -55,18 +59,21 @@ export default function SignUpPage() {
       return;
     }
 
-    const data = {
-      firstname: firstName,
-      lastname: lastName,
-      email,
-      username,
-      password,
-      dob,
-      city,
-      stateCode,
-      phone,
-      gender,
-    };
+   const data = {
+  firstname: firstName,
+  lastname: lastName,
+  email,
+  username,
+  password,
+  dob,
+  city,
+  subCity,
+  stateCode,
+  club,
+  phone,
+  gender,
+};
+
 
     try {
       setLoading(true);
@@ -187,11 +194,16 @@ export default function SignUpPage() {
             {/* State Code & Gender */}
             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
             <CitySelector
-              stateCode={stateCode}
-              setStateCode={setStateCode}
               city={city}
               setCity={setCity}
+              subCity={subCity}
+              setSubCity={setSubCity}
+              stateCode={stateCode}
+              setStateCode={setStateCode}
+              club={club}
+              setClub={setClub}
             />
+
             {/* <Input
                 label="State Code"
                 value={stateCode}

@@ -17,10 +17,12 @@ export default function UserForm({ user = null, onSuccess }) {
     phone: "",
     gender: "",
     city: "",
+    subCity: "", // ✅ new
     stateCode: "",
+    club: "", // ✅ new
     dob: "",
     role: "player",
-    password: "", // ✅ add password
+    password: "",
   });
 
   // Prefill form if editing
@@ -34,10 +36,12 @@ export default function UserForm({ user = null, onSuccess }) {
         phone: user.phone || "",
         gender: user.gender || "",
         city: user.city || "",
+        subCity: user.subCity || "", // ✅ new
         stateCode: user.stateCode || "",
+        club: user.club || "", // ✅ new
         dob: user.dob ? user.dob.split("T")[0] : "",
         role: user.role || "player",
-        password: "", // ✅ keep empty on edit
+        password: "",
       });
     }
   }, [isEdit, user]);
@@ -177,7 +181,7 @@ export default function UserForm({ user = null, onSuccess }) {
               name="gender"
               value={form.gender}
               onChange={handleChange}
-              className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+              className="py-2 px-4 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
             >
               <option value="">Select</option>
               <option value="male">Male</option>
@@ -190,10 +194,16 @@ export default function UserForm({ user = null, onSuccess }) {
             <CitySelector
               city={form.city}
               setCity={(val) => setForm((prev) => ({ ...prev, city: val }))}
+              subCity={form.subCity}
+              setSubCity={(val) =>
+                setForm((prev) => ({ ...prev, subCity: val }))
+              }
               stateCode={form.stateCode}
               setStateCode={(val) =>
                 setForm((prev) => ({ ...prev, stateCode: val }))
               }
+              club={form.club}
+              setClub={(val) => setForm((prev) => ({ ...prev, club: val }))}
             />
           </div>
 
@@ -213,7 +223,7 @@ export default function UserForm({ user = null, onSuccess }) {
               name="role"
               value={form.role}
               onChange={handleChange}
-              className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+              className="py-2 px-4 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
             >
               <option value="player">Player</option>
               <option value="admin">Admin</option>
@@ -262,7 +272,7 @@ function InputField({ label, type = "text", name, value, onChange, ...rest }) {
         value={value}
         onChange={onChange}
         required={name !== "password"} // ✅ password optional on edit
-        className="p-3 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+        className="px-4 py-1.5 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
         {...rest} // ✅ allows custom validation props
       />
     </div>
