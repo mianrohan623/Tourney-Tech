@@ -25,6 +25,8 @@ export const PATCH = asyncHandler(async (req, context) => {
     teamBtotalWon,
     teamAboston,
     teamBboston,
+    teamAAgree,
+    teamBAgree,
   } = fields;
 
   const match = await Match.findById(matchId).populate(
@@ -165,7 +167,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       match.teamAScore = teamAScore;
       match.teamAtotalWon = teamAtotalWon;
       match.teamAboston = teamAboston;
-      match.teamAAgree = true; // ✅ team A confirmed
+      match.teamAAgree = teamAAgree; // ✅ team A confirmed
     } else if (isTeamB) {
       if (teamAScore || teamAtotalWon) {
         throw new ApiResponse(
@@ -177,7 +179,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       match.teamBScore = teamBScore;
       match.teamBtotalWon = teamBtotalWon;
       match.teamBboston = teamBboston;
-      match.teamBAgree = true; // ✅ team B confirmed
+      match.teamBAgree = teamBAgree; // ✅ team B confirmed
     }
 
     // ✅ Match completion only if both teams agree
@@ -217,8 +219,8 @@ export const PATCH = asyncHandler(async (req, context) => {
     match.teamBtotalWon = teamBtotalWon;
     match.teamAboston = teamAboston;
     match.teamBboston = teamBboston;
-    match.teamAAgree = true;
-    match.teamBAgree = true;
+    match.teamAAgree = teamAAgree;
+    match.teamBAgree = teamBAgree;
     match.status = "completed";
     match.completedAt = new Date();
 
