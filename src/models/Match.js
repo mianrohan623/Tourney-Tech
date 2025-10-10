@@ -21,6 +21,9 @@ const MatchSchema = new Schema(
     teamAScore: { type: Number, default: 0 },
     teamBScore: { type: Number, default: 0 },
 
+    teamAAgree: { type: Boolean, default: false },
+    teamBAgree: { type: Boolean, default: false },
+
     winner: { type: Schema.Types.ObjectId, ref: "Team" },
     loser: { type: Schema.Types.ObjectId, ref: "Team" },
 
