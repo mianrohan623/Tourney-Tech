@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 
 import CitySelector from "@/components/ui/signup/CitySelector";
 
+
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -17,6 +18,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [dob, setDob] = useState("");
   const [city, setCity] = useState("");
+  const [subCity, setSubCity] = useState("");
+  const [club, setClub] = useState("");
   const [stateCode, setStateCode] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
@@ -26,6 +29,7 @@ export default function SignUpPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 🔍 Basic required field validation
     if (
       !firstName ||
       !lastName ||
@@ -33,40 +37,76 @@ export default function SignUpPage() {
       !username ||
       !password ||
       !city ||
+      !subCity ||
       !stateCode ||
+      !club ||
       !dob
     ) {
       toast.error("Please fill in all required fields.");
       return;
     }
 
-    const data = {
-      firstname: firstName,
-      lastname: lastName,
-      email,
-      username,
-      password,
-      dob,
-      city,
-      stateCode,
-      phone,
-      gender,
-    };
-
-    try {
-      setLoading(true);
-
-      const res = await api.post("/api/register", data);
-
-      toast.success("Account created!");
-      window.location.href = "/auth/login";
-    } catch (error) {
-      const errorMessage =
-        error?.response?.data?.message || "Something went wrong";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+    // 🔍 Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
     }
+
+    // 🔍 Phone validation (10 digits)
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phone)) {
+      toast.error("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+   const data = {
+  firstname: firstName,
+  lastname: lastName,
+  email,
+  username,
+  password,
+  dob,
+  city,
+  subCity,
+  stateCode,
+  club,
+  phone,
+  gender,
+};
+
+try {
+  setLoading(true);
+
+  const data = {
+    firstname: firstName,
+    lastname: lastName,
+    email,
+    username,
+    password,
+    dob,
+    city,
+    subCity,
+    stateCode,
+    club,
+    phone,
+    gender,
+  };
+
+  const res = await api.post("/api/register", data, {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  toast.success(res?.data?.message || "Verification email sent!");
+  window.location.href = "/auth/verify-otp";
+} catch (error) {
+  const errorMessage =
+    error?.response?.data?.message || "Something went wrong";
+  toast.error(errorMessage);
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (
@@ -108,11 +148,14 @@ export default function SignUpPage() {
             {/* Username & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input label="Nickname" value={username} onChange={setUsername} />
+              {/* Email */}
               <Input
                 label="Email"
                 value={email}
                 onChange={setEmail}
                 type="email"
+                pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                title="Please enter a valid email address."
               />
             </div>
 
@@ -134,46 +177,59 @@ export default function SignUpPage() {
 
             {/* Phone & City */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Phone" value={phone} onChange={setPhone} />
+              {/* Phone */}
+              <Input
+                label="Phone"
+                value={phone}
+                onChange={setPhone}
+                maxLength="10"
+                pattern="^[0-9]{10}$"
+                title="Phone number must be exactly 10 digits."
+              />
 
-            <div className="">
+              <div className="">
                 <label className="block mb-2 text-sm font-medium">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                required
-                className="w-full px-4 py-2.5 rounded-md border"
-                style={{
-                  backgroundColor: "var(--secondary-color)",
-                  borderColor: "var(--border-color)",
-                  color: "var(--foreground)",
-                }}
-              >
-                <option value="" disabled>
-                  Select gender
-                </option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                {/* <option value="other">Other</option> */}
-              </select>
-            </div>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 rounded-md border"
+                  style={{
+                    backgroundColor: "var(--secondary-color)",
+                    borderColor: "var(--border-color)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  <option value="" disabled>
+                    Select gender
+                  </option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  {/* <option value="other">Other</option> */}
+                </select>
+              </div>
               {/* <Input label="City" value={city} onChange={setCity} /> */}
             </div>
 
             {/* State Code & Gender */}
             {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
-              <CitySelector
-                stateCode={stateCode}
-                setStateCode={setStateCode}
-                city={city}
-                setCity={setCity}
-              />
-              {/* <Input
+            <CitySelector
+              city={city}
+              setCity={setCity}
+              subCity={subCity}
+              setSubCity={setSubCity}
+              stateCode={stateCode}
+              setStateCode={setStateCode}
+              club={club}
+              setClub={setClub}
+            />
+
+            {/* <Input
                 label="State Code"
                 value={stateCode}
                 onChange={setStateCode}
               /> */}
-              
+
             {/* </div> */}
 
             {/* Submit Button */}
@@ -207,7 +263,26 @@ export default function SignUpPage() {
 }
 
 // 🔧 Reusable Input Component
-function Input({ label, value, onChange, type = "text" }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  pattern,
+  title,
+  maxLength,
+}) {
+  const handleChange = (e) => {
+    let val = e.target.value;
+
+    // If it's a phone field, allow only digits
+    if (label.toLowerCase().includes("phone")) {
+      val = val.replace(/\D/g, ""); // remove all non-digits
+    }
+
+    onChange(val);
+  };
+
   return (
     <div>
       <label className="block mb-2 text-sm font-medium">{label}</label>
@@ -215,7 +290,10 @@ function Input({ label, value, onChange, type = "text" }) {
         type={type}
         value={value}
         required
-        onChange={(e) => onChange(e.target.value)}
+        maxLength={maxLength}
+        onChange={handleChange}
+        pattern={pattern}
+        title={title}
         className="w-full px-4 py-2 rounded-md border"
         style={{
           backgroundColor: "var(--secondary-color)",

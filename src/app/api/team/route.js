@@ -10,7 +10,6 @@ import "@/models/BankDetails";
 import "@/models/Game";
 import "@/models/Tournament";
 
-
 export const POST = asyncHandler(async (req) => {
   await requireAdmin();
   const { fields } = await parseForm(req);
@@ -91,6 +90,7 @@ export const GET = asyncHandler(async () => {
     .populate("tournament")
     .populate("createdBy", "firstname lastname username email")
     .populate("members", "firstname lastname username email")
+    .sort({ createdAt: -1 })
     .lean();
   return Response.json(
     new ApiResponse(200, teams, "Teams fetched successfully")

@@ -119,6 +119,17 @@ export default function LoginPage() {
                   caretColor: "var(--accent-color)",
                 }}
               />
+
+              <div className="mt-1 ">
+                <Link href="/auth/forgot-password">
+                  <span
+                    className="text-sm hover:underline"
+                    style={{ color: "var(--accent-color)" }}
+                  >
+                    Forgot password?
+                  </span>
+                </Link>
+              </div>
             </div>
 
             <button

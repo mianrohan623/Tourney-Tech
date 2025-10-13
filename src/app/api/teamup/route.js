@@ -17,18 +17,26 @@ export const POST = asyncHandler(async (req) => {
 
   const to = fields.to?.toString();
   const tournamentId = fields.tournamentId?.toString();
+  const gameId = fields.gameId?.toString();
   const message = fields.message?.toString();
-  console.log("to", to, "tournamentId", tournamentId, "message", message);
-  if (!to || !tournamentId)
-    throw new ApiResponse(400, null, "Receiver user ID (to) is required");
+  if (!to || !tournamentId || !gameId)
+    throw new ApiResponse(
+      400,
+      null,
+      "Receiver user (to) tournament and game is required"
+    );
 
   if (to.toString() === user._id.toString())
     throw new ApiResponse(400, null, "Cannot send team-up request to yourself");
 
   const existRequest = await TeamUp.findOne({
-    $or: [{ from: user._id, to }, { from: to, to: user._id }],
+    $or: [
+      { from: user._id, to },
+      { from: to, to: user._id },
+    ],
     status: { $in: ["pending", "accepted"] },
     tournament: tournamentId,
+    gameId
   });
   if (existRequest)
     throw new ApiResponse(400, null, "Team-up request already exists");
@@ -38,6 +46,7 @@ export const POST = asyncHandler(async (req) => {
     to,
     message,
     tournament: tournamentId,
+    gameId
   });
 
   return Response.json(
@@ -56,6 +65,7 @@ export const GET = asyncHandler(async () => {
     .populate("from", "firstname lastname username email")
     .populate("to", "firstname lastname username email")
     .populate("tournament")
+    .populate("gameId")
     .lean();
 
   const userIds = [

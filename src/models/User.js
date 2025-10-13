@@ -96,6 +96,15 @@ const UserSchema = new Schema(
       enum: ["player", "admin"],
       default: "player",
     },
+    subCity: {
+      type: String,
+    },
+    club: {
+      type: String,
+    },
+    isVerified: { type: Boolean, default: false },
+    otp: { type: Number },
+    otpExpiry: { type: Date },
   },
   { timestamps: true }
 );

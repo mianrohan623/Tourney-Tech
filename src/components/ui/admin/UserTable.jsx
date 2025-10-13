@@ -45,23 +45,30 @@ export default function UserTable({ onEditUser, refreshKey }) {
   const columns = useMemo(
     () => [
       { header: "#", cell: ({ row }) => row.index + 1 },
-      { header: "Full Name", accessorFn: (row) => `${row.firstname} ${row.lastname}` },
+      {
+        header: "Full Name",
+        accessorFn: (row) => `${row.firstname} ${row.lastname}`,
+      },
       { header: "Username", accessorKey: "username" },
       { header: "Email", accessorKey: "email" },
       { header: "Gender", accessorKey: "gender" },
       { header: "Phone", accessorKey: "phone" },
-      { header: "City", accessorKey: "city" },
+      { header: "Region", accessorKey: "city" },
+      { header: "City", accessorKey: "subCity" },
       { header: "State", accessorKey: "stateCode" },
+      // { header: "Club", accessorKey: "club" },
       { header: "Role", accessorKey: "role" },
       {
         header: "DOB",
         accessorKey: "dob",
-        cell: ({ getValue }) => (getValue() ? new Date(getValue()).toLocaleDateString() : "-"),
+        cell: ({ getValue }) =>
+          getValue() ? new Date(getValue()).toLocaleDateString() : "-",
       },
       {
         header: "Created At",
         accessorKey: "createdAt",
-        cell: ({ getValue }) => (getValue() ? new Date(getValue()).toLocaleDateString() : "-"),
+        cell: ({ getValue }) =>
+          getValue() ? new Date(getValue()).toLocaleDateString() : "-",
       },
       {
         header: "Actions",
@@ -98,19 +105,61 @@ export default function UserTable({ onEditUser, refreshKey }) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10, // default
+      },
+    },
   });
+
+  const handlePageSizeChange = (e) => {
+    const value = e.target.value;
+    if (value === "all") {
+      table.setPageSize(data.length || 10);
+    } else {
+      table.setPageSize(Number(value));
+    }
+  };
 
   return (
     <div className="p-4">
-      {/* Global Search */}
-      <input
-        type="text"
-        placeholder="Search users..."
-        className="mb-4 p-2 bg-[var(--card-background)] rounded w-full"
-        value={globalFilter}
-        onChange={(e) => setGlobalFilter(e.target.value)}
-      />
+      {/* Top Controls */}
+      <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        {/* Rows per page */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="pageSize" className="text-sm">
+            Rows per page:
+          </label>
+          <select
+            id="pageSize"
+            value={
+              table.getState().pagination.pageSize >= data.length
+                ? "all"
+                : table.getState().pagination.pageSize
+            }
+            onChange={handlePageSizeChange}
+            className="p-2 rounded bg-[var(--card-background)]"
+          >
+            {[10, 30, 50].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+            <option value="all">All</option>
+          </select>
+        </div>
 
+        {/* Global Search */}
+        <input
+          type="text"
+          placeholder="Search users..."
+          className="p-2 bg-[var(--card-background)] rounded w-full sm:w-72"
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+        />
+      </div>
+
+      {/* Table */}
       <div className="scrollbar-x overflow-x-auto">
         <table className="w-full rounded overflow-hidden">
           <thead className="bg-[var(--card-background)] text-white">
@@ -122,7 +171,10 @@ export default function UserTable({ onEditUser, refreshKey }) {
                     onClick={header.column.getToggleSortingHandler()}
                     className="text-left p-3 cursor-pointer select-none"
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
                     <span className="ml-2">
                       {{
                         asc: "🔼",
@@ -139,7 +191,10 @@ export default function UserTable({ onEditUser, refreshKey }) {
             {table.getRowModel().rows.map((row) => (
               <tr key={row.id} className="hover:bg-[var(--card-hover)]">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="p-3 border-t border-[var(--background)]">
+                  <td
+                    key={cell.id}
+                    className="p-3 border-t border-[var(--background)]"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -149,26 +204,44 @@ export default function UserTable({ onEditUser, refreshKey }) {
         </table>
       </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex justify-between items-center">
-        <button
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-          className="px-4 py-2 bg-[var(--card-hover)] rounded disabled:opacity-50"
-        >
-          Previous
-        </button>
-        <span>
-          Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{" "}
-          {table.getPageCount()}
-        </span>
-        <button
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-          className="px-4 py-2 bg-[var(--card-background)] rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+      {/* Pagination Controls */}
+      <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="text-sm text-gray-400">
+          Showing{" "}
+          <strong>
+            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+          </strong>{" "}
+          -
+          <strong>
+            {Math.min(
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
+              data.length
+            )}
+          </strong>{" "}
+          of <strong>{data.length}</strong> users
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="px-4 py-2 bg-[var(--card-hover)] rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{" "}
+            {table.getPageCount()}
+          </span>
+          <button
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="px-4 py-2 bg-[var(--card-background)] rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

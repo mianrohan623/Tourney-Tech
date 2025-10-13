@@ -97,7 +97,10 @@ export default function DashboardSidebar({ isOpen, onClose, navItems }) {
                             <Link
                               href={subItem.href}
                               className="block text-sm px-2 py-1 rounded hover:bg-[var(--card-hover)]"
-                              onClick={() => setOpenMenu(null)}
+                              onClick={() => {
+                                setOpenMenu(null);
+                                onClose(); // ✅ close sidebar on submenu click
+                              }}
                             >
                               {subItem.label}
                             </Link>
@@ -118,6 +121,7 @@ export default function DashboardSidebar({ isOpen, onClose, navItems }) {
                   <Link
                     href={item.href}
                     className="flex items-center gap-2 px-2 py-2 hover:bg-[var(--card-hover)] rounded"
+                    onClick={onClose} // ✅ close sidebar on normal link click
                   >
                     <item.icon size={18} />
                     {item.label}

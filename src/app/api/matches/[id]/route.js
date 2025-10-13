@@ -18,7 +18,16 @@ export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth(req);
   const matchId = context.params.id;
   const { fields } = await parseForm(req);
-  const { teamAScore, teamBScore, teamAtotalWon, teamBtotalWon } = fields;
+  const {
+    teamAScore,
+    teamBScore,
+    teamAtotalWon,
+    teamBtotalWon,
+    teamAboston,
+    teamBboston,
+    teamAAgree,
+    teamBAgree,
+  } = fields;
 
   const match = await Match.findById(matchId).populate(
     "teamA teamB tournament game"
@@ -26,8 +35,106 @@ export const PATCH = asyncHandler(async (req, context) => {
   if (!match) throw new ApiResponse(404, null, "Match not found");
 
   // ✅ Role-based access
+  // if (user.role !== "admin") {
+  //   // Normal user → check if user belongs to teamA or teamB
+  //   const userTeam = await Team.findOne({
+  //     createdBy: user._id,
+  //     tournament: match?.tournament?._id,
+  //   });
+
+  //   if (!userTeam) {
+  //     throw new ApiResponse(403, null, "You are not the owner of any team");
+  //   }
+
+  //   // ✅ Check if this userTeam is playing in this match
+  //   const isTeamA = match.teamA._id.toString() === userTeam._id.toString();
+  //   const isTeamB = match.teamB._id.toString() === userTeam._id.toString();
+
+  //   if (!isTeamA && !isTeamB) {
+  //     throw new ApiResponse(
+  //       403,
+  //       null,
+  //       "You are not the owner of this team or this match does not belong to your team"
+  //     );
+  //   }
+
+  //   // ✅ Strict check: User cannot update the other team's score
+  //   if (isTeamA) {
+  //     if (teamBScore || teamBtotalWon) {
+  //       throw new ApiResponse(
+  //         403,
+  //         null,
+  //         "You cannot update opponent's score (Team B)"
+  //       );
+  //     }
+  //     match.teamAScore = teamAScore;
+  //     match.teamAtotalWon = teamAtotalWon;
+  //     match.teamAboston = teamAboston;
+  //   } else if (isTeamB) {
+  //     if (teamAScore || teamAtotalWon) {
+  //       throw new ApiResponse(
+  //         403,
+  //         null,
+  //         "You cannot update opponent's score (Team A)"
+  //       );
+  //     }
+  //     match.teamBScore = teamBScore;
+  //     match.teamBtotalWon = teamBtotalWon;
+  //     match.teamBboston = teamBboston;
+  //   }
+
+  //   // ✅ Check if both teams have submitted scores
+  //   if (
+  //     match.teamAScore !== undefined &&
+  //     match.teamBScore !== undefined &&
+  //     match.teamAScore !== null &&
+  //     match.teamBScore !== null &&
+  //     match.teamAScore > 0 &&
+  //     match.teamBScore > 0
+  //   ) {
+  //     if (match.teamAScore > match.teamBScore) {
+  //       match.winner = match.teamA._id;
+  //       match.loser = match.teamB._id;
+  //       match.status = "completed";
+  //       match.completedAt = new Date();
+  //     } else if (match.teamBScore > match.teamAScore) {
+  //       match.winner = match.teamB._id;
+  //       match.loser = match.teamA._id;
+  //       match.status = "completed";
+  //       match.completedAt = new Date();
+  //     } else {
+  //       throw new ApiResponse(
+  //         400,
+  //         null,
+  //         "Draw not supported in knockout format"
+  //       );
+  //     }
+  //   }
+  // } else {
+  //   // ✅ Admin can update both teams’ scores
+  //   console.log("running Admin");
+  //   match.teamAScore = teamAScore;
+  //   match.teamBScore = teamBScore;
+  //   match.teamAtotalWon = teamAtotalWon;
+  //   match.teamBtotalWon = teamBtotalWon;
+  //   match.teamAboston = teamAboston;
+  //   match.teamBboston = teamBboston;
+  //   match.completedAt = new Date();
+  //   match.status = "completed";
+
+  //   // ✅ Winner decide (after scores set)
+  //   if (match.teamAScore > match.teamBScore) {
+  //     match.winner = match.teamA._id;
+  //     match.loser = match.teamB._id;
+  //   } else if (match.teamBScore > match.teamAScore) {
+  //     match.winner = match.teamB._id;
+  //     match.loser = match.teamA._id;
+  //   } else {
+  //     throw new ApiResponse(400, null, "Draw not supported in knockout format");
+  //   }
+  // }
+
   if (user.role !== "admin") {
-    // Normal user → check if user belongs to teamA or teamB
     const userTeam = await Team.findOne({
       createdBy: user._id,
       tournament: match?.tournament?._id,
@@ -37,10 +144,8 @@ export const PATCH = asyncHandler(async (req, context) => {
       throw new ApiResponse(403, null, "You are not the owner of any team");
     }
 
-    // ✅ Check if this userTeam is playing in this match
     const isTeamA = match.teamA._id.toString() === userTeam._id.toString();
     const isTeamB = match.teamB._id.toString() === userTeam._id.toString();
-
 
     if (!isTeamA && !isTeamB) {
       throw new ApiResponse(
@@ -50,7 +155,7 @@ export const PATCH = asyncHandler(async (req, context) => {
       );
     }
 
-    // ✅ Strict check: User cannot update the other team's score
+    // ✅ Score update + Agree tracking
     if (isTeamA) {
       if (teamBScore || teamBtotalWon) {
         throw new ApiResponse(
@@ -61,6 +166,8 @@ export const PATCH = asyncHandler(async (req, context) => {
       }
       match.teamAScore = teamAScore;
       match.teamAtotalWon = teamAtotalWon;
+      match.teamAboston = teamAboston;
+      match.teamAAgree = teamAAgree; // ✅ team A confirmed
     } else if (isTeamB) {
       if (teamAScore || teamAtotalWon) {
         throw new ApiResponse(
@@ -71,46 +178,52 @@ export const PATCH = asyncHandler(async (req, context) => {
       }
       match.teamBScore = teamBScore;
       match.teamBtotalWon = teamBtotalWon;
+      match.teamBboston = teamBboston;
+      match.teamBAgree = teamBAgree; // ✅ team B confirmed
     }
 
-    // ✅ Check if both teams have submitted scores
-    if (
-      match.teamAScore !== undefined &&
-      match.teamBScore !== undefined &&
-      match.teamAScore !== null &&
-      match.teamBScore !== null &&
-      match.teamAScore > 0 &&
-      match.teamBScore > 0
-    ) {
-      if (match.teamAScore > match.teamBScore) {
-        match.winner = match.teamA._id;
-        match.loser = match.teamB._id;
-        match.status = "completed";
-        match.completedAt = new Date();
-      } else if (match.teamBScore > match.teamAScore) {
-        match.winner = match.teamB._id;
-        match.loser = match.teamA._id;
-        match.status = "completed";
-        match.completedAt = new Date();
-      } else {
-        throw new ApiResponse(
-          400,
-          null,
-          "Draw not supported in knockout format"
-        );
+    // ✅ Match completion only if both teams agree
+    if (match.teamAAgree && match.teamBAgree) {
+      if (
+        match.teamAScore !== undefined &&
+        match.teamBScore !== undefined &&
+        match.teamAScore !== null &&
+        match.teamBScore !== null
+      ) {
+        if (match.teamAScore > match.teamBScore) {
+          match.winner = match.teamA._id;
+          match.loser = match.teamB._id;
+          match.status = "completed";
+          match.completedAt = new Date();
+        } else if (match.teamBScore > match.teamAScore) {
+          match.winner = match.teamB._id;
+          match.loser = match.teamA._id;
+          match.status = "completed";
+          match.completedAt = new Date();
+        } else {
+          throw new ApiResponse(
+            400,
+            null,
+            "Draw not supported in knockout format"
+          );
+        }
       }
+    } else {
+      match.status = "pending"; // ✅ still waiting for the other team
     }
   } else {
-    // ✅ Admin can update both teams’ scores
-    console.log("running Admin");
+    // ✅ Admin full control
     match.teamAScore = teamAScore;
     match.teamBScore = teamBScore;
     match.teamAtotalWon = teamAtotalWon;
     match.teamBtotalWon = teamBtotalWon;
-    match.completedAt = new Date();
+    match.teamAboston = teamAboston;
+    match.teamBboston = teamBboston;
+    match.teamAAgree = teamAAgree;
+    match.teamBAgree = teamBAgree;
     match.status = "completed";
+    match.completedAt = new Date();
 
-    // ✅ Winner decide (after scores set)
     if (match.teamAScore > match.teamBScore) {
       match.winner = match.teamA._id;
       match.loser = match.teamB._id;

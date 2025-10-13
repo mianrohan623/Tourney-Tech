@@ -60,7 +60,23 @@ export const POST = asyncHandler(async (req) => {
     user: userId,
   });
   if (existingRegistration) {
-    throw new ApiError(400, "User already registered for this tournament.");
+    await Registration.findByIdAndUpdate(
+      existingRegistration._id,
+      {
+        gameRegistrationDetails: {
+          games: validGameIds,
+          status: "pending",
+          paid: false,
+          paymentMethod: paymentMethod || "cash",
+          paymentDetails: paymentMethod === "online" ? paymentDetails : null,
+        },
+      },
+      { new: true }
+    );
+
+    return Response.json(
+      new ApiResponse(200, null, "Registration updated successfully.")
+    );
   }
 
   const gameRegistrationDetails = {
@@ -69,22 +85,6 @@ export const POST = asyncHandler(async (req) => {
     paid: false,
     paymentMethod: paymentMethod || "cash",
   };
-
-  /*
-  if (tournament.isTeamBased) {
-    const teamId = fields.teamId?.toString();
-    if (!teamId || !mongoose.isValidObjectId(teamId)) {
-      throw new ApiError(400, "Team ID is required for team-based tournament.");
-    }
-
-    const team = await Team.findById(teamId);
-    if (!team) {
-      throw new ApiError(404, `Team not found for team ID ${teamId}.`);
-    }
-
-    gameRegistrationDetails.team = new mongoose.Types.ObjectId(teamId);
-  }
-  */
 
   if (paymentMethod === "online") {
     if (

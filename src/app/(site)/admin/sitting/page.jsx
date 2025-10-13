@@ -45,13 +45,9 @@ export default function SittingArrangementsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1
-          className="text-2xl font-bold"
-        >
-          🎭 Sitting Arrangements
-        </h1>
+        <h1 className="text-2xl font-bold">🎭 Sitting Arrangements</h1>
         <button
-          className="flex items-center px-4 py-2 rounded-lg text-white transition"
+          className="bg-[var(--accent-color)] text-[var(--background)] flex items-center gap-2  px-4 py-2 rounded-lg  transition"
           style={{ background: "var(--accent-color)" }}
           onClick={() => {
             setEditing(null); // ✅ reset for add
@@ -98,9 +94,9 @@ export default function SittingArrangementsPage() {
                   <td className="p-3">{item.tournament?.name}</td>
                   <td className="p-3">{item.game?.name}</td>
                   <td className="p-3">
-                    {item.image ? (
+                    {item.image || item?.gallery?.image ? (
                       <img
-                        src={item.image}
+                        src={item.image || item?.gallery?.image}
                         alt="Sitting"
                         className="w-10 h-10 rounded-md object-cover border"
                         style={{ borderColor: "var(--border-color)" }}
@@ -110,24 +106,36 @@ export default function SittingArrangementsPage() {
                         No Image
                       </span>
                     )}
+                      {/* update later */}
+                    {/* {item.gallery?.image ? (
+                      <img
+                        src={item.gallery.image}
+                        alt={item.gallery.name || "Sitting"}
+                        className="w-10 h-10 rounded-md object-cover border"
+                      />
+                    ) : (
+                      <span style={{ color: "var(--foreground)" }}>
+                        No Image
+                      </span>
+                    )} */}
                   </td>
                   <td className="p-3 ">
-                  <div className="flex gap-3 h-full">
+                    <div className="flex gap-3 h-full">
                       <button
-                      onClick={() => handleEdit(item)}
-                      style={{ color: "var(--info-color)" }}
-                      className="hover:opacity-80"
-                    >
-                      <Pencil className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item._id)}
-                      style={{ color: "var(--error-color)" }}
-                      className="hover:opacity-80"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
+                        onClick={() => handleEdit(item)}
+                        style={{ color: "var(--info-color)" }}
+                        className="hover:opacity-80"
+                      >
+                        <Pencil className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item._id)}
+                        style={{ color: "var(--error-color)" }}
+                        className="hover:opacity-80"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

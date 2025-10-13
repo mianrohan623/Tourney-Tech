@@ -23,8 +23,8 @@ export const regionList = [
   "Other",
 ];
 
-// Map regions → states (like country-state-city style)
-export const regionStatesMap = {
+// 🌆 REGION → CITY (subcity)
+export const regionCitiesMap = {
   "NY-NJ-DE": ["New York City", "Newark", "Wilmington"],
   "PHIL / PA CITIES": ["Philadelphia", "Pittsburgh", "Allentown"],
   "CT/MAS/NH/VT (NE)": ["Hartford", "Boston", "Concord", "Burlington"],
@@ -46,3 +46,104 @@ export const regionStatesMap = {
   "Las Vegas": ["Summerlin", "Henderson", "Paradise"],
   Other: ["Other Region"],
 };
+
+// 🗺️ CITY → STATE
+export const cityStateMap = {
+  "New York City": "New York",
+  Newark: "New Jersey",
+  Wilmington: "Delaware",
+
+  Philadelphia: "Pennsylvania",
+  Pittsburgh: "Pennsylvania",
+  Allentown: "Pennsylvania",
+
+  Hartford: "Connecticut",
+  Boston: "Massachusetts",
+  Concord: "New Hampshire",
+  Burlington: "Vermont",
+
+  "Washington DC": "District of Columbia",
+  Baltimore: "Maryland",
+  Arlington: "Virginia",
+
+  Norfolk: "Virginia",
+  "Virginia Beach": "Virginia",
+  Richmond: "Virginia",
+
+  Dearborn: "Michigan",
+  Southfield: "Michigan",
+  Downtown: "Multiple States", // Shared name across regions
+
+  "Midtown": "Georgia",
+  Buckhead: "Georgia",
+
+  Hoover: "Alabama",
+  Homewood: "Alabama",
+  "Mountain Brook": "Alabama",
+
+  Dublin: "Ohio",
+  Westerville: "Ohio",
+
+  Miami: "Florida",
+  Orlando: "Florida",
+  Tampa: "Florida",
+  Jacksonville: "Florida",
+
+  "Hyde Park": "Ohio",
+  "Over-the-Rhine": "Ohio",
+
+  Evanston: "Illinois",
+  "Oak Park": "Illinois",
+
+  Irving: "Texas",
+  Plano: "Texas",
+  Arlington: "Texas",
+
+  "Round Rock": "Texas",
+  "Cedar Park": "Texas",
+
+  "Sugar Land": "Texas",
+  Katy: "Texas",
+  "The Woodlands": "Texas",
+
+  "Alamo Heights": "Texas",
+  "Stone Oak": "Texas",
+
+  "French Quarter": "Louisiana",
+  "Garden District": "Louisiana",
+  Uptown: "Louisiana",
+
+  Hollywood: "California",
+  "Santa Monica": "California",
+  Burbank: "California",
+
+  Summerlin: "Nevada",
+  Henderson: "Nevada",
+  Paradise: "Nevada",
+
+  "Other Region": "Other",
+};
+
+// 🏆 CLUB LIST
+export const clubList = [
+  "7NO PLAYERS",
+  "ALAMO 7NO",
+  "AWC",
+  "BEST OF THE WEST",
+  "CAPITAL CITY CARD CLUB (C4)",
+  "CINCINNATI WHIST GROUP (CWG)",
+  "CLUB BID",
+  "CWPS COLUMBUS WHIST PLAYERS SOCIETY",
+  "DALLAS ROAD CREW",
+  "DMV CARTEL",
+  "DMV REGULATORS",
+  "H-TOWN 7NO BID WHIST CLUB",
+  "HEAVY HITTERS",
+  "MIS DEALS",
+  "MOTOR CITY WHIST MECHANICS",
+  "SMOKIN ACES",
+  "T.O.W.",
+  "TRUMP TIGHT HOUSTON",
+  "Other",
+  "None",
+];

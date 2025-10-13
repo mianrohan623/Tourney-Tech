@@ -40,10 +40,7 @@ export const PATCH = asyncHandler(async (req, context) => {
   const sittingArrangementId = context.params?.id;
   const tournamentId = fields.tournamentId?.toString();
   const gameId = fields.gameId?.toString();
-
-  const imagePath = Array.isArray(files.image)
-    ? files.image[0]?.filepath
-    : files.image?.filepath;
+  const galleryId = fields.galleryId?.toString();
 
   if (!sittingArrangementId) {
     throw new ApiError(400, "Sitting Arrangement ID is required");
@@ -52,19 +49,14 @@ export const PATCH = asyncHandler(async (req, context) => {
   const updateData = {};
   if (tournamentId) updateData.tournament = tournamentId;
   if (gameId) updateData.game = gameId;
-  if (imagePath) {
-    const imageUpload = await uploadOnCloudinary(
-      imagePath,
-      "sitting-arrangment"
-    );
-    updateData.image = imageUpload?.secure_url;
-  }
+  if (galleryId) updateData.gallery = galleryId;
+  
 
   const sittingArrangement = await SittingArrangment.findOneAndUpdate(
     { _id: sittingArrangementId, user: user._id },
     { $set: updateData },
     { new: true }
-  ).populate("game tournament user");
+  ).populate("game tournament user gallery");
 
   if (!sittingArrangement) {
     throw new ApiError(404, "Sitting Arrangement not found or unauthorized");

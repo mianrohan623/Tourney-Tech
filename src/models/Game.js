@@ -4,7 +4,7 @@ import { Schema, model, models } from "mongoose";
 
 const GameSchema = new Schema(
   {
-    name: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, trim: true },
     genre: { type: String, trim: true },
     platform: {
       type: String,

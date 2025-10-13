@@ -88,7 +88,7 @@ export default function GameForm({ onSubmit, initialData = {}, onClose }) {
           name="genre"
           value={formData.genre}
           onChange={handleChange}
-          placeholder="Genre"
+          placeholder="Host"
           className="p-2 rounded border border-[var(--border-color)] bg-[var(--card-background)] text-[var(--foreground)]"
         />
         <input

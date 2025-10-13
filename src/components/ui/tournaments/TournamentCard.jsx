@@ -114,32 +114,39 @@ export default function TournamentCard({
             </Link>
           ) : status === "ongoing" ? (
             // ✅ Show Play Tournament for ongoing
-            <Link href={`/dashboard/game-play/${_id}`} className="flex-1">
+            <div className="w-full">
+              <Link href={`/dashboard/game-play/${_id}`} className="flex-1">
+                <button
+                  onClick={() => onSelect(_id)}
+                  className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01] hover:bg[]"
+                  style={{
+                    backgroundColor: "var(--info-color)",
+                    color: "white",
+                  }}
+                >
+                  Play Tournament
+                </button>
+              </Link>
+
+              <p className="mt-3 text-sm text-center text-[var(--accent-color)]">
+                Online registration is closed. Please Contact to the tournament
+                director.
+              </p>
+            </div>
+          ) : (
+            // ✅ Default: View Tournament
+            <Link href={`/dashboard/game-score/${_id}`} className="flex-1">
               <button
                 onClick={() => onSelect(_id)}
-                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01] hover:bg[]"
+                className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
                 style={{
-                  backgroundColor: "var(--info-color)",
+                  backgroundColor: "var(--success-color)",
                   color: "white",
                 }}
               >
-                Play Tournament
+                View ScoreBoard
               </button>
             </Link>
-          ) : (
-            // ✅ Default: View Tournament
-             <Link href={`/dashboard/game-score/${_id}`} className="flex-1">
-            <button
-              onClick={() => onSelect(_id)}
-              className="w-full py-2 rounded-lg font-semibold transition hover:scale-[1.01]"
-              style={{
-                backgroundColor: "var(--success-color)",
-                color: "white",
-              }}
-            >
-              View ScoreBoard
-            </button>
-          </Link>
           )}
         </div>
       </div>

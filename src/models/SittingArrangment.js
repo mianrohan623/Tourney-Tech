@@ -12,8 +12,11 @@ const SittingArrangmentSchema = new Schema(
       ref: "Game",
       required: true,
     },
-    image: {
-      type: String,
+    gallery: {
+      type: Schema.Types.ObjectId,
+      ref: "ImageGallery",
+      required: false,
+      default: null,
     },
     user: {
       type: Schema.Types.ObjectId,

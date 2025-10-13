@@ -25,6 +25,9 @@ const TeamUpSchema = new Schema(
     message: {
       type: String,
     },
+    gameId: {
+      type: String
+    }
   },
   { timestamps: true }
 );

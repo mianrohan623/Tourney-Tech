@@ -1,41 +1,21 @@
-// src\app\api\auth\register\route.js
-
-import { connectDB } from "@/lib/mongoose";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  setAuthCookies,
-} from "@/utils/server/tokens";
-import { NextResponse } from "next/server";
+import crypto from "crypto";
+import sendEmail from "@/constants/EmailProvider";
+import { parseForm } from "@/utils/server/parseForm";
 
-/**
- * Basic string sanitization (trims and escapes input)
- */
 function sanitize(input) {
   if (typeof input !== "string") return "";
   return input.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export const POST = asyncHandler(async (req) => {
-  // ✅ Connect to DB
-  try {
-    await connectDB();
-  } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err.message);
-    throw new ApiError(500, "Database connection failed", err);
-  }
+  const { fields } = await parseForm(req);
 
-  // ✅ Parse and sanitize JSON body
-  let body;
-  try {
-    body = await req.json();
-  } catch (err) {
-    throw new ApiError(400, "Invalid JSON body", err);
-  }
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otpExpiry = Date.now() + 10 * 60 * 1000;
 
   const {
     firstname,
@@ -49,9 +29,10 @@ export const POST = asyncHandler(async (req) => {
     phone,
     gender,
     avatar,
-  } = body;
+    club,
+    subCity,
+  } = fields;
 
-  // ✅ Sanitize all values
   const clean = {
     firstname: sanitize(firstname),
     lastname: sanitize(lastname),
@@ -64,6 +45,8 @@ export const POST = asyncHandler(async (req) => {
     phone: sanitize(phone),
     gender: sanitize(gender),
     avatar: sanitize(avatar),
+    club: sanitize(club),
+    subCity: sanitize(subCity),
   };
 
   // ✅ Required field validation
@@ -71,7 +54,6 @@ export const POST = asyncHandler(async (req) => {
     "firstname",
     "lastname",
     "email",
-    "username",
     "password",
     "city",
     "stateCode",
@@ -99,7 +81,8 @@ export const POST = asyncHandler(async (req) => {
     firstname: clean.firstname,
     lastname: clean.lastname,
     email: clean.email,
-    username: clean.username.toLowerCase(),
+    username:
+      clean.username.toLowerCase() || `${clean?.firstname} ${clean?.lastname}`,
     password: clean.password,
     city: clean.city,
     stateCode: clean.stateCode,
@@ -107,50 +90,31 @@ export const POST = asyncHandler(async (req) => {
     phone: clean.phone,
     gender: clean.gender,
     avatar: clean.avatar || undefined,
+    club: clean.club,
+    subCity: clean.subCity,
+    otp,
+    otpExpiry,
   });
 
   await user.save();
 
-  // ✅ Double-check user was created
-  const createdUser = await User.findById(user._id).select(
-    "-refreshToken -accessToken -password"
+  const emailContent = {
+    from: `"Tourney Tech" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Your Email Verification OTP",
+    html: `
+      <h2>Hello ${firstname}!</h2>
+      <p>Your OTP for verification is:</p>
+      <h1 style="letter-spacing:4px;">${otp}</h1>
+      <p>This code will expire in 10 minutes.</p>
+    `,
+  };
+
+  await sendEmail(emailContent);
+
+  return Response.json(
+    new ApiResponse(201, null, "Verfication Email Sent Successfully!")
   );
 
-  if (!createdUser) {
-    throw new ApiError(500, "User creation failed, try again.");
-  }
-
-  // ✅ Token generation
-  const accessToken = generateAccessToken(createdUser);
-  const refreshToken = generateRefreshToken(createdUser);
-
-  // ✅ Save refreshToken in DB only
-  try {
-    await User.findByIdAndUpdate(
-      user._id,
-      { refreshToken },
-      { validateBeforeSave: false }
-    );
-
-    // After generating tokens:
-    // setAuthCookies(accessToken, refreshToken);
-  } catch (err) {
-    throw new ApiError(500, "Failed to update refreshToken in db.", err);
-  }
-
-  const safeUser = await User.findById(user._id).select(
-    "-refreshToken -password -accessToken"
-  );
-
-  const res = NextResponse.json(
-    new ApiResponse(
-      201,
-      {
-        user: safeUser,
-      },
-      "User registered successfully"
-    )
-  );
-
-  return setAuthCookies(res, accessToken, refreshToken);
+  // return setAuthCookies(res, accessToken, refreshToken);
 });

@@ -22,6 +22,8 @@ export const POST = asyncHandler(async (req) => {
     dob,
     role,
     password,
+    club,
+    subCity
   } = body;
 
   if (!password) throw new ApiResponse(500, null, "Password is Required");
@@ -38,9 +40,9 @@ export const POST = asyncHandler(async (req) => {
     dob,
     role,
     password,
+    subCity,
+    club
   });
-
-  console.log("user=============:", user)
 
   await user.save();
 
