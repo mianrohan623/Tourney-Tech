@@ -1,13 +1,12 @@
-import { connectDB } from "@/lib/mongoose";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import bcrypt from "bcrypt";
+import { parseForm } from "@/utils/server/parseForm";
 
 export const POST = asyncHandler(async (req) => {
-  await connectDB();
-  const { email, otp, newPassword } = await req.json();
+  const { fields } = await parseForm(req);
+  const { email, otp, newPassword } = fields;
 
   if (!email || !otp || !newPassword)
     throw new ApiError(400, "Email, OTP, and new password are required");
@@ -15,20 +14,14 @@ export const POST = asyncHandler(async (req) => {
   const user = await User.findOne({ email });
   if (!user) throw new ApiError(404, "User not found");
 
-  // Check OTP validity
-  if (user.otp !== Number(otp))
-    throw new ApiError(400, "Invalid OTP");
+  if (user.otp !== Number(otp)) throw new ApiError(400, "Invalid OTP");
+  if (Date.now() > user.otpExpiry) throw new ApiError(400, "OTP expired");
 
-  if (Date.now() > user.otpExpiry)
-    throw new ApiError(400, "OTP expired");
-
-  // Update password (hashing auto in model or here)
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(newPassword, salt);
-
-  // Clear OTP fields
+  // ✅ Let pre-save hook hash password
+  user.password = newPassword;
   user.otp = undefined;
   user.otpExpiry = undefined;
+  user.isVerified = true;
 
   await user.save();
 

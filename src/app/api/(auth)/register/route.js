@@ -76,8 +76,6 @@ export const POST = asyncHandler(async (req) => {
     throw new ApiError(409, "Email or username already in use");
   }
 
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-
   // ✅ Create user
   const user = new User({
     firstname: clean.firstname,

@@ -60,6 +60,7 @@ export const POST = asyncHandler(async (req) => {
 
   // ✅ Check password
   const isPasswordValid = await user.isPasswordCorrect(clean.password);
+  
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid credentials");
   }
@@ -67,6 +68,8 @@ export const POST = asyncHandler(async (req) => {
   // ✅ Generate tokens
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
+
+  console.log("refresh Token:------------------", refreshToken);
 
   // ✅ Save refreshToken in DB
   user.refreshToken = refreshToken;
