@@ -3,7 +3,6 @@ import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import { NextResponse } from "next/server";
 import sendEmail from "@/constants/EmailProvider";
 
 export const POST = asyncHandler(async (req) => {

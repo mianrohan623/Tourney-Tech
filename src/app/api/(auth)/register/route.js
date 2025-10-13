@@ -1,35 +1,21 @@
-// src\app\api\auth\register\route.js
-
-import { connectDB } from "@/lib/mongoose";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  setAuthCookies,
-} from "@/utils/server/tokens";
-import { NextResponse } from "next/server";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import sendEmail from "@/constants/EmailProvider";
 import { parseForm } from "@/utils/server/parseForm";
 
-/**
- * Basic string sanitization (trims and escapes input)
- */
 function sanitize(input) {
   if (typeof input !== "string") return "";
   return input.trim().replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 export const POST = asyncHandler(async (req) => {
-  // ✅ Connect to DB
   const { fields } = await parseForm(req);
 
   const otp = Math.floor(100000 + Math.random() * 900000);
-  const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes validity
+  const otpExpiry = Date.now() + 10 * 60 * 1000;
 
   const {
     firstname,
@@ -47,7 +33,6 @@ export const POST = asyncHandler(async (req) => {
     subCity,
   } = fields;
 
-  // ✅ Sanitize all values
   const clean = {
     firstname: sanitize(firstname),
     lastname: sanitize(lastname),
@@ -115,8 +100,6 @@ export const POST = asyncHandler(async (req) => {
 
   await user.save();
 
-  const verifyURL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${verificationToken}`;
-
   const emailContent = {
     from: `"Tourney Tech" <${process.env.EMAIL_USER}>`,
     to: email,
@@ -131,7 +114,7 @@ export const POST = asyncHandler(async (req) => {
 
   await sendEmail(emailContent);
 
-  return NextResponse.json(
+  return Response.json(
     new ApiResponse(201, null, "Verfication Email Sent Successfully!")
   );
 
