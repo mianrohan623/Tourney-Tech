@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 
 import CitySelector from "@/components/ui/signup/CitySelector";
 
+
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -74,19 +75,38 @@ export default function SignUpPage() {
   gender,
 };
 
+try {
+  setLoading(true);
 
-    try {
-      setLoading(true);
-      const res = await api.post("/api/register", data);
-      toast.success("Account created!");
-      window.location.href = "/auth/login";
-    } catch (error) {
-      const errorMessage =
-        error?.response?.data?.message || "Something went wrong";
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+  const data = {
+    firstname: firstName,
+    lastname: lastName,
+    email,
+    username,
+    password,
+    dob,
+    city,
+    subCity,
+    stateCode,
+    club,
+    phone,
+    gender,
+  };
+
+  const res = await api.post("/api/register", data, {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  toast.success(res?.data?.message || "Verification email sent!");
+  window.location.href = "/auth/verify-otp";
+} catch (error) {
+  const errorMessage =
+    error?.response?.data?.message || "Something went wrong";
+  toast.error(errorMessage);
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (
