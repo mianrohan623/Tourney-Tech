@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
       });
 
       toast.success(data?.message || "Password reset successful!");
-      window.location.href = "/login"; // ✅ redirect after success
+      window.location.href = "/auth/login"; // ✅ redirect after success
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to reset password");
     } finally {
