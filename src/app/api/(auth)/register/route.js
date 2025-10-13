@@ -26,7 +26,7 @@ function sanitize(input) {
 
 export const POST = asyncHandler(async (req) => {
   // ✅ Connect to DB
-  const {fields} = await parseForm(req);
+  const { fields } = await parseForm(req);
 
   const otp = Math.floor(100000 + Math.random() * 900000);
   const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes validity
@@ -69,7 +69,6 @@ export const POST = asyncHandler(async (req) => {
     "firstname",
     "lastname",
     "email",
-    "username",
     "password",
     "city",
     "stateCode",
@@ -99,7 +98,8 @@ export const POST = asyncHandler(async (req) => {
     firstname: clean.firstname,
     lastname: clean.lastname,
     email: clean.email,
-    username: clean.username.toLowerCase(),
+    username:
+      clean.username.toLowerCase() || `${clean?.firstname} ${clean?.lastname}`,
     password: clean.password,
     city: clean.city,
     stateCode: clean.stateCode,
@@ -118,7 +118,7 @@ export const POST = asyncHandler(async (req) => {
   const verifyURL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${verificationToken}`;
 
   const emailContent = {
-    from: `"Tournament App" <${process.env.EMAIL_USER}>`,
+    from: `"Tourney Tech" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Your Email Verification OTP",
     html: `

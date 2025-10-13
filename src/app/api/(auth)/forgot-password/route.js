@@ -1,44 +1,45 @@
-import crypto from "crypto";
-import nodemailer from "nodemailer";
 import { connectDB } from "@/lib/mongoose";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
+import { ApiError } from "@/utils/server/ApiError";
 import { asyncHandler } from "@/utils/server/asyncHandler";
+import { NextResponse } from "next/server";
+import sendEmail from "@/constants/EmailProvider";
 
 export const POST = asyncHandler(async (req) => {
+  await connectDB();
   const { email } = await req.json();
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    return Response.json(new ApiResponse(404, null, "No user found with that email."));
-  }
+  if (!email) throw new ApiError(400, "Email is required");
 
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  user.resetPasswordToken = resetToken;
-  user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 mins
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(404, "User not found");
+
+  // Generate OTP
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 min
+
+  // Save OTP in DB
+  user.otp = otp;
+  user.otpExpiry = otpExpiry;
   await user.save();
 
-  const resetURL = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password?token=${resetToken}`;
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: `"Tournament App" <${process.env.SMTP_USER}>`,
+  // Send Email
+  const emailContent = {
+    from: `"Tourney Tech" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Password Reset Request",
+    subject: "Password Reset OTP - Tourney Tech",
     html: `
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetURL}">${resetURL}</a>
+      <h2>Hi ${user.firstname || "User"}!</h2>
+      <p>Your password reset OTP is:</p>
+      <h1 style="letter-spacing:4px;">${otp}</h1>
+      <p>This code will expire in 10 minutes.</p>
     `,
-  });
+  };
+
+  await sendEmail(emailContent);
 
   return Response.json(
-    new ApiResponse(200, null, "Password reset email sent successfully.")
+    new ApiResponse(200, null, "OTP sent successfully to your email")
   );
 });
