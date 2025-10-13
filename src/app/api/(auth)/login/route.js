@@ -70,6 +70,11 @@ export const POST = asyncHandler(async (req) => {
 
   // ✅ Save refreshToken in DB
   user.refreshToken = refreshToken;
+
+  if (!user?.isVerified) {
+    throw new ApiError(401, "User is not verified");
+  }
+
   await user.save({ validateBeforeSave: false });
 
   // ✅ Return sanitized user

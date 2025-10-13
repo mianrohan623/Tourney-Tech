@@ -13,6 +13,8 @@ import {
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import sendEmail from "@/constants/EmailProvider";
+import { parseForm } from "@/utils/server/parseForm";
 
 /**
  * Basic string sanitization (trims and escapes input)
@@ -24,20 +26,10 @@ function sanitize(input) {
 
 export const POST = asyncHandler(async (req) => {
   // ✅ Connect to DB
-  try {
-    await connectDB();
-  } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err.message);
-    throw new ApiError(500, "Database connection failed", err);
-  }
+  const {fields} = await parseForm(req);
 
-  // ✅ Parse and sanitize JSON body
-  let body;
-  try {
-    body = await req.json();
-  } catch (err) {
-    throw new ApiError(400, "Invalid JSON body", err);
-  }
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes validity
 
   const {
     firstname,
@@ -53,7 +45,7 @@ export const POST = asyncHandler(async (req) => {
     avatar,
     club,
     subCity,
-  } = body;
+  } = fields;
 
   // ✅ Sanitize all values
   const clean = {
@@ -117,61 +109,27 @@ export const POST = asyncHandler(async (req) => {
     avatar: clean.avatar || undefined,
     club: clean.club,
     subCity: clean.subCity,
-    verificationToken,
+    otp,
+    otpExpiry,
   });
 
   await user.save();
 
   const verifyURL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${verificationToken}`;
 
-  // ✅ Double-check user was created
-  // const createdUser = await User.findById(user._id).select(
-  //   "-refreshToken -accessToken -password"
-  // );
-
-  // if (!createdUser) {
-  //   throw new ApiError(500, "User creation failed, try again.");
-  // }
-
-  // // ✅ Token generation
-  // const accessToken = generateAccessToken(createdUser);
-  // const refreshToken = generateRefreshToken(createdUser);
-
-  // // ✅ Save refreshToken in DB only
-  // try {
-  //   await User.findByIdAndUpdate(
-  //     user._id,
-  //     { refreshToken },
-  //     { validateBeforeSave: false }
-  //   );
-
-  //   // After generating tokens:
-  //   // setAuthCookies(accessToken, refreshToken);
-  // } catch (err) {
-  //   throw new ApiError(500, "Failed to update refreshToken in db.", err);
-  // }
-
-  // const safeUser = await User.findById(user._id).select(
-  //   "-refreshToken -password -accessToken"
-  // );
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: `"Tournament App" <${process.env.SMTP_USER}>`,
+  const emailContent = {
+    from: `"Tournament App" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Verify your email address",
+    subject: "Your Email Verification OTP",
     html: `
-      <h2>Welcome, ${firstname}!</h2>
-      <p>Click below to verify your email:</p>
-      <a href="${verifyURL}">${verifyURL}</a>
+      <h2>Hello ${firstname}!</h2>
+      <p>Your OTP for verification is:</p>
+      <h1 style="letter-spacing:4px;">${otp}</h1>
+      <p>This code will expire in 10 minutes.</p>
     `,
-  });
+  };
+
+  await sendEmail(emailContent);
 
   return NextResponse.json(
     new ApiResponse(201, null, "Verfication Email Sent Successfully!")

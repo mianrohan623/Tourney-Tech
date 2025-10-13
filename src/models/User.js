@@ -103,9 +103,8 @@ const UserSchema = new Schema(
       type: String,
     },
     isVerified: { type: Boolean, default: false },
-    verificationToken: { type: String },
-    resetPasswordToken: { type: String },
-    resetPasswordExpire: { type: Date },
+    otp: { type: Number },
+    otpExpiry: { type: Date },
   },
   { timestamps: true }
 );
