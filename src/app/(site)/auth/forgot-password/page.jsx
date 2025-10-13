@@ -94,7 +94,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full py-3 bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white font-semibold rounded-lg transition-all shadow-md hover:scale-[1.02]"
             >
-              {loading ? <Loader /> : "Send OTP"}
+              {loading ? "Loading" : "Send OTP"}
             </button>
           </form>
         ) : (
@@ -156,7 +156,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full py-3 bg-[var(--success-color)] hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-md hover:scale-[1.02]"
             >
-              {loading ? <Loader /> : "Reset Password"}
+              {loading ? "Loading" : "Reset Password"}
             </button>
           </form>
         )}
