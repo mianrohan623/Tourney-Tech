@@ -7,7 +7,7 @@ import "@/models/Tournament";
 import "@/models/Game";
 import "@/models/User";
 import { parseForm } from "@/utils/server/parseForm";
-import { uploadOnCloudinary } from "@/utils/server/cloudinary";
+// import { uploadOnCloudinary } from "@/utils/server/cloudinary";
 
 export const DELETE = asyncHandler(async (_, context) => {
   const user = await requireAuth();
@@ -35,7 +35,8 @@ export const DELETE = asyncHandler(async (_, context) => {
 
 export const PATCH = asyncHandler(async (req, context) => {
   const user = await requireAuth();
-  const { fields, files } = await parseForm(req);
+  // const { fields, files } = await parseForm(req);
+  const { fields } = await parseForm(req);
 
   const sittingArrangementId = context.params?.id;
   const tournamentId = fields.tournamentId?.toString();

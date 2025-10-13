@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/mongoose";
+// import { connectDB } from "@/lib/mongoose";
 import { User } from "@/models/User";
 import { ApiResponse } from "@/utils/server/ApiResponse";
 import { asyncHandler } from "@/utils/server/asyncHandler";
