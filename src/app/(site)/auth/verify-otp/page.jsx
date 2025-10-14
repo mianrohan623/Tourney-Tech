@@ -12,6 +12,23 @@ export default function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const resendOtp = async () => {
+    if (!email) {
+      toast.error("Please enter your email before resending OTP.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await api.post("/api/resend-otp", { email });
+      toast.success(res.data.message || "OTP resent successfully!");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to resend OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -126,9 +143,11 @@ export default function VerifyOtpPage() {
           >
             Didn’t receive the code?{" "}
             <span
-              className="cursor-pointer hover:underline"
+              className={`cursor-pointer hover:underline ${
+                !email ? "opacity-50 pointer-events-none" : ""
+              }`}
               style={{ color: "var(--accent-color)" }}
-              onClick={() => toast.success("Resend OTP feature coming soon!")}
+              onClick={resendOtp}
             >
               Resend
             </span>

@@ -9,7 +9,6 @@ import { toast } from "react-hot-toast";
 
 import CitySelector from "@/components/ui/signup/CitySelector";
 
-
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -34,7 +33,6 @@ export default function SignUpPage() {
       !firstName ||
       !lastName ||
       !email ||
-      !username ||
       !password ||
       !city ||
       !subCity ||
@@ -60,53 +58,52 @@ export default function SignUpPage() {
       return;
     }
 
-   const data = {
-  firstname: firstName,
-  lastname: lastName,
-  email,
-  username,
-  password,
-  dob,
-  city,
-  subCity,
-  stateCode,
-  club,
-  phone,
-  gender,
-};
+    //    const data = {
+    //   firstname: firstName,
+    //   lastname: lastName,
+    //   email,
+    //   username,
+    //   password,
+    //   dob,
+    //   city,
+    //   subCity,
+    //   stateCode,
+    //   club,
+    //   phone,
+    //   gender,
+    // };
 
-try {
-  setLoading(true);
+    try {
+      setLoading(true);
 
-  const data = {
-    firstname: firstName,
-    lastname: lastName,
-    email,
-    username,
-    password,
-    dob,
-    city,
-    subCity,
-    stateCode,
-    club,
-    phone,
-    gender,
-  };
+      const data = {
+        firstname: firstName,
+        lastname: lastName,
+        email,
+        username,
+        password,
+        dob,
+        city,
+        subCity,
+        stateCode,
+        club,
+        phone,
+        gender,
+      };
 
-  const res = await api.post("/api/register", data, {
-    headers: { "Content-Type": "application/json" },
-  });
+      const res = await api.post("/api/register", data, {
+        headers: { "Content-Type": "application/json" },
+      });
 
-  toast.success(res?.data?.message || "Verification email sent!");
-  window.location.href = "/auth/verify-otp";
-} catch (error) {
-  const errorMessage =
-    error?.response?.data?.message || "Something went wrong";
-  toast.error(errorMessage);
-} finally {
-  setLoading(false);
-}
-
+      toast.success(res?.data?.message || "Verification email sent!");
+      window.location.href = "/auth/verify-otp";
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.message || "Something went wrong";
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -147,7 +144,12 @@ try {
 
             {/* Username & Email */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input label="Nickname" value={username} onChange={setUsername} />
+              <Input
+                label="Nickname ( Optional )"
+                value={username}
+                onChange={setUsername}
+                required={false}
+              />
               {/* Email */}
               <Input
                 label="Email"
@@ -271,6 +273,7 @@ function Input({
   pattern,
   title,
   maxLength,
+  required = true,
 }) {
   const handleChange = (e) => {
     let val = e.target.value;
@@ -289,7 +292,7 @@ function Input({
       <input
         type={type}
         value={value}
-        required
+        required={required}
         maxLength={maxLength}
         onChange={handleChange}
         pattern={pattern}

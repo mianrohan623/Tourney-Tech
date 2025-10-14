@@ -21,7 +21,9 @@ export default function ForgotPasswordPage() {
     try {
       setLoading(true);
       const { data } = await api.post("/api/forgot-password", { email });
-      toast.success(data?.message || "OTP sent successfully! Check your email.");
+      toast.success(
+        data?.message || "OTP sent successfully! Check your email."
+      );
       setOtpSent(true);
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to send OTP");
@@ -154,9 +156,24 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[var(--success-color)] hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-md hover:scale-[1.02]"
+              className="w-full py-3 bg-[var(--success-color)] hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-md hover:scale-[1.02] cursor-pointer"
             >
               {loading ? "Loading" : "Reset Password"}
+            </button>
+
+            {/* change email button */}
+            <button
+              type="button"
+              onClick={() => {
+                setOtpSent(false);
+                setOtp("");
+                setNewPassword("");
+                setConfirmPassword("");
+                toast.success("You can now change your email.");
+              }}
+              className="w-full py-3 mt-1 bg-[var(--accent-color)]  text-black font-semibold rounded-lg transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              Change Email
             </button>
           </form>
         )}
