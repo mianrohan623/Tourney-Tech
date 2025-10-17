@@ -5,6 +5,9 @@ import api from "@/utils/axios";
 import { toast } from "react-hot-toast";
 import CitySelector from "../../signup/CitySelector";
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 export default function UserForm({ user = null, onSuccess }) {
   const isEdit = !!user;
 
@@ -39,7 +42,7 @@ export default function UserForm({ user = null, onSuccess }) {
         subCity: user.subCity || "", // ✅ new
         stateCode: user.stateCode || "",
         club: user.club || "", // ✅ new
-        dob: user.dob ? user.dob.split("T")[0] : "",
+        dob: user.dob || "",
         role: user.role || "player",
         password: "",
       });
@@ -208,13 +211,51 @@ export default function UserForm({ user = null, onSuccess }) {
           </div>
 
           {/* Date of Birth */}
-          <InputField
+          {/* <InputField
             label="Date of Birth"
             type="date"
             name="dob"
             value={form.dob}
             onChange={handleChange}
-          />
+          /> */}
+          <div>
+            <label className="block mb-2 text-sm font-medium">
+              Date of Birth
+            </label>
+            <DatePicker
+              selected={
+                form.dob
+                  ? (() => {
+                      const [month, day] = form.dob.split("/");
+                      const d = new Date();
+                      d.setMonth(month - 1);
+                      d.setDate(day);
+                      return d;
+                    })()
+                  : null
+              }
+              onChange={(date) => {
+                if (date instanceof Date && !isNaN(date)) {
+                  const formatted = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+                    date.getDate()
+                  ).padStart(2, "0")}`;
+                  setForm((prev) => ({ ...prev, dob: formatted })); // ✅ correctly update form.dob
+                }
+              }}
+              dateFormat="MM/dd"
+              showMonthDropdown
+              showDayDropdown
+              showYearDropdown={false} // 🚫 disable year
+              placeholderText="Select month and day"
+              className="w-full px-4 py-2 rounded-md border focus:outline-none"
+              style={{
+                backgroundColor: "var(--secondary-color)",
+                borderColor: "var(--border-color)",
+                color: "var(--foreground)",
+              }}
+              calendarClassName="custom-calendar"
+            />
+          </div>
 
           {/* Role */}
           <div className="flex flex-col">
@@ -271,7 +312,7 @@ function InputField({ label, type = "text", name, value, onChange, ...rest }) {
         name={name}
         value={value}
         onChange={onChange}
-        required={name !== "password"} // ✅ password optional on edit
+        required={name !== "password" && name !== "username"} // ✅ password optional on edit
         className="px-4 py-1.5 rounded-lg bg-[var(--secondary-color)] text-foreground border border-[var(--border-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
         {...rest} // ✅ allows custom validation props
       />
