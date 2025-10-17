@@ -78,6 +78,10 @@ body {
   width: 6px;
 }
 
+.scrollbar-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
 /* Track */
 .scrollbar::-webkit-scrollbar-track {
   background: var(--background);
@@ -86,7 +90,13 @@ body {
 .scrollbar-sidebar::-webkit-scrollbar-track {
   background: var(--card-background);
 }
+.scrollbar::-webkit-scrollbar-track {
+  background: var(--background);
+}
 
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: var(--card-background);
+}
 /* Handle */
 .scrollbar::-webkit-scrollbar-thumb {
   background: var(--card-background);

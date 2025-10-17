@@ -64,6 +64,7 @@ export default function ManageUsers() {
           <CreateUserForm
             user={editingUser}
             onSuccess={handleFormSuccess} // ✅ refresh after create/edit
+            onClose={() => setShowForm(false)}
           />
         </div>
       )}

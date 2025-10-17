@@ -5,6 +5,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Loader from "@/components/Loader";
 
+import PasswordInput from "@/components/ui/signup/PasswordInput";
+
 import { toast } from "react-hot-toast";
 
 export default function LoginPage() {
@@ -99,13 +101,13 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
+              {/* <label
                 htmlFor="password"
                 className="block mb-2 text-sm font-medium"
               >
                 Password
-              </label>
-              <input
+              </label> */}
+              {/* <input
                 type="password"
                 id="password"
                 required
@@ -118,6 +120,11 @@ export default function LoginPage() {
                   borderColor: "var(--border-color)",
                   caretColor: "var(--accent-color)",
                 }}
+              /> */}
+              <PasswordInput
+                label="Password"
+                value={password}
+                onChange={setPassword}
               />
 
               <div className="mt-1 ">

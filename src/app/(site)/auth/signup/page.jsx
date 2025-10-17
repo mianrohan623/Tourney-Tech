@@ -12,6 +12,8 @@ import CitySelector from "@/components/ui/signup/CitySelector";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import PasswordInput from "@/components/ui/signup/PasswordInput";
+
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -166,18 +168,13 @@ export default function SignUpPage() {
 
             {/* Password & DOB */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+              <PasswordInput
                 label="Password"
                 value={password}
                 onChange={setPassword}
-                type="password"
               />
-              {/* <Input
-                label="Date of Birth"
-                value={dob}
-                onChange={setDob}
-                type="date"
-              /> */}
+
+              {/* DOB */}
               <div>
                 <label className="block mb-2 text-sm font-medium">
                   Date of Birth

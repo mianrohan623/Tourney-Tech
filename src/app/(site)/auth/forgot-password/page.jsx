@@ -120,36 +120,18 @@ export default function ForgotPasswordPage() {
             </div>
 
             <div>
-              <label
-                htmlFor="newPassword"
-                className="block text-sm font-medium mb-1 text-gray-300"
-              >
-                New Password
-              </label>
-              <input
-                id="newPassword"
-                type="password"
+              <PasswordInput
+                label="New Password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full p-3 rounded-lg bg-[var(--secondary-color)] border border-[var(--border-color)] text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+                onChange={setNewPassword}
               />
             </div>
 
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-1 text-gray-300"
-              >
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
+              <PasswordInput
+                label="Confirm Password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full p-3 rounded-lg bg-[var(--secondary-color)] border border-[var(--border-color)] text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+                onChange={setConfirmPassword}
               />
             </div>
 

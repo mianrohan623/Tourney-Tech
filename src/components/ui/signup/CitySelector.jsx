@@ -13,35 +13,46 @@ export default function CitySelector({
   club,
   setClub,
 }) {
-  const [regions, setRegions] = useState([]); // Regions (independent)
-  const [states, setStates] = useState([]);   // All available states
-  const [cities, setCities] = useState([]);   // Cities that depend on state
+  const [regions, setRegions] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
-  // Load all regions & states on mount
+  // Load all regions & states once
   useEffect(() => {
     setRegions(regionList);
     setStates(stateList);
   }, []);
 
-  // When state changes → load its cities
+  // 🔥 Load cities when stateCode changes
   useEffect(() => {
     if (stateCode) {
       const cityList = stateCitiesMap[stateCode] || [];
       setCities(cityList.map((c) => ({ code: c, name: c })));
-      setSubCity("");
     } else {
       setCities([]);
       setSubCity("");
     }
   }, [stateCode]);
 
+  // ✅ Sync values when user is in edit mode and props change
+  useEffect(() => {
+    if (city && regions.includes(city) === false) setRegions((prev) => [...prev, city]);
+    if (stateCode && !states.find((s) => s.isoCode === stateCode)) {
+      setStates((prev) => [...prev, { isoCode: stateCode, name: stateCode }]);
+    }
+
+    // If editing and we already have a stateCode, ensure city dropdown loads
+    if (stateCode) {
+      const cityList = stateCitiesMap[stateCode] || [];
+      setCities(cityList.map((c) => ({ code: c, name: c })));
+    }
+  }, [city, stateCode, subCity, club]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Region (Independent) */}
+      {/* Region */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          Region
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">Region</label>
         <select
           value={city}
           onChange={(e) => setCity(e.target.value)}
@@ -62,11 +73,9 @@ export default function CitySelector({
         </select>
       </div>
 
-      {/* State (Independent) */}
+      {/* State */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          State
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">State</label>
         <select
           value={stateCode}
           onChange={(e) => setStateCode(e.target.value)}
@@ -87,11 +96,9 @@ export default function CitySelector({
         </select>
       </div>
 
-      {/* City (Depends on State) */}
+      {/* City */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          City
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">City</label>
         <select
           value={subCity}
           onChange={(e) => setSubCity(e.target.value)}
@@ -115,9 +122,7 @@ export default function CitySelector({
 
       {/* Club */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          Club
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">Club</label>
         <select
           value={club}
           onChange={(e) => setClub(e.target.value)}
