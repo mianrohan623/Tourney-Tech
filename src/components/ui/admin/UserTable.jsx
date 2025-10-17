@@ -61,8 +61,7 @@ export default function UserTable({ onEditUser, refreshKey }) {
       {
         header: "DOB",
         accessorKey: "dob",
-        cell: ({ getValue }) =>
-          getValue() ? new Date(getValue()).toLocaleDateString() : "-",
+      
       },
       {
         header: "Created At",

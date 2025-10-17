@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { regionList, regionCitiesMap, cityStateMap, clubList } from "@/constants/RegionData";
+import { regionList, stateList, stateCitiesMap, clubList } from "@/constants/RegionData";
 
 export default function CitySelector({
   stateCode,
@@ -13,46 +13,31 @@ export default function CitySelector({
   club,
   setClub,
 }) {
-  const [regions, setRegions] = useState([]);     // Regions
-  const [cities, setCities] = useState([]);       // Cities (subCity in your code)
-  const [states, setStates] = useState([]);       // States (based on city)
+  const [regions, setRegions] = useState([]); // Regions (independent)
+  const [states, setStates] = useState([]);   // All available states
+  const [cities, setCities] = useState([]);   // Cities that depend on state
 
+  // Load all regions & states on mount
   useEffect(() => {
-    // Load all regions on mount
     setRegions(regionList);
+    setStates(stateList);
   }, []);
 
-  // When region (city variable) changes → load its cities
+  // When state changes → load its cities
   useEffect(() => {
-    if (city) {
-      const cityList = regionCitiesMap[city] || [];
+    if (stateCode) {
+      const cityList = stateCitiesMap[stateCode] || [];
       setCities(cityList.map((c) => ({ code: c, name: c })));
       setSubCity("");
-      setStates([]);
-      setStateCode("");
     } else {
       setCities([]);
       setSubCity("");
-      setStates([]);
-      setStateCode("");
     }
-  }, [city]);
-
-  // When subCity (selected city) changes → load related state
-  useEffect(() => {
-    if (subCity) {
-      const stateName = cityStateMap[subCity] ? [cityStateMap[subCity]] : [];
-      setStates(stateName.map((s) => ({ isoCode: s, name: s })));
-      setStateCode("");
-    } else {
-      setStates([]);
-      setStateCode("");
-    }
-  }, [subCity]);
+  }, [stateCode]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Region */}
+      {/* Region (Independent) */}
       <div>
         <label className="block mb-2 text-sm font-medium text-white">
           Region
@@ -77,7 +62,32 @@ export default function CitySelector({
         </select>
       </div>
 
-      {/* City */}
+      {/* State (Independent) */}
+      <div>
+        <label className="block mb-2 text-sm font-medium text-white">
+          State
+        </label>
+        <select
+          value={stateCode}
+          onChange={(e) => setStateCode(e.target.value)}
+          required
+          className="w-full px-4 py-2 rounded-md border"
+          style={{
+            backgroundColor: "var(--secondary-color)",
+            borderColor: "var(--border-color)",
+            color: "var(--foreground)",
+          }}
+        >
+          <option value="">Select State</option>
+          {states.map((s) => (
+            <option key={s.isoCode} value={s.isoCode}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* City (Depends on State) */}
       <div>
         <label className="block mb-2 text-sm font-medium text-white">
           City
@@ -103,33 +113,7 @@ export default function CitySelector({
         </select>
       </div>
 
-      {/* State */}
-      <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          State
-        </label>
-        <select
-          value={stateCode}
-          onChange={(e) => setStateCode(e.target.value)}
-          required
-          disabled={!states.length}
-          className="w-full px-4 py-2 rounded-md border"
-          style={{
-            backgroundColor: "var(--secondary-color)",
-            borderColor: "var(--border-color)",
-            color: "var(--foreground)",
-          }}
-        >
-          <option value="">Select State</option>
-          {states.map((s) => (
-            <option key={s.isoCode} value={s.isoCode}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Club (Always visible) */}
+      {/* Club */}
       <div>
         <label className="block mb-2 text-sm font-medium text-white">
           Club

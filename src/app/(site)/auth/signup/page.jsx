@@ -9,6 +9,9 @@ import { toast } from "react-hot-toast";
 
 import CitySelector from "@/components/ui/signup/CitySelector";
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 export default function SignUpPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -169,12 +172,50 @@ export default function SignUpPage() {
                 onChange={setPassword}
                 type="password"
               />
-              <Input
+              {/* <Input
                 label="Date of Birth"
                 value={dob}
                 onChange={setDob}
                 type="date"
-              />
+              /> */}
+              <div>
+                <label className="block mb-2 text-sm font-medium">
+                  Date of Birth
+                </label>
+                <DatePicker
+                  selected={
+                    dob
+                      ? (() => {
+                          const [month, day] = dob.split("/");
+                          const d = new Date();
+                          d.setMonth(month - 1);
+                          d.setDate(day);
+                          return d;
+                        })()
+                      : null
+                  }
+                  onChange={(date) => {
+                    if (date instanceof Date && !isNaN(date)) {
+                      const formatted = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+                        date.getDate()
+                      ).padStart(2, "0")}`;
+                      setDob(formatted); // ✅ store as "MM/DD" string only
+                    }
+                  }}
+                  dateFormat="MM/dd"
+                  showMonthDropdown
+                  showDayDropdown
+                  showYearDropdown={false} // 🚫 disable year
+                  placeholderText="Select month and day"
+                  className="w-full px-4 py-2 rounded-md border focus:outline-none"
+                  style={{
+                    backgroundColor: "var(--secondary-color)",
+                    borderColor: "var(--border-color)",
+                    color: "var(--foreground)",
+                  }}
+                  calendarClassName="custom-calendar"
+                />
+              </div>
             </div>
 
             {/* Phone & City */}
