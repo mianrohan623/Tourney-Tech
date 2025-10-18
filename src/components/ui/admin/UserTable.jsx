@@ -49,20 +49,19 @@ export default function UserTable({ onEditUser, refreshKey }) {
         header: "Full Name",
         accessorFn: (row) => `${row.firstname} ${row.lastname}`,
       },
-      { header: "Username", accessorKey: "username" },
+      { header: "Nickname", accessorKey: "username" },
       { header: "Email", accessorKey: "email" },
       { header: "Gender", accessorKey: "gender" },
       { header: "Phone", accessorKey: "phone" },
       { header: "Region", accessorKey: "city" },
       { header: "City", accessorKey: "subCity" },
       { header: "State", accessorKey: "stateCode" },
-      // { header: "Club", accessorKey: "club" },
+      { header: "Club", accessorKey: "club" },
       { header: "Role", accessorKey: "role" },
       {
         header: "DOB",
         accessorKey: "dob",
-        cell: ({ getValue }) =>
-          getValue() ? new Date(getValue()).toLocaleDateString() : "-",
+      
       },
       {
         header: "Created At",
@@ -122,7 +121,7 @@ export default function UserTable({ onEditUser, refreshKey }) {
   };
 
   return (
-    <div className="p-4">
+    <div className="">
       {/* Top Controls */}
       <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
         {/* Rows per page */}

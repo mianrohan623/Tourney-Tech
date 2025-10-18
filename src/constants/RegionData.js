@@ -1,5 +1,4 @@
-// src/data/regionData.js
-
+// 🌍 REGION LIST (UNCHANGED)
 export const regionList = [
   "NY-NJ-DE",
   "PHIL / PA CITIES",
@@ -23,7 +22,7 @@ export const regionList = [
   "Other",
 ];
 
-// 🌆 REGION → CITY (subcity)
+// 🌆 REGION → CITY (UNCHANGED)
 export const regionCitiesMap = {
   "NY-NJ-DE": ["New York City", "Newark", "Wilmington"],
   "PHIL / PA CITIES": ["Philadelphia", "Pittsburgh", "Allentown"],
@@ -47,84 +46,52 @@ export const regionCitiesMap = {
   Other: ["Other Region"],
 };
 
-// 🗺️ CITY → STATE
-export const cityStateMap = {
-  "New York City": "New York",
-  Newark: "New Jersey",
-  Wilmington: "Delaware",
+// 🏙️ UK STATES (Constituent Countries + Major Counties)
+export const stateList = [
+  { isoCode: "ENG", name: "England" },
+  { isoCode: "SCT", name: "Scotland" },
+  { isoCode: "WLS", name: "Wales" },
+  { isoCode: "NIR", name: "Northern Ireland" },
 
-  Philadelphia: "Pennsylvania",
-  Pittsburgh: "Pennsylvania",
-  Allentown: "Pennsylvania",
+  // Major English counties (for detail)
+  { isoCode: "LND", name: "Greater London" },
+  { isoCode: "MAN", name: "Greater Manchester" },
+  { isoCode: "YKS", name: "Yorkshire" },
+  { isoCode: "WMID", name: "West Midlands" },
+  { isoCode: "MER", name: "Merseyside" },
+  { isoCode: "KNT", name: "Kent" },
+  { isoCode: "ESS", name: "Essex" },
+  { isoCode: "HRF", name: "Hertfordshire" },
+  { isoCode: "SRY", name: "Surrey" },
+];
 
-  Hartford: "Connecticut",
-  Boston: "Massachusetts",
-  Concord: "New Hampshire",
-  Burlington: "Vermont",
+// 🏙️ STATE → CITY MAP (UK)
+export const stateCitiesMap = {
+  // 🌆 England
+  ENG: ["London", "Birmingham", "Manchester", "Liverpool", "Leeds", "Bristol", "Nottingham", "Sheffield", "Leicester", "Newcastle upon Tyne"],
+  
+  // 🏔️ Scotland
+  SCT: ["Edinburgh", "Glasgow", "Aberdeen", "Dundee", "Inverness", "Stirling"],
 
-  "Washington DC": "District of Columbia",
-  Baltimore: "Maryland",
-  Arlington: "Virginia",
+  // 🏞️ Wales
+  WLS: ["Cardiff", "Swansea", "Newport", "Wrexham", "Bangor"],
 
-  Norfolk: "Virginia",
-  "Virginia Beach": "Virginia",
-  Richmond: "Virginia",
+  // 🍀 Northern Ireland
+  NIR: ["Belfast", "Derry", "Lisburn", "Newry"],
 
-  Dearborn: "Michigan",
-  Southfield: "Michigan",
-  Downtown: "Multiple States", // Shared name across regions
-
-  "Midtown": "Georgia",
-  Buckhead: "Georgia",
-
-  Hoover: "Alabama",
-  Homewood: "Alabama",
-  "Mountain Brook": "Alabama",
-
-  Dublin: "Ohio",
-  Westerville: "Ohio",
-
-  Miami: "Florida",
-  Orlando: "Florida",
-  Tampa: "Florida",
-  Jacksonville: "Florida",
-
-  "Hyde Park": "Ohio",
-  "Over-the-Rhine": "Ohio",
-
-  Evanston: "Illinois",
-  "Oak Park": "Illinois",
-
-  Irving: "Texas",
-  Plano: "Texas",
-  Arlington: "Texas",
-
-  "Round Rock": "Texas",
-  "Cedar Park": "Texas",
-
-  "Sugar Land": "Texas",
-  Katy: "Texas",
-  "The Woodlands": "Texas",
-
-  "Alamo Heights": "Texas",
-  "Stone Oak": "Texas",
-
-  "French Quarter": "Louisiana",
-  "Garden District": "Louisiana",
-  Uptown: "Louisiana",
-
-  Hollywood: "California",
-  "Santa Monica": "California",
-  Burbank: "California",
-
-  Summerlin: "Nevada",
-  Henderson: "Nevada",
-  Paradise: "Nevada",
-
-  "Other Region": "Other",
+  // 🇬🇧 Major English counties
+  LND: ["City of London", "Westminster", "Camden", "Croydon", "Ealing"],
+  MAN: ["Manchester", "Salford", "Stockport", "Bolton", "Oldham"],
+  YKS: ["Leeds", "Sheffield", "Bradford", "York", "Huddersfield"],
+  WMID: ["Birmingham", "Wolverhampton", "Coventry", "Solihull", "Dudley"],
+  MER: ["Liverpool", "Birkenhead", "St Helens", "Southport", "Bootle"],
+  KNT: ["Maidstone", "Canterbury", "Dover", "Tunbridge Wells", "Ashford"],
+  ESS: ["Chelmsford", "Colchester", "Southend-on-Sea", "Basildon", "Harlow"],
+  HRF: ["Watford", "St Albans", "Stevenage", "Hemel Hempstead"],
+  SRY: ["Guildford", "Woking", "Epsom", "Redhill", "Farnham"],
 };
 
-// 🏆 CLUB LIST
+// 🏆 CLUB LIST (UNCHANGED)
 export const clubList = [
   "7NO PLAYERS",
   "ALAMO 7NO",

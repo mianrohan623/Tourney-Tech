@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { regionList, regionCitiesMap, cityStateMap, clubList } from "@/constants/RegionData";
+import { regionList, stateList, stateCitiesMap, clubList } from "@/constants/RegionData";
 
 export default function CitySelector({
   stateCode,
@@ -13,50 +13,46 @@ export default function CitySelector({
   club,
   setClub,
 }) {
-  const [regions, setRegions] = useState([]);     // Regions
-  const [cities, setCities] = useState([]);       // Cities (subCity in your code)
-  const [states, setStates] = useState([]);       // States (based on city)
+  const [regions, setRegions] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
+  // Load all regions & states once
   useEffect(() => {
-    // Load all regions on mount
     setRegions(regionList);
+    setStates(stateList);
   }, []);
 
-  // When region (city variable) changes → load its cities
+  // 🔥 Load cities when stateCode changes
   useEffect(() => {
-    if (city) {
-      const cityList = regionCitiesMap[city] || [];
+    if (stateCode) {
+      const cityList = stateCitiesMap[stateCode] || [];
       setCities(cityList.map((c) => ({ code: c, name: c })));
-      setSubCity("");
-      setStates([]);
-      setStateCode("");
     } else {
       setCities([]);
       setSubCity("");
-      setStates([]);
-      setStateCode("");
     }
-  }, [city]);
+  }, [stateCode]);
 
-  // When subCity (selected city) changes → load related state
+  // ✅ Sync values when user is in edit mode and props change
   useEffect(() => {
-    if (subCity) {
-      const stateName = cityStateMap[subCity] ? [cityStateMap[subCity]] : [];
-      setStates(stateName.map((s) => ({ isoCode: s, name: s })));
-      setStateCode("");
-    } else {
-      setStates([]);
-      setStateCode("");
+    if (city && regions.includes(city) === false) setRegions((prev) => [...prev, city]);
+    if (stateCode && !states.find((s) => s.isoCode === stateCode)) {
+      setStates((prev) => [...prev, { isoCode: stateCode, name: stateCode }]);
     }
-  }, [subCity]);
+
+    // If editing and we already have a stateCode, ensure city dropdown loads
+    if (stateCode) {
+      const cityList = stateCitiesMap[stateCode] || [];
+      setCities(cityList.map((c) => ({ code: c, name: c })));
+    }
+  }, [city, stateCode, subCity, club]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Region */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          Region
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">Region</label>
         <select
           value={city}
           onChange={(e) => setCity(e.target.value)}
@@ -77,11 +73,32 @@ export default function CitySelector({
         </select>
       </div>
 
+      {/* State */}
+      <div>
+        <label className="block mb-2 text-sm font-medium text-white">State</label>
+        <select
+          value={stateCode}
+          onChange={(e) => setStateCode(e.target.value)}
+          required
+          className="w-full px-4 py-2 rounded-md border"
+          style={{
+            backgroundColor: "var(--secondary-color)",
+            borderColor: "var(--border-color)",
+            color: "var(--foreground)",
+          }}
+        >
+          <option value="">Select State</option>
+          {states.map((s) => (
+            <option key={s.isoCode} value={s.isoCode}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* City */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          City
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">City</label>
         <select
           value={subCity}
           onChange={(e) => setSubCity(e.target.value)}
@@ -103,37 +120,9 @@ export default function CitySelector({
         </select>
       </div>
 
-      {/* State */}
+      {/* Club */}
       <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          State
-        </label>
-        <select
-          value={stateCode}
-          onChange={(e) => setStateCode(e.target.value)}
-          required
-          disabled={!states.length}
-          className="w-full px-4 py-2 rounded-md border"
-          style={{
-            backgroundColor: "var(--secondary-color)",
-            borderColor: "var(--border-color)",
-            color: "var(--foreground)",
-          }}
-        >
-          <option value="">Select State</option>
-          {states.map((s) => (
-            <option key={s.isoCode} value={s.isoCode}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Club (Always visible) */}
-      <div>
-        <label className="block mb-2 text-sm font-medium text-white">
-          Club
-        </label>
+        <label className="block mb-2 text-sm font-medium text-white">Club</label>
         <select
           value={club}
           onChange={(e) => setClub(e.target.value)}

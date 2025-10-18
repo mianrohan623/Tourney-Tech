@@ -72,15 +72,25 @@ const UserSchema = new Schema(
       required: [true, "State code is required."],
     },
 
+    // Rohan replace this
+
+    // dob: {
+    //   type: Date,
+    //   validate: {
+    //     validator: function (value) {
+    //       return value <= new Date();
+    //     },
+    //     message: "Date of birth cannot be in the future.",
+    //   },
+    //   required: [true, "DOB is required."],
+    // },
     dob: {
-      type: Date,
-      validate: {
-        validator: function (value) {
-          return value <= new Date();
-        },
-        message: "Date of birth cannot be in the future.",
-      },
+      type: String,
       required: [true, "DOB is required."],
+      match: [
+        /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])$/,
+        "Invalid date format (MM/DD).",
+      ],
     },
 
     refreshToken: { type: String },

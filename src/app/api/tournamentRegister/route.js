@@ -58,6 +58,7 @@ export const POST = asyncHandler(async (req) => {
   const existingRegistration = await Registration.findOne({
     tournament: tournamentId,
     user: userId,
+    "gameRegistrationDetails.games": { $all: validGameIds },
   });
   if (existingRegistration) {
     await Registration.findByIdAndUpdate(
