@@ -41,7 +41,5 @@ const RegistrationSchema = new Schema(
   { timestamps: true }
 );
 
-RegistrationSchema.index({ tournament: 1, user: 1 }, { unique: true });
-
 export const Registration =
   models.Registration || model("Registration", RegistrationSchema);

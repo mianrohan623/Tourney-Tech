@@ -14,7 +14,6 @@ export const POST = asyncHandler(async (req) => {
     firstname,
     lastname,
     email,
-    username,
     phone,
     gender,
     city,
@@ -26,7 +25,13 @@ export const POST = asyncHandler(async (req) => {
     subCity,
   } = body;
 
+  let { username } = body;
+
   if (!password) throw new ApiResponse(500, null, "Password is Required");
+
+  if (!username) {
+    username = firstname + " " + lastname;
+  }
 
   const user = new User({
     firstname,
